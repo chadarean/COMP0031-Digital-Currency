@@ -7,14 +7,7 @@ public class MerkleTrie {
         String value;
     }
 
-    static class Pair<U, V> {
-        public final U key; // 2^256 bits address
-        public final V value; // hash
-        public Pair(U key, V value) {
-            this.key = key;
-            this.value = value;
-        }
-    }
+    TrieNode MerkleRoot;
 
     private static String getHash(String value) {
         return value;
@@ -116,21 +109,5 @@ public class MerkleTrie {
         }
 
         return node.value;
-    }
-
-    public static void main(String args[]) {
-        ArrayList<Pair<String, String>> pairs = new ArrayList<Pair<String, String>>(Arrays.asList(
-                new Pair("0000", "V"),
-                new Pair("0001", "W"),
-                new Pair("0010", "X"),
-                new Pair("0100", "Y"),
-                new Pair("0101", "Z")));
-        TrieNode root = createMerkleTrie(pairs);
-        System.out.println(root.value);
-        for (Pair<String, String> p: pairs) {
-            System.out.print("The value from trie for address " + p.key);
-            System.out.print(" is " + findValueForAddress(p.key, root));
-            System.out.println(" and the actual value is " + p.value);
-        }
     }
 }
