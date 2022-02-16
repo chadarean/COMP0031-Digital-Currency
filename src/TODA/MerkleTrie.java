@@ -3,6 +3,8 @@ package src.TODA;
 import java.util.*;
 
 public class MerkleTrie {
+    final ADDRESS_SIZE = 256;
+
     static class TrieNode {
         TrieNode branch[] = new TrieNode[2];
         String prefix; // the branch prefix from its parent to the node, empty string for root
@@ -109,7 +111,16 @@ public class MerkleTrie {
             node = node.branch[address.charAt(index)-48];
             index += node.prefix.length();
         }
-
         return node.value;
+    }
+
+    public static ArrayList<MerkleProof.Frame> getMerkleFrames(String address, TrieNode node) {
+        int index = 0;
+        ArrayList<MerkleProof.Frame> frames = new ArrayList<>();
+        while (node != null && node.branch[0] != null && node.branch[1] != null) {
+            frames.append(new Frame())
+            node = node.branch[address.charAt(index)-48];
+            index += node.prefix.length();
+        }
     }
 }
