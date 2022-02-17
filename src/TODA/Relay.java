@@ -16,7 +16,7 @@ public class Relay {
         return new ArrayList<Pair<String, String>>(); // TODO: get updates as pair (address, txpx)
     }
 
-    public MerkleTrie.TrieNode getTransactionTrie() {
+    public MerkleTrie.TrieNode getCycleTrie() {
         ArrayList<Pair<String, String>> pairs = getUpdatedUSOs();
         return MerkleTrie.createMerkleTrie(pairs);
     }
@@ -44,5 +44,30 @@ public class Relay {
             System.out.print(" is " + MerkleTrie.findValueForAddress(p.key, root));
             System.out.println(" and the actual value is " + p.value);
         }
+    }
+
+    public String getCurrentCycleRoot();
+
+    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleRoot);
+
+    public POPSlice computePOPSlice(String address, MerkleTrie.TrieNode root) {
+        MerkleProof addressProof = new MerkleProof(getMerkleFrames(address, root));
+        return POPSlice(root.value, addressProof, null, null, null); //TODO: is txpx created by relay or owner
+    }
+
+    public ArrayList<PopSlice> sendPOP(String address) {
+        ArrayList<PopSlice> pop = new ArrayList<PopSlice>();
+        String G_t = getCurrentCycleRoot();
+        while (true) {
+            ArrayList<Pair<String, String>> pairs = getPairsFromDB(G_t);
+            MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
+            popSlice = computePOPSlice(address, root)
+            pop.append(popSlice);
+            if (!popSlice.addressProof.nullProof) {
+                break;
+            }
+            // TODO: how to link G_T with previous cycle root?
+        }
+        return pop;
     }
 }

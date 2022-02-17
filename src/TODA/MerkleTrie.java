@@ -3,7 +3,7 @@ package src.TODA;
 import java.util.*;
 
 public class MerkleTrie {
-    final ADDRESS_SIZE = 256;
+    final static int ADDRESS_SIZE = 256;
 
     static class TrieNode {
         TrieNode branch[] = new TrieNode[2];
@@ -12,10 +12,6 @@ public class MerkleTrie {
     }
 
     TrieNode MerkleRoot;
-
-    private static String getHash(String value) {
-        return value;
-    }
 
     private static int getLCP(String a, String b) {
         int max_lcp = Math.min(a.length(), b.length());
@@ -33,7 +29,7 @@ public class MerkleTrie {
         par.branch[1] = data1.key;
         par.branch[0].prefix = data0.value.key.substring(lcp, data0.value.value);
         par.branch[1].prefix = data1.value.key.substring(lcp, data1.value.value);
-        par.value = getHash(data0.value.key + data0.key.value + data1.value.key + data1.key.value);
+        par.value = Utils.getHash(data0.value.key.substring(lcp, data0.value.value) + data0.key.value + data1.value.key.substring(lcp, data1.value.value) + data1.key.value);
         return par;
     }
 
@@ -116,11 +112,18 @@ public class MerkleTrie {
 
     public static ArrayList<MerkleProof.Frame> getMerkleFrames(String address, TrieNode node) {
         int index = 0;
+        //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
+        // the parent will be combined with the non null branch
         ArrayList<MerkleProof.Frame> frames = new ArrayList<>();
         while (node != null && node.branch[0] != null && node.branch[1] != null) {
-            frames.append(new Frame())
+            frames.append(new MerkleProof.Frame(
+                    node.branch[0].value, (byte)node.branch[0].prefix.length(),
+                    Utils.prefixToBytes(node.branch[0].prefix),
+                    node.branch[1].value, (byte)node.branch[1].prefix.length(),
+                    Utils.prefixToBytes(node.branch[1].prefix)));
             node = node.branch[address.charAt(index)-48];
             index += node.prefix.length();
         }
+        return frames;
     }
 }
