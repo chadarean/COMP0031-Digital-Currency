@@ -3,16 +3,12 @@ package src.TODA;
 import java.util.*;
 
 public class MerkleTrie {
-    static class TrieNode {
+    final static int ADDRESS_SIZE = 256;
+
+    public static class TrieNode {
         TrieNode branch[] = new TrieNode[2];
         String prefix; // the branch prefix from its parent to the node, empty string for root
         String value;
-    }
-
-    TrieNode MerkleRoot;
-
-    private static String getHash(String value) {
-        return value;
     }
 
     private static int getLCP(String a, String b) {
@@ -25,17 +21,17 @@ public class MerkleTrie {
         return max_lcp;
     }
 
-    protected static TrieNode mergeNodes(Pair<TrieNode, Pair<String, Integer>> data0, Pair<TrieNode, Pair<String, Integer>> data1, int lcp) {
+    public static TrieNode mergeNodes(Pair<TrieNode, Pair<String, Integer>> data0, Pair<TrieNode, Pair<String, Integer>> data1, int lcp) {
         TrieNode par = new TrieNode();
         par.branch[0] = data0.key;
         par.branch[1] = data1.key;
         par.branch[0].prefix = data0.value.key.substring(lcp, data0.value.value);
         par.branch[1].prefix = data1.value.key.substring(lcp, data1.value.value);
-        par.value = getHash(data0.value.key + data0.key.value + data1.value.key + data1.key.value);
+        par.value = Utils.getHash(data0.value.key.substring(lcp, data0.value.value) + data0.key.value + data1.value.key.substring(lcp, data1.value.value) + data1.key.value);
         return par;
     }
 
-    protected static TrieNode createMerkleTrie(ArrayList<Pair<String, String>> data) {
+    public static TrieNode createMerkleTrie(ArrayList<Pair<String, String>> data) {
         /*
         1. Rows are retrieved sorted from file id
         2. Find two adjacent rows whose bit strings share the longest common
@@ -109,7 +105,31 @@ public class MerkleTrie {
             node = node.branch[address.charAt(index)-48];
             index += node.prefix.length();
         }
-
         return node.value;
+    }
+
+    public static MerkleProof getMerkleProof(String address, TrieNode node) {
+        int index = 0;
+        //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
+        // the parent will be combined with the non null branch
+
+        //TODO: implement null proofs
+        MerkleProof proof = new MerkleProof();
+        String dataHash = node.value;
+        int num_f = 0;
+        while (node != null && node.branch[0] != null && node.branch[1] != null) {
+            proof.addFrame(
+                    node.branch[0].value, (byte)(node.branch[0].prefix.length()-1), //the prefix length in TODA Frame is prefix length - 1
+                    Utils.prefixToBytes(node.branch[0].prefix),
+                    node.branch[1].value, (byte)(node.branch[1].prefix.length()-1),
+                    Utils.prefixToBytes(node.branch[1].prefix),
+                    dataHash);
+            dataHash = null;
+            node = node.branch[address.charAt(index)-48];
+            index += node.prefix.length();
+            num_f += 1;
+        }
+        //System.out.println("Added nf=" + Integer.toString(num_f) + " for address=" + address + "; inedx = " + Integer.toString(index));
+        return proof;
     }
 }
