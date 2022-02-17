@@ -33,11 +33,13 @@ public class MerkleProof {
 
     ArrayList<Frame> frames;
 
-    public MerkleProof(ArrayList<Frame> frames) {
+    public MerkleProof() {
         this.frames = new ArrayList<Frame>();
-        for (Frame frame : frames) {
-            this.frames.add(frame);
-        };
+    }
+
+    public void addFrame(String leftBranchHash, byte leftBranchPrefixLength, byte[] leftBranchPrefix, String rightBranchHash, byte rightBranchPrefixLength, byte[] rightBranchPrefix) {
+        this.frames.add(new Frame(leftBranchHash, leftBranchPrefixLength, leftBranchPrefix,
+        rightBranchHash, rightBranchPrefixLength, rightBranchPrefix));
     }
 
     public boolean verify(String address, String leafHash) {

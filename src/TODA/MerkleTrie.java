@@ -110,20 +110,21 @@ public class MerkleTrie {
         return node.value;
     }
 
-    public static ArrayList<MerkleProof.Frame> getMerkleFrames(String address, TrieNode node) {
+    public static MerkleProof getMerkleProof(String address, TrieNode node) {
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch
-        ArrayList<MerkleProof.Frame> frames = new ArrayList<>();
+        MerkleProof proof = new MerkleProof();
+       
         while (node != null && node.branch[0] != null && node.branch[1] != null) {
-            frames.append(new MerkleProof.Frame(
+            proof.addFrame(
                     node.branch[0].value, (byte)node.branch[0].prefix.length(),
                     Utils.prefixToBytes(node.branch[0].prefix),
                     node.branch[1].value, (byte)node.branch[1].prefix.length(),
-                    Utils.prefixToBytes(node.branch[1].prefix)));
+                    Utils.prefixToBytes(node.branch[1].prefix));
             node = node.branch[address.charAt(index)-48];
             index += node.prefix.length();
         }
-        return frames;
+        return proof;
     }
 }

@@ -1,5 +1,6 @@
 package src.TODA;
 
+import src.POP.*;
 import java.util.*;
 
 public class Relay {
@@ -46,26 +47,31 @@ public class Relay {
         }
     }
 
-    public String getCurrentCycleRoot();
-
-    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleRoot);
-
-    public POPSlice computePOPSlice(String address, MerkleTrie.TrieNode root) {
-        MerkleProof addressProof = new MerkleProof(getMerkleFrames(address, root));
-        return POPSlice(root.value, addressProof, null, null, null); //TODO: is txpx created by relay or owner
+    public String getCurrentCycleRoot() {
+        return "";
     }
 
-    public ArrayList<PopSlice> sendPOP(String address) {
-        ArrayList<PopSlice> pop = new ArrayList<PopSlice>();
+    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleRoot) {
+        return null;
+    }
+
+    public POPSlice computePOPSlice(String address, MerkleTrie.TrieNode root) {
+        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+        return new POPSlice(root.value, addressProof, null, null, null); //TODO: is txpx created by relay or owner
+    }
+
+    public ArrayList<POPSlice> sendPOP(String address) {
+        ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
         String G_t = getCurrentCycleRoot();
         while (true) {
             ArrayList<Pair<String, String>> pairs = getPairsFromDB(G_t);
             MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
-            popSlice = computePOPSlice(address, root)
-            pop.append(popSlice);
-            if (!popSlice.addressProof.nullProof) {
-                break;
-            }
+            POPSlice popSlice = computePOPSlice(address, root);
+            pop.add(popSlice);
+            break;
+            // if (!popSlice.addressProof.nullProof) {
+            //     break;
+            // }
             // TODO: how to link G_T with previous cycle root?
         }
         return pop;
