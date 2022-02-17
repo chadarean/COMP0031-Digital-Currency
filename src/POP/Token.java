@@ -9,7 +9,7 @@ import src.TODA.MerkleTrie;
 
 public class Token {
 
-    private final String SHA_256 = "SHA-256";
+    private static final String SHA_256 = "SHA-256";
 
     FileKernel fileKernel;
     FileDetail fileDetail;
@@ -59,7 +59,7 @@ public class Token {
         // TODO: Create txpx
     }
 
-    public String getHashOfString(String concatenation) {
+    public static String getHashOfString(String concatenation) {
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));

@@ -1,6 +1,7 @@
 package src.TODA;
 
 import java.util.*;
+import src.POP.*;
 
 public class Utils {
     public static void appendBits(StringBuilder res, int value, int n) {
@@ -32,7 +33,7 @@ public class Utils {
         int num_bytes = (prefix.length()-1)/8 + 1;
         int idx = 0;
         for (int i = 0; i < num_bytes; ++ i) {
-            for (int j = 0; j < 8 && idx < prefix.length(); ++ j, ++ idx) {
+            for (int j = 0; (j < 8) && (idx < prefix.length()); ++ j, ++ idx) {
                 if (prefix.charAt(idx) == '1') {
                     res[i] |= (1<<j); // set bit j in byte i to 1
                 }
@@ -42,6 +43,6 @@ public class Utils {
     }
 
     public static String getHash(String value) {
-        return value;
+        return Token.getHashOfString(value);
     }
 }
