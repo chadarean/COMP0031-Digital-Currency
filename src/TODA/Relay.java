@@ -4,13 +4,14 @@ import src.POP.*;
 import java.util.*;
 
 public class Relay {
-    public void addUpdateFromUpstream() {
+    public void addUpdateFromUpstream(String address, String updateHash) {
     }
 
-    public void addUpdateFromDownstream() {
+    public void addUpdateFromDownstream(String updateHash) {
     }
 
     public void publishHash(String hash) {
+        //TODO: publish hash on DLT
     }
 
     public ArrayList<Pair<String, String>> getUpdatedUSOs() {
@@ -52,19 +53,14 @@ public class Relay {
         return new POPSlice(root.value, addressProof, null, null, null); //TODO: is txpx created by relay or owner
     }
 
-    public ArrayList<POPSlice> sendPOP(String address) {
+    public ArrayList<POPSlice> sendPOP(String address, String G_k, String G_n) {
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
-        String G_t = getCurrentCycleRoot();
-        while (true) {
+        String G_t = G_n;
+        while (!G_t.equals(G_k)) {
             ArrayList<Pair<String, String>> pairs = getPairsFromDB(G_t);
             MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
             POPSlice popSlice = computePOPSlice(address, root);
             pop.add(popSlice);
-            break;
-            // if (!popSlice.addressProof.nullProof) {
-            //     break;
-            // }
-            // TODO: how to link G_T with previous cycle root?
         }
         return pop;
     }

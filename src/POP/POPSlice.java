@@ -14,11 +14,11 @@ public class POPSlice {
     FileDetail fileDetail;
 
     public POPSlice(String cycleRoot, MerkleProof addressProof, TransactionPacket transactionPacket, MerkleProof fileProof, FileDetail fileDetail) {
-        this.cycleRoot = cycleRoot;
-        this.addressProof = addressProof;
-        this.transactionPacket = transactionPacket;
-        this.fileProof = fileProof;
-        this.fileDetail = fileDetail;
+        this.cycleRoot = cycleRoot; // the Cycle hash Ck
+        this.addressProof = addressProof; // Merkle proof associating the (possibly null) value p with the address a in the cycle trie whose root hash is Ck
+        this.transactionPacket = transactionPacket; // the txpx whose hash is equal to p
+        this.fileProof = fileProof; // Merkle proof associating the (possibly null) value f with the file id id in the file trie whose root hash is the file trie root in the txpx
+        this.fileDetail = fileDetail; // file detail whose hash is equal to f
     }
 
     public boolean verify(String dest_pk) {
@@ -32,6 +32,7 @@ public class POPSlice {
         if (!fileProof.verify(fileId, Utils.getHash(fileDetail.toString()))) {
             return false;
         }
+        //TODO: verify signature of txpx
         return true;
     }
 }

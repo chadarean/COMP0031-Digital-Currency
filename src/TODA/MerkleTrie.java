@@ -112,6 +112,8 @@ public class MerkleTrie {
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch
+
+        //TODO: implement null proofs
         MerkleProof proof = new MerkleProof();
         String dataHash = node.value;
         int num_f = 0;
