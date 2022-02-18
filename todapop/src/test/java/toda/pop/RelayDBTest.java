@@ -9,9 +9,7 @@ import org.junit.Test;
  */
 public class RelayDBTest
 {
-    /**
-     * Rigorous Test :-)
-     */
+
     @Test
     public void shouldAnswerWithTrue()
     {

@@ -132,6 +132,3 @@ public class RelayDB
     }
     
 }
-
-// For each cycle root: key cycle root, value is the previous one
-//
