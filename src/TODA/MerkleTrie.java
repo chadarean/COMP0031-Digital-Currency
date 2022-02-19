@@ -103,6 +103,9 @@ public class MerkleTrie {
         int index = 0;
         while (node != null && node.branch[0] != null && node.branch[1] != null) {
             node = node.branch[address.charAt(index)-48];
+            if (!address.substring(index, index + node.prefix.length()).equals(node.prefix)) {
+                return null;
+            }
             index += node.prefix.length();
         }
         return node.value;

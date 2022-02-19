@@ -32,7 +32,6 @@ public class POPSlice {
         if (!fileProof.verify(fileId, Utils.getHash(fileDetail.toString()))) {
             return false;
         }
-        //TODO: verify signature of txpx
         return true;
     }
 }
