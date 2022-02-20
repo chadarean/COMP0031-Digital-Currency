@@ -2,6 +2,8 @@ package src.TODA;
 
 import java.util.*;
 
+import javax.management.RuntimeErrorException;
+
 public class MerkleTrie {
     final static int ADDRESS_SIZE = 256;
 
@@ -22,12 +24,17 @@ public class MerkleTrie {
     }
 
     public static TrieNode mergeNodes(Pair<TrieNode, Pair<String, Integer>> data0, Pair<TrieNode, Pair<String, Integer>> data1, int lcp) {
+        System.out.println("Merging " + data0.value.key + " with " + data1.value.key);
+        System.out.println("lcp=" + Integer.toString(lcp) + "and l1=" + Integer.toString(data0.value.value) + " l2=" +Integer.toString(data1.value.value)
+        );
+        
         TrieNode par = new TrieNode();
         par.branch[0] = data0.key;
         par.branch[1] = data1.key;
         par.branch[0].prefix = data0.value.key.substring(lcp, data0.value.value);
         par.branch[1].prefix = data1.value.key.substring(lcp, data1.value.value);
         par.value = Utils.getHash(data0.value.key.substring(lcp, data0.value.value) + data0.key.value + data1.value.key.substring(lcp, data1.value.value) + data1.key.value);
+        System.out.println("val = " + par.value);
         return par;
     }
 
@@ -103,6 +110,9 @@ public class MerkleTrie {
         int index = 0;
         while (node != null && node.branch[0] != null && node.branch[1] != null) {
             node = node.branch[address.charAt(index)-48];
+            if (!address.substring(index, index + node.prefix.length()).equals(node.prefix)) {
+                return null;
+            }
             index += node.prefix.length();
         }
         return node.value;
@@ -117,6 +127,8 @@ public class MerkleTrie {
         MerkleProof proof = new MerkleProof();
         String dataHash = node.value;
         int num_f = 0;
+        int chosen_branch = -1;
+    
         while (node != null && node.branch[0] != null && node.branch[1] != null) {
             proof.addFrame(
                     node.branch[0].value, (byte)(node.branch[0].prefix.length()-1), //the prefix length in TODA Frame is prefix length - 1
@@ -125,10 +137,40 @@ public class MerkleTrie {
                     Utils.prefixToBytes(node.branch[1].prefix),
                     dataHash);
             dataHash = null;
-            node = node.branch[address.charAt(index)-48];
+            
+            if (proof.null_proof) {
+                if (chosen_branch != 0 && chosen_branch != 1) {
+                    throw new RuntimeException("Error constructing null proof");
+                }
+                node = node.branch[chosen_branch];
+            } else {
+                int expBranch = address.charAt(index)-48;
+                int cmp = address.substring(index, index+node.branch[expBranch].prefix.length()).
+                   compareTo(node.branch[expBranch].prefix);
+                if (cmp == 0) {
+                    node = node.branch[expBranch];
+                } else {
+                    if (cmp < 0) {
+                    node = node.branch[expBranch];
+                    chosen_branch = 0;
+                    proof.null_proof = true;
+                } else {
+                    node = node.branch[1];
+                    chosen_branch = expBranch;
+                    proof.null_proof = true;
+                }
+            }
+            }
+    
             index += node.prefix.length();
             num_f += 1;
         }
+        if (index < address.length()) {
+            proof.null_proof = true;
+        }
+        // if (proof.null_proof) {
+        //     System.out.println("Null proof for address=" + address);
+        // }
         //System.out.println("Added nf=" + Integer.toString(num_f) + " for address=" + address + "; inedx = " + Integer.toString(index));
         return proof;
     }
