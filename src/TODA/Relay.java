@@ -4,7 +4,9 @@ import src.POP.*;
 import java.util.*;
 
 public class Relay {
+    public int NCycleTries = 0;
     public void addUpdateFromUpstream(String address, String updateHash) {
+        // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
     }
 
     public void addUpdateFromDownstream(String updateHash) {
@@ -15,12 +17,14 @@ public class Relay {
     }
 
     public ArrayList<Pair<String, String>> getUpdatedUSOs() {
-        return new ArrayList<Pair<String, String>>(); // TODO: get updates as pair (address, txpx)
+        // calls selectAllTransactions(Connection conn, NCycleTries) for the transactions not included in any CT
+        return new ArrayList<Pair<String, String>>(); 
     }
 
-    public MerkleTrie.TrieNode getCycleTrie() {
+    public MerkleTrie.TrieNode createCycleTrie() {
         ArrayList<Pair<String, String>> pairs = getUpdatedUSOs();
-        return MerkleTrie.createMerkleTrie(pairs);
+        NCycleTries += 1;
+        return MerkleTrie.createMerkleTrie(pairs); //TODO: store in cache most recent cycle trie objects; check if memory problems occur
     }
 
     public static void main(String args[]) {
@@ -40,17 +44,14 @@ public class Relay {
         }
     }
 
-    public String getCurrentCycleRoot() {
-        return "";
-    }
-
-    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleRoot) {
+    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleId) {
+        // gets the transactions from cycle trie with cycleId
         return null;
     }
 
     public POPSlice computePOPSlice(String address, MerkleTrie.TrieNode root) {
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        return new POPSlice(root.value, addressProof, null, null, null); //TODO: is txpx created by relay or owner
+        return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
     public ArrayList<POPSlice> sendPOP(String address, String G_k, String G_n) {
