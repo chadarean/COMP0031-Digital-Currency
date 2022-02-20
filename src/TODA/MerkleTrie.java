@@ -136,9 +136,6 @@ public class MerkleTrie {
                     node.branch[1].value, (byte)(node.branch[1].prefix.length()-1),
                     Utils.prefixToBytes(node.branch[1].prefix),
                     dataHash);
-            if (node.branch[0].prefix.length() == 0) {
-                System.out.println(num_f + " wtf");
-            }
             dataHash = null;
             
             if (proof.null_proof) {
