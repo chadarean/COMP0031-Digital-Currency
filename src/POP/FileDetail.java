@@ -49,5 +49,9 @@ public class FileDetail {
         return this.metadataHash;
     }
 
+    @Override
+    public String toString() {
+        return this.destinationAddress + this.proofsPacketHash + this.metadataHash;
+    }
 
 }

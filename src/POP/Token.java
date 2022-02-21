@@ -12,16 +12,16 @@ public class Token {
     private static final String SHA_256 = "SHA-256";
 
     FileKernel fileKernel;
-    FileDetail fileDetail;
+    public FileDetail fileDetail;
     MerkleTrie fileTrie;
     TransactionPacket transactionPacket;
     MerkleTrie cycleTrie;
 
     // TODO: Signature
-    public Token createAsset(String creatorAddress, String address, String signature) {
+    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature) {
          
         // TODO: Issued cycle root - will we get this from the DB?
-        fileKernel = new FileKernel(null, creatorAddress, null, null, null);
+        fileKernel = new FileKernel(cycleRoot, creatorAddress, null, null, null);
         fileDetail = new FileDetail(address, null, null);
         transactionPacket = null;
         
@@ -39,7 +39,7 @@ public class Token {
     }
 
     public String getFileDetail() {
-         return getHashOfString(fileDetail.getDestinationAddress() + fileDetail.getProofsPacketHash() + fileDetail.getMetadataHash());
+        return getHashOfString(fileDetail.getDestinationAddress() + fileDetail.getProofsPacketHash() + fileDetail.getMetadataHash());
     }
 
     public String getTransactionPacket() {

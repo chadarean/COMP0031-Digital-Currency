@@ -74,7 +74,7 @@ public class MerkleProof {
             System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
             int expBranch = address.charAt(prefSize) - 48;
             if (expBranch == 0)
-            System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1));
+            System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1) + "branch is " + Integer.toString(expBranch));
             else
             System.out.println("Next preflen= " + Integer.toString((int)frame_i.rightBranchPrefixLength + 1));
             if (!expectedHash.equals(prevHash)) {
