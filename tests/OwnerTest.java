@@ -12,16 +12,15 @@ public class OwnerTest {
         String addressB = "10000000";
         Owner a = new Owner(aId);
         Token asset1 = a.createAsset(addressA1, 1);
-        String asset1Id = "010000101";
-        
-        System.out.println("Asset id is " + asset1Id);
-        a.transferAsset(C_2, addressA1, asset1Id, addressB);
+    
+        System.out.println("Asset id is " + asset1.getFileId());
+        a.transferAsset(C_2, addressA1, asset1.getFileId(), addressB);
         a.sendUpdates(C_2, addressA1);
         System.out.println("Asset update is " + asset1.getFileDetail());
-        MerkleProof proof = a.getFileProof(C_2, addressA1, asset1Id);
+        MerkleProof proof = a.getFileProof(C_2, addressA1, asset1.getFileId());
         String fileDetailHash = asset1.getFileDetail();
         System.out.println(fileDetailHash);
-        if (!proof.verify(asset1Id, fileDetailHash)) {
+        if (!proof.verify(asset1.getFileId(), fileDetailHash)) {
             throw new RuntimeException("Incorrect proof created!");
         }
     }

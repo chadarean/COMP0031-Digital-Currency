@@ -26,8 +26,7 @@ public class Owner {
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
         Token token = new Token();
         token.createAsset(cycleRoot, address, address, signature);
-        assets.put("010000101", token);
-        //assets.put(token.getFileId(), token);
+        assets.put(token.getFileId(), token);
         // TODO: should we add the token to a DB
         return token;
     }

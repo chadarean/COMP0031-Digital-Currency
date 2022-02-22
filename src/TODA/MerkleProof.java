@@ -60,10 +60,10 @@ public class MerkleProof {
         // will be set to the branch of the immediately next address (or previous in the case of the largest address)
         boolean exceeded_lcp = false;
         //System.out.println("Nf = " + Integer.toString(frames.size()));
-        System.out.println("Proof for " + address);
+        //System.out.println("Proof for " + address);
         for (Frame frame_i: frames) {
-            System.out.println("left branch pref=" + Integer.toString((int)frame_i.leftBranchPrefixLength) + "an first is" +
-            Integer.toString((int)frame_i.leftBranchPrefix[0]));
+            //System.out.println("left branch pref=" + Integer.toString((int)frame_i.leftBranchPrefixLength) + "an first is" +
+            //Integer.toString((int)frame_i.leftBranchPrefixLength));
             String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, frame_i.leftBranchPrefixLength+1);
             String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, frame_i.rightBranchPrefixLength+1);
         
@@ -71,12 +71,12 @@ public class MerkleProof {
                     frame_i.leftBranchHash +
                     rightPrefStr +
                     frame_i.rightBranchHash);
-            System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
+            //System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
             int expBranch = address.charAt(prefSize) - 48;
-            if (expBranch == 0)
-            System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1) + "branch is " + Integer.toString(expBranch));
-            else
-            System.out.println("Next preflen= " + Integer.toString((int)frame_i.rightBranchPrefixLength + 1));
+            // if (expBranch == 0)
+            // System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1));
+            // else
+            // System.out.println("Next preflen= " + Integer.toString((int)frame_i.rightBranchPrefixLength + 1));
             if (!expectedHash.equals(prevHash)) {
                 return false;
             }
@@ -101,12 +101,12 @@ public class MerkleProof {
                 if (null_proof) {
                     if (cmp < 0) {
                         chosen_branch = 0;
-                        System.out.println("choose b 0");
+                        //System.out.println("choose b 0");
                         // stay on branch and choose only 0;
                     } else if (cmp > 0 || (cmp == 0 && frame_i.rightBranchHash == null && expBranch == 1)) {
                         chosen_branch = expBranch; 
                         expBranch = 1;
-                        System.out.println("choose b 1");
+                       // System.out.println("choose b 1");
                     } // for cmp == 0, chosen_branch remains -1 until address diverges from prefix
                 }
                 if (expBranch == 0) {
@@ -122,7 +122,7 @@ public class MerkleProof {
             return false;
         }
         if (!null_proof && (prefSize != address.length() || !(prevHash.equals(leafHash)))) {
-            System.out.println("pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
+            //System.out.println("pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
             return false;
         }
         return true;
