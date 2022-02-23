@@ -43,15 +43,15 @@ public class MerkleTrie {
 
     public static TrieNode mergeNodes(StackNode lnode, StackNode rnode) {
         int lcp = rnode.pLcp;
-        System.out.println("Merging " + lnode.addr + " with " + rnode.addr);
-        System.out.println("lcp=" + Integer.toString(lcp) + "and l1=" + Integer.toString(lnode.prefLen) + " l2=" +Integer.toString(rnode.prefLen));
+        //System.out.println("Merging " + lnode.addr + " with " + rnode.addr);
+        //System.out.println("lcp=" + Integer.toString(lcp) + "and l1=" + Integer.toString(lnode.prefLen) + " l2=" +Integer.toString(rnode.prefLen));
         
         String parValue = Utils.getHash(lnode.addr.substring(lcp, lnode.prefLen) + lnode.tNode.value + 
         rnode.addr.substring(lcp, rnode.prefLen) + rnode.tNode.value);
         TrieNode par = new TrieNode(lnode.tNode, rnode.tNode, parValue);
         par.branch[0].prefix = lnode.addr.substring(lcp, lnode.prefLen);
         par.branch[1].prefix = rnode.addr.substring(lcp, rnode.prefLen);
-        System.out.println("val = " + par.value);
+        //System.out.println("val = " + par.value);
         return par;
     }
 
@@ -102,7 +102,7 @@ public class MerkleTrie {
         int stack2Top = 2;
         int stack2TopLcp = (stack2Top < npairs) ? getLCP(data.get(stack2Top).key, data.get(1).key) : 0;
         while (stack2Top < npairs || stack1.size() > 1) {
-            System.out.println("Stack2top = " + Integer.toString(stack2Top) + "lcp2top = " + Integer.toString(stack2TopLcp));
+            //System.out.println("Stack2top = " + Integer.toString(stack2Top) + "lcp2top = " + Integer.toString(stack2TopLcp));
             while (stack2Top < npairs && (stack1.size() <= 1 || stack1.peek().pLcp <= stack2TopLcp)) {
                 Pair<String, String> stack2TopData = data.get(stack2Top);
                 stack1.push(new StackNode(stack2TopLcp, new TrieNode(null, null, stack2TopData.value), stack2TopData.key, stack2TopData.key.length()));

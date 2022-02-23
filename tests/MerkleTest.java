@@ -1,12 +1,14 @@
 package tests;
 
-import java.util.Random;
 import java.util.*;
+import java.sql.Timestamp;
 import src.TODA.*;
 
 public class MerkleTest {
     public static void MerkleTreeTest(ArrayList<Pair<String, String>> pairs, ArrayList<String> idleAddresses) {
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
+        System.out.println("Time after Merkle Trie is created:");
+        System.out.println(new Timestamp(System.currentTimeMillis()));
         for (String idleAddress : idleAddresses) {
             if (MerkleTrie.findValueForAddress(idleAddress, root) != null) {
                 throw new RuntimeException("Address not stored in trie but has path!");
@@ -88,28 +90,31 @@ public class MerkleTest {
                     "1100010000000000000011", "1100111100000000000011", "0000100000000000000011", "0000000000000000000010")));
     }
 
-    public static void randomTest() {
+    public static String getRandomXBitAddr(Random rand, int addrSize) {
+        StringBuilder addr = new StringBuilder();
+        for (int j = 0; j < MerkleTrie.ADDRESS_SIZE; ++ j) {
+            addr.append(Integer.toString(rand.nextInt(2)));
+        }
+        return addr.toString();
+    }
+
+    public static void randomTest(int numAddresses) {
         Random rand = new Random();
         HashMap <String, Boolean> usedAddresses = new HashMap<>();
-        int numAddresses = 2000;
         ArrayList<Pair<String, String>> updates = new ArrayList<>();
         ArrayList<String> addresses = new ArrayList<>();
         ArrayList<String> idleAddresses = new ArrayList<>();
         for (int i = 0; i < numAddresses; ++ i) {
             String addrString;
             while (true) {
-                StringBuilder addr = new StringBuilder();
-                for (int j = 0; j < MerkleTrie.ADDRESS_SIZE / 2; ++ j) {
-                    addr.append(Integer.toString(rand.nextInt(2)));
-                }
-                addrString = addr.toString();
+                addrString = getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                 if (!usedAddresses.containsKey(addrString)) {
                     break;
                 }
             }
             usedAddresses.put(addrString, true);
             if (i % 2 == 0) {
-                //idleAddresses.add(addrString);
+                idleAddresses.add(addrString);
             } else {
                 addresses.add(addrString); //(new Pair<String, String>(addrString, Integer.toString(i)));
             }
@@ -118,13 +123,20 @@ public class MerkleTest {
         for (String addr : addresses) {
             updates.add(new Pair<String, String>(addr, Integer.toString(rand.nextInt(1000000000))));
         }
-
+        System.out.println("Time before:");
+        System.out.println(new Timestamp(System.currentTimeMillis()));
         MerkleTreeTest(updates, idleAddresses);
+        System.out.println("Time after verifying all proofs:");
+        System.out.println(new Timestamp(System.currentTimeMillis()));
     }
 
     public static void main(String args[]) {
         //MerkleTreeTests();
-        randomTest();
+        randomTest(2000);
+        randomTest(20000);
+        randomTest(200000);
+        randomTest(2000000);
+       System.out.println("All tests passed!");
     }
 
 }

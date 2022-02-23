@@ -62,42 +62,41 @@ public class MerkleProof {
         //System.out.println("Nf = " + Integer.toString(frames.size()));
         //System.out.println("Proof for " + address);
         for (Frame frame_i: frames) {
-            //System.out.println("left branch pref=" + Integer.toString((int)frame_i.leftBranchPrefixLength) + "an first is" +
-            //Integer.toString((int)frame_i.leftBranchPrefixLength));
-            String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, frame_i.leftBranchPrefixLength+1);
-            String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, frame_i.rightBranchPrefixLength+1);
+            int leftBranchPLen = Utils.ubyte(frame_i.leftBranchPrefixLength)+1;
+            int rightBranchPLen = Utils.ubyte(frame_i.rightBranchPrefixLength)+1;
+            //System.out.println("left branch pref=" + Integer.toString(leftBranchPlen) + "an first is" +
+            //Integer.toString(frame_i.leftBranchPrefix[0]));
+            String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, leftBranchPLen);
+            String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, rightBranchPLen);
         
-            String expectedHash = Utils.getHash(leftPrefStr +
-                    frame_i.leftBranchHash +
-                    rightPrefStr +
-                    frame_i.rightBranchHash);
+            String expectedHash = Utils.getHash(leftPrefStr + frame_i.leftBranchHash +
+                    rightPrefStr + frame_i.rightBranchHash);
             //System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
             int expBranch = address.charAt(prefSize) - 48;
             // if (expBranch == 0)
-            // System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1));
+            // System.out.println("Next preflen= " + Integer.toString(leftBranchPLen));
             // else
-            // System.out.println("Next preflen= " + Integer.toString((int)frame_i.rightBranchPrefixLength + 1));
+            // System.out.println("Next preflen= " + Integer.toString(rightBranchPLen));
             if (!expectedHash.equals(prevHash)) {
                 return false;
             }
             
             if (null_proof && chosen_branch != -1) {
                 if (chosen_branch == 0) {
-                    prefSize += (int)frame_i.leftBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += leftBranchPLen; 
                     prevHash = frame_i.leftBranchHash;
                 } else {
-                    prefSize += (int)frame_i.rightBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += rightBranchPLen; 
                     prevHash = frame_i.rightBranchHash;
                 }
             } else {
-                int cmp = (expBranch == 0) ? address.substring(prefSize, prefSize + (int)frame_i.leftBranchPrefixLength + 1).compareTo(leftPrefStr)
-                : address.substring(prefSize, prefSize + (int)frame_i.rightBranchPrefixLength + 1).compareTo(rightPrefStr);
+                int cmp = (expBranch == 0) ? address.substring(prefSize, prefSize + leftBranchPLen).compareTo(leftPrefStr)
+                : address.substring(prefSize, prefSize + rightBranchPLen).compareTo(rightPrefStr);
                 
                 if (!null_proof && cmp != 0) {
                     // the address doesn't match the prefix
                     return false;
                 }
-                // 0, 1
                 if (null_proof) {
                     if (cmp < 0) {
                         chosen_branch = 0;
@@ -110,10 +109,10 @@ public class MerkleProof {
                     } // for cmp == 0, chosen_branch remains -1 until address diverges from prefix
                 }
                 if (expBranch == 0) {
-                    prefSize += (int)frame_i.leftBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += leftBranchPLen; 
                     prevHash = frame_i.leftBranchHash;
                 } else { 
-                    prefSize += (int)frame_i.rightBranchPrefixLength + 1;
+                    prefSize += rightBranchPLen;
                     prevHash = frame_i.rightBranchHash;
                 } 
             }
