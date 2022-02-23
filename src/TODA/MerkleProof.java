@@ -71,6 +71,7 @@ public class MerkleProof {
         
             String expectedHash = Utils.getHash(leftPrefStr + frame_i.leftBranchHash +
                     rightPrefStr + frame_i.rightBranchHash);
+            //System.out.println(frame_i.rightBranchHash + ";;" + frame_i.leftBranchHash + ";;");
             //System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
             int expBranch = address.charAt(prefSize) - 48;
             // if (expBranch == 0)
@@ -98,14 +99,15 @@ public class MerkleProof {
                     return false;
                 }
                 if (null_proof) {
-                    if (cmp < 0) {
+                    //System.out.println("NULL proof" + Integer.toString(cmp) + " " + Integer.toString(expBranch));
+                    if (cmp < 0 || (cmp == 0 && (frame_i.leftBranchHash == null || frame_i.leftBranchHash.equals(Utils.getHash(null))) && expBranch == 0)) {
                         chosen_branch = 0;
                         //System.out.println("choose b 0");
                         // stay on branch and choose only 0;
-                    } else if (cmp > 0 || (cmp == 0 && frame_i.rightBranchHash == null && expBranch == 1)) {
+                    } else if (cmp > 0 || (cmp == 0 && (frame_i.rightBranchHash == null || frame_i.rightBranchHash.equals(Utils.getHash(null))) && expBranch == 1)) {
                         chosen_branch = expBranch; 
                         expBranch = 1;
-                       // System.out.println("choose b 1");
+                       //System.out.println("choose b 1");
                     } // for cmp == 0, chosen_branch remains -1 until address diverges from prefix
                 }
                 if (expBranch == 0) {
@@ -117,6 +119,7 @@ public class MerkleProof {
                 } 
             }
         }
+        //System.out.println(prefSize);
         if (null_proof && chosen_branch == -1) {
             return false;
         }

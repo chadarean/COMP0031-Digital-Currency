@@ -60,6 +60,9 @@ public class Token {
     }
 
     public static String getHashOfString(String concatenation) {
+        if (concatenation == null) {
+            return nullHash();
+        }
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));
@@ -68,6 +71,14 @@ public class Token {
         } catch(NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String nullHash() {
+        StringBuilder nullHashStr = new StringBuilder();
+        for (int i = 0; i < MerkleTrie.ADDRESS_SIZE; ++ i) {
+            nullHashStr.append("0");
+        }
+        return nullHashStr.toString();
     }
 
 }

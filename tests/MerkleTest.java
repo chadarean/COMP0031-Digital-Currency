@@ -10,7 +10,8 @@ public class MerkleTest {
         System.out.println("Time after Merkle Trie is created:");
         System.out.println(new Timestamp(System.currentTimeMillis()));
         for (String idleAddress : idleAddresses) {
-            if (MerkleTrie.findValueForAddress(idleAddress, root) != null) {
+            if (MerkleTrie.findValueForAddress(idleAddress, root) != null && 
+            !MerkleTrie.findValueForAddress(idleAddress, root).equals(Utils.getHash(null))) {
                 throw new RuntimeException("Address not stored in trie but has path!");
             }
             MerkleProof proof_for_idle = MerkleTrie.getMerkleProof(idleAddress, root);
@@ -54,8 +55,8 @@ public class MerkleTest {
     public static void MerkleTreeTests() {
         ArrayList<Pair<String, String>> pairs1 = new ArrayList<>((List<Pair<String, String>>)
         Arrays.asList(
-                new Pair<String, String>("0000000", "0"), // lcp = -1
-                new Pair<String, String>("0000001", "1"), // lcp = 6
+                new Pair<String, String>("0000000", "0"), 
+                new Pair<String, String>("0000001", "1"), 
                 new Pair<String, String>("0000100", "2"), // lcp = 4
                 new Pair<String, String>("0000101", "3"), // lcp = 6
                 new Pair<String, String>("0001100", "4"), // lcp = 3
@@ -121,7 +122,7 @@ public class MerkleTest {
         }
         Collections.sort(addresses);
         for (String addr : addresses) {
-            updates.add(new Pair<String, String>(addr, Integer.toString(rand.nextInt(1000000000))));
+            updates.add(new Pair<String, String>(addr, Utils.getHash(getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE))));
         }
         System.out.println("Time before:");
         System.out.println(new Timestamp(System.currentTimeMillis()));
@@ -132,10 +133,15 @@ public class MerkleTest {
 
     public static void main(String args[]) {
         //MerkleTreeTests();
+        for (int j = 1; j < 10; ++ j)
+        for (int i = 2; i < 20; i += 2) {
+            randomTest(i);
+        }
+        randomTest(20);
         randomTest(2000);
         randomTest(20000);
         randomTest(200000);
-        randomTest(2000000);
+        // // randomTest(2000000);
        System.out.println("All tests passed!");
     }
 

@@ -82,7 +82,7 @@ public class MerkleTrie {
         int npairs = data.size();
         if (npairs == 1 || (data.get(0).key.charAt(0) == data.get(npairs-1).key.charAt(0))) {
             int chr = 49 - data.get(0).key.charAt(0);
-            data.add(chr, new Pair(Integer.toString(chr), null)); // TODO: the paper adds address of length=1, prove that it's correct
+            data.add(chr*npairs, new Pair(Integer.toString(chr), Utils.getHash(null))); // TODO: the paper adds address of length=1, prove that it's correct
             ++ npairs;
         }
 
@@ -135,8 +135,6 @@ public class MerkleTrie {
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch
-
-        //TODO: implement null proofs
         MerkleProof proof = new MerkleProof();
         String dataHash = node.value;
         int num_f = 0;
