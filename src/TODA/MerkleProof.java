@@ -3,6 +3,8 @@ package src.TODA;
 import java.util.*;
 
 public class MerkleProof {
+    public String leafHash;
+
     public class Frame {
         public String leftBranchHash;
         public byte leftBranchPrefixLength;
@@ -46,6 +48,10 @@ public class MerkleProof {
         null_proof = false;
     }
 
+    public void setHash(String leafHash) {
+        this.leafHash = leafHash;
+    }
+    
     public void addFrame(String leftBranchHash, byte leftBranchPrefixLength, byte[] leftBranchPrefix, String rightBranchHash, byte rightBranchPrefixLength, 
     byte[] rightBranchPrefix, String constructionDataHash) {
         this.frames.add(new Frame(leftBranchHash, leftBranchPrefixLength, leftBranchPrefix,

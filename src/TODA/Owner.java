@@ -7,18 +7,24 @@ public class Owner {
     // Note: the user balance can either be stored on user side or in an MSB database. The former is more public, but
     // the latter could be more robust against technical failure of user application.
     public String userId;
-    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTries; // assoctiates addresses with file trie objects for each cycle_root
-    // fileTries[cycleRoot][address] = fileTrie object with files under address in cycleRoot
-    public HashMap<String, HashMap<String, TreeMap<String, FileDetail>>> fileDetails; // stores pairs of <file_id, file_detail> sorted by file_id 
-    // for each address for each cycle root: fileDetails[cycleRoot][address] = sorted set of <file_id, file_detail>
+    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTries;
+    // fileTries[cycleRoot][address] = fileTrie object with files under address at current cycle root = cycleRoot
+    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTrieCache; // assoctiates addresses with file trie objects for each cycle_root
+    // fileTrieCache[cycleRoot][address] = fileTrie object with files under address in cycleRoot
+    public HashMap<String, TreeMap<String, FileDetail>> fileDetails; // stores pairs of <file_id, file_detail> sorted by file_id 
+    // for each address: fileDetails[address] = sorted set of <file_id, file_detail>
+    // Note that a file can have a single valid file detail at a given cycle
     public HashMap<String, Token> assets; // assets[address]
-    public HashMap<String, ArrayList<POPSlice>> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
+    public HashMap<String, POPSlice> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
     public HashMap<String, String> lastProovedCycle; // lastProovedCycle[assetId] = the latest cycle for which there is non-null proof for assetId
     public Relay relay; 
+    public HashMap<String, FileDetail> oldFileDetails;
+    public HashMap<String, TransactionPacket> txpxs; // assume address has only one update 
 
     public Owner(String userId) {
         this.userId = userId;
-        fileTries = new HashMap<>();
+        this.fileTries = new HashMap<>();
+        fileTrieCache = new HashMap<>();
         fileDetails = new HashMap<>();
         assets = new HashMap<>();
         relay = new Relay();
@@ -29,8 +35,8 @@ public class Owner {
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
         Token token = new Token();
         token.createAsset(cycleRoot, address, address, signature);
-        String fileIdAddress = Utils.convertKey(token.getFileId());
-        assets.put(fileIdAddress, token);
+        //String fileIdAddress = Utils.convertKey(token.getFileId());
+        assets.put(address, token);
         lastProovedCycle.put(Utils.convertKey(token.getFileId()), cycleRoot);
         // TODO: should we add the token to a DB
         return token;
@@ -42,40 +48,26 @@ public class Owner {
         // TODO: the relay could send back the POP after creating the trie
     } 
 
-    public void transferAsset(String cycleRoot, String address, String assetId, String dest_pk) {
-        // creates update for assetId to be transferred to dest_pk at a cycle following cycleRoot
+    public void transferAsset(String cycleRoot, String address, Token asset, String destPk) {
+        // creates update for assetId to be transferred to destPk at a cycle following cycleRoot
         // using a map ensures that an address makes a single update in a cycle for an assetId
-        Token asset = assets.get(assetId);
-        asset.createUpdate(address, dest_pk);
+        String assetId = Utils.convertKey(asset.getFileId());
+        asset.createUpdate(address, destPk);
         FileDetail fileDetail = asset.fileDetail; //TODO: is proofs packet hash required?
-        if (fileDetails.containsKey(cycleRoot)) { 
-            HashMap<String, TreeMap<String, FileDetail>> crtFileDetails = fileDetails.get(cycleRoot);
-            if (crtFileDetails.containsKey(address)) {
-                crtFileDetails.get(address).put(assetId, fileDetail);
-            } else {
-                crtFileDetails.put(address, new TreeMap<String, FileDetail>(){{put(assetId, fileDetail);}});
-            }
+        if (fileDetails.containsKey(address)) {
+            fileDetails.get(address).put(assetId, fileDetail);
         } else {
-            fileDetails.put(cycleRoot, new HashMap<String, TreeMap<String, FileDetail>>() {{put(address,
-                    new TreeMap<String, FileDetail>(){{put(assetId, fileDetail);}});}});
+            fileDetails.put(address, new TreeMap<String, FileDetail>(){{put(assetId, fileDetail);}});
         }
     }
 
     public void removeCycleRootData(ArrayList<String> cycleRoots) {
         for (String cycleRoot: cycleRoots) {
-            fileDetails.remove(cycleRoot); // TODO: should it remove the addresses too or set the value to null?
-            fileTries.remove(cycleRoot);
+            // TODO: should it remove the addresses too or set the value to null?
+            fileTrieCache.remove(cycleRoot);
         }
     }
-
-    private TreeMap<String, FileDetail> getFileDetailsForAddress(String cycleRoot, String address) {
-        HashMap<String, TreeMap<String, FileDetail>> crtFileDeitails = fileDetails.get(cycleRoot);
-        if (crtFileDeitails == null) {
-            return null;
-        }
-        TreeMap<String, FileDetail> t = crtFileDeitails.get(address); //get pairs of <file, fileDetials> for address
-        return t;
-    }
+    // TODO: implement function that detects the time when it is safe to remove the POPs data 
 
     private MerkleTrie.TrieNode getFileTrieForAddress(String cycleRoot, String address) {
         HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTries.get(cycleRoot);
@@ -86,10 +78,10 @@ public class Owner {
         return t;
     }
 
-    public ArrayList<Pair<String, String>> getFileDetailPairs(String cycleRoot, String address) {
+    public ArrayList<Pair<String, String>> getFileDetailPairs(String address) {
         ArrayList<Pair<String, String>> fileDetailPairs = new ArrayList<Pair<String, String>>();
 
-        TreeMap<String, FileDetail> t = getFileDetailsForAddress(cycleRoot, address); //get pairs of <file, fileDetials> for address
+        TreeMap<String, FileDetail> t = fileDetails.get(address); //get pairs of <file, fileDetials> for address
         if (t == null) {
             return fileDetailPairs;
         }
@@ -109,7 +101,7 @@ public class Owner {
     }
 
     public MerkleTrie.TrieNode createFileTrie(String cycleRoot, String address) {
-        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(cycleRoot, address));
+        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address));
         HashMap<String, MerkleTrie.TrieNode> crtFileTrie = fileTries.get(cycleRoot);
         if (crtFileTrie != null) {
             crtFileTrie.put(address, fileTrie);
@@ -124,7 +116,8 @@ public class Owner {
         MerkleTrie.TrieNode fileTrie = createFileTrie(cycleRoot, address);
         String signature = ""; // TODO: should this be user's signature, now that bsig is handled per file or null?
         TransactionPacket txpx = new TransactionPacket(cycleRoot, address, fileTrie.value, null, signature);
-        sendUpdate(address, Token.getHashOfString(txpx.toString()));
+        addressTxpx.put(address, txpx);
+        sendUpdate(address, Token.getTransactionPacket(txpx));
     }
 
     public MerkleProof getFileProof(String cycleRoot, String address, String assetId) {
@@ -157,14 +150,22 @@ public class Owner {
         return true;
     }
 
-    public void getPOPSliceForCycle(String address, String fileId, String cycleRoot) {
-        POPSlice popSlice = relay.getPOPSlice(address, cycleRoot);
-        popSlice.fileId = fileId;
-        popSlice.fileDetail = fileDetails.get(cycleRoot).get(fileId);
-        popSlice.fileProof = getFileProof(cycleRoot, address, fileId);
+    public TransactionPacket getTxpx(String txpx) {
+        return txpxs.get(txpx);
     }
 
-    public void getPOP(String address, String fileId) {
+    public void getPOPSliceForCycle(String address, String fileId, String cycleRoot) {
+        POPSlice popSlice = relay.getPOPSlice(address, cycleRoot);
+        popSlice.transactionPacket = getTxpx(popSlice.addressProof.leafHash);
+        popSlice.fileId = fileId;
+        popSlice.fileDetail = fileDetails.get(popSlice.transactionPacket.getCurrentCycleRoot()).get(fileId);
+        popSlice.fileProof = getFileProof(popSlice.transactionPacket.getCurrentCycleRoot(), address, fileId);
+    }
+
+    public void getPOP(String cycleRoot, String address, String fileId) {
+        ArrayList<POPSlice> pop = relay.getPOP(address, lastProovedCycle.get(fileId), cycleRoot);
+        // TODO: remove first POPs with null proof
+        
     }
 
     public boolean receiveAsset(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature, Token token) {

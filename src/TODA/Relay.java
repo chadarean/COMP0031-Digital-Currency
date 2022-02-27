@@ -62,13 +62,15 @@ public class Relay {
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
-    // public ArrayList<POPSlice> sendPOP(String address, String G_k, String G_n) {
-    //     ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
-    //     String G_t = G_n;
-    //     while (!G_t.equals(G_k)) {
-    //         POPSlice popSlice = getPOPSlice(address, G_t);
-    //         pop.add(popSlice);
-    //     }
-    //     return pop;
-    // }
+    public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) {
+        ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
+        int beginCycle = cycleId.get(G_k);
+        int endCycle = cycleId.get(G_n);
+        pop.add(getPOPSlice(address, G_k));
+        for (int i = beginCycle+1; i < endCycle; ++ i) {
+            pop.add(getPOPSlice(address, cycleHash.get(i)));
+        }
+        pop.add(getPOPSlice(address, G_n));
+        return pop;
+    }
 }

@@ -8,6 +8,7 @@ import src.TODA.MerkleTrie;
 public class POPSlice {
     public String fileId;
     public String cycleRoot;
+    public String txpxHash;
     public MerkleProof addressProof;
     public TransactionPacket transactionPacket; //TODO: 2check that transactionPacket.address is sender's address
     public MerkleProof fileProof;

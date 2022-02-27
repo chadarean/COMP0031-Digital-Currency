@@ -181,6 +181,8 @@ public class MerkleTrie {
         if (index < address.length()) {
             proof.null_proof = true;
         }
+        proof.setHash(node.value);
+        
         // if (proof.null_proof) {
         //     System.out.println("Null proof for address=" + address);
         // }

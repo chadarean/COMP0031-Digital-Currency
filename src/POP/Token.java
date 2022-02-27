@@ -13,18 +13,11 @@ public class Token {
 
     FileKernel fileKernel;
     public FileDetail fileDetail;
-    MerkleTrie fileTrie;
-    TransactionPacket transactionPacket;
-    MerkleTrie cycleTrie;
 
     // TODO: Signature
     public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature) {
-         
-        // TODO: Issued cycle root - will we get this from the DB?
         fileKernel = new FileKernel(cycleRoot, creatorAddress, null, null, null);
         fileDetail = new FileDetail(address, null, null);
-        transactionPacket = null;
-        
         // TODO: Add asset to DB
         return this;
     }
@@ -42,7 +35,7 @@ public class Token {
         return getHashOfString(fileDetail.getDestinationAddress() + fileDetail.getProofsPacketHash() + fileDetail.getMetadataHash());
     }
 
-    public String getTransactionPacket() {
+    public static String getTransactionPacket(TransactionPacket transactionPacket) {
          return getHashOfString(transactionPacket.getFileTrieRoot() 
             + transactionPacket.getCurrentCycleRoot() 
             + transactionPacket.getAddress() 
@@ -50,14 +43,8 @@ public class Token {
         );
     }
 
-    public MerkleTrie getFileTrie(String fileId, String fileDetail) {
-        // TODO: getFileTrie([key=file_id, value=file_detail]) // files can be retrieved from DB and kept in memory when building the trie)
-        return null;
-    }
-
     public void createUpdate(String address, String destinationAddress) {
         fileDetail.destinationAddress = destinationAddress;
-        // TODO: Create txpx
     }
 
     public static String getHashOfString(String concatenation) {
