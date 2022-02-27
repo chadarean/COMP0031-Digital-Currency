@@ -5,64 +5,70 @@ import java.util.*;
 
 public class Relay {
     public int NCycleTries = 0;
+    public int lastCachedCycleTrieId = 1;
+    public static final int cacheSize = 3600;
+    public ArrayList<Pair<String, String>> currentTransactions = new ArrayList<>();
+    public HashMap<String, Integer> cycleId = new HashMap<>();
+    public HashMap<Integer, String> cycleHash = new HashMap<>();
+    public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
+
     public void addUpdateFromUpstream(String address, String updateHash) {
         // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
     }
 
-    public void addUpdateFromDownstream(String updateHash) {
+    public void addUpdateFromDownstream(String address, String updateHash) {
+        currentTransactions.add(new Pair<String, String>(address, updateHash));
     }
 
     public void publishHash(String hash) {
         //TODO: publish hash on DLT
     }
 
-    public ArrayList<Pair<String, String>> getUpdatedUSOs() {
-        // calls selectAllTransactions(Connection conn, NCycleTries) for the transactions not included in any CT
+    public ArrayList<Pair<String, String>> getTransactionsForCycleId(int cycleRootId) {
+        // calls selectAllTransactions(Connection conn, NCycleTries) for the transactions included in CT with id cycleRootId
         return new ArrayList<Pair<String, String>>(); 
     }
 
-    public MerkleTrie.TrieNode createCycleTrie() {
-        ArrayList<Pair<String, String>> pairs = getUpdatedUSOs();
-        NCycleTries += 1;
-        return MerkleTrie.createMerkleTrie(pairs); //TODO: store in cache most recent cycle trie objects; check if memory problems occur
-    }
-
-    public static void main(String args[]) {
-        ArrayList<Pair<String, String>> pairs = new ArrayList<Pair<String, String>>(Arrays.asList(
-                    new Pair<String, String>("0000", "V"),
-                    new Pair<String, String>("0001", "W"),
-                    new Pair<String, String>("0010", "X"),
-                    new Pair<String, String>("0100", "Y"),
-                    new Pair<String, String>("0101", "Z")));
-        
-        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
-        System.out.println(root.value);
-        for (Pair<String, String> p: pairs) {
-            System.out.print("The value from trie for address " + p.key);
-            System.out.print(" is " + MerkleTrie.findValueForAddress(p.key, root));
-            System.out.println(" and the actual value is " + p.value);
+    public MerkleTrie.TrieNode constructCycleTrie(String cycleRoot) {
+        Integer cycleRootId = cycleId.get(cycleRoot);
+        if (cycleRootId == null) {
+            return null;
         }
+        MerkleTrie.TrieNode cachedRoot = cycleTrie.get(cycleRootId);
+        if (cachedRoot != null) {
+            return cachedRoot;
+        }
+        ArrayList<Pair<String, String>> pairs = getTransactionsForCycleId(cycleRootId);
+        return MerkleTrie.createMerkleTrie(pairs); 
     }
 
-    public ArrayList<Pair<String, String>> getPairsFromDB(String cycleId) {
-        // gets the transactions from cycle trie with cycleId
-        return null;
+    public MerkleTrie.TrieNode createCycleTrie() {
+        NCycleTries += 1;
+        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(currentTransactions); 
+        cycleId.put(root.value, NCycleTries);
+        cycleHash.put(NCycleTries, root.value);
+        cycleTrie.put(NCycleTries, root);
+        while (cycleTrie.size() >= cacheSize) {
+            cycleTrie.remove(lastCachedCycleTrieId);
+            lastCachedCycleTrieId += 1;
+        }
+        //TODO: check if memory problems occur due to cacheing
+        return root;
     }
 
-    public POPSlice computePOPSlice(String address, MerkleTrie.TrieNode root) {
+    public POPSlice getPOPSlice(String address, String cycleRoot) {
+        MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
-    public ArrayList<POPSlice> sendPOP(String address, String G_k, String G_n) {
-        ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
-        String G_t = G_n;
-        while (!G_t.equals(G_k)) {
-            ArrayList<Pair<String, String>> pairs = getPairsFromDB(G_t);
-            MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(pairs);
-            POPSlice popSlice = computePOPSlice(address, root);
-            pop.add(popSlice);
-        }
-        return pop;
-    }
+    // public ArrayList<POPSlice> sendPOP(String address, String G_k, String G_n) {
+    //     ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
+    //     String G_t = G_n;
+    //     while (!G_t.equals(G_k)) {
+    //         POPSlice popSlice = getPOPSlice(address, G_t);
+    //         pop.add(popSlice);
+    //     }
+    //     return pop;
+    // }
 }

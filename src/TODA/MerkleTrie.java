@@ -2,8 +2,6 @@ package src.TODA;
 
 import java.util.*;
 
-import javax.management.RuntimeErrorException;
-
 public class MerkleTrie {
     public final static int ADDRESS_SIZE = 256;
 
@@ -132,6 +130,10 @@ public class MerkleTrie {
     }
 
     public static MerkleProof getMerkleProof(String address, TrieNode node) {
+        if (node == null) {
+            return null;
+        }
+        
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch

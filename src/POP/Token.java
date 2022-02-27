@@ -56,6 +56,7 @@ public class Token {
     }
 
     public void createUpdate(String address, String destinationAddress) {
+        fileDetail.destinationAddress = destinationAddress;
         // TODO: Create txpx
     }
 
@@ -67,7 +68,7 @@ public class Token {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));
             String encoded = Base64.getEncoder().encodeToString(hash);
-            return encoded;
+            return encoded.substring(0, 32);
         } catch(NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
@@ -80,5 +81,4 @@ public class Token {
         }
         return nullHashStr.toString();
     }
-
 }

@@ -64,8 +64,10 @@ public class MerkleProof {
         for (Frame frame_i: frames) {
             int leftBranchPLen = Utils.ubyte(frame_i.leftBranchPrefixLength)+1;
             int rightBranchPLen = Utils.ubyte(frame_i.rightBranchPrefixLength)+1;
-            //System.out.println("left branch pref=" + Integer.toString(leftBranchPlen) + "an first is" +
+            //System.out.println("left branch pref len=" + Integer.toString(leftBranchPLen) + "an first is" +
             //Integer.toString(frame_i.leftBranchPrefix[0]));
+            //System.out.println("right branch pref len=" + Integer.toString(rightBranchPLen) + "an first is" +
+            //Integer.toString(frame_i.rightBranchPrefix[0]));
             String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, leftBranchPLen);
             String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, rightBranchPLen);
         
@@ -93,6 +95,8 @@ public class MerkleProof {
             } else {
                 int cmp = (expBranch == 0) ? address.substring(prefSize, prefSize + leftBranchPLen).compareTo(leftPrefStr)
                 : address.substring(prefSize, prefSize + rightBranchPLen).compareTo(rightPrefStr);
+
+                //System.out.println("cmp is " + Integer.toString(cmp) + " exp= " + Integer.toString(expBranch));
                 
                 if (!null_proof && cmp != 0) {
                     // the address doesn't match the prefix

@@ -1,5 +1,12 @@
 package tests;
 
+import src.TODA.*;
+
+import java.lang.reflect.Array;
+import java.util.*;
+
+import src.POP.*;
+
 public class RelayUserTest {
     public void test() {
         /** 
@@ -13,7 +20,7 @@ public class RelayUserTest {
          * create a set of senders and receivers, update the number of assets held by users and add/remove them from the sets accordingly
          * generate x simultaneous random transactions (a, b) by selecting a \in senders and b \in receivers
          * 
-         * Transaction workflow: 
+         * Transaction workflow1: 
          * 1. user creates a fileDetail for each transaction
          * 2. user creates the fileTrie
          * 3. user blinds the fileTrie root and requests s(b(F0), I_d) from integrity (not tested here)
@@ -23,7 +30,41 @@ public class RelayUserTest {
          * 6. sender sends POP to receiver
          * 7. receiver verifies POP (not properly tested here)
          * 
+         * Transaction workflow2:
+         * 1. user requests signature on the blinded file identifier
+         * 2. user creates the fileDetail representing an asset transfer
+         * 3. user sends the file_identifier and the update to the relay
+         * 4. the user gets the POP for the file_identifier from the relay
+         * 5. the user sends the signature on the file_identifier, and the POP to receiver to verify 
+         * 6. receiver verifies that the signature matches S(file_identifer, I_d) and that the POP is valid
+         * 
          * */
-        
+    }
+
+    public void testSingleTransaction() {
+        ArrayList<String> cycleRoots = new ArrayList<>((List<String>)Arrays.asList({"C_0", "C_1", "C_2", "C_3", "C_4"}));
+        Owner a = new Owner("userA");
+        String addressA = "01010101010101011";
+        int d = 2;
+        Token asset = a.createAsset(addressA, d); 
+        // blind token.getFileId() and request signature for blinded version
+        // unblind signature 
+        String signature = "asdfghjkl";
+        String destPk = "00000110101010101";
+        a.transferAsset(cycleRoots.get(1), addressA, assetId, destPk);
+        a.sendUpdates(cycleRoots.get(1), address);
+        ArrayList<POPSlice> popSlices1 = relay.sendPOP(addressA, cycleRoots.get(2), cycleRoots.get(2));
+        ArrayList<POPSlice> popSlices2 = relay.sendPOP(addressA, cycleRoots.get(2), cycleRoots.get(4));
+        ArrayList<POPSlice> popSlices3 = relay.sendPOP(addressA, cycleRoots.get(0), cycleRoots.get(1));
+        Owner b = new Owner("userB");
+        if (!b.verifyPOP(popSlices1, addressA, destPk, signature)) {
+            throw new RuntimeException("Valid POP is not correctly verified!");
+        }
+        if (!b.verifyPOP(popSlices2, addressA, destPk, signature)) {
+            throw new RuntimeException("Valid POP is not correctly verified!");
+        }
+        if (b.verifyPOP(popSlices3, addressA, destPk, signature)) {
+            throw new RuntimeException("Invalid POP is considered valid!");
+        }
     }
 }

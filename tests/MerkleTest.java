@@ -48,8 +48,6 @@ public class MerkleTest {
             //System.out.println(proof.verify(p.key, p.value));
             //System.out.println(p.key + " has value=" + p.value + " and trie value=" + trieValue);
         }
-
-
     }
 
     public static void MerkleTreeTests() {
@@ -132,7 +130,7 @@ public class MerkleTest {
     }
 
     public static void main(String args[]) {
-        //MerkleTreeTests();
+        MerkleTreeTests();
         for (int j = 1; j < 10; ++ j)
         for (int i = 2; i < 20; i += 2) {
             randomTest(i);
