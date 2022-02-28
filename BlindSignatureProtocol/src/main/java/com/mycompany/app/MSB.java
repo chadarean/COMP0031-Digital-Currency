@@ -2,8 +2,13 @@ package com.mycompany.app;
 
 import java.sql.*;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.CipherParameters;
+
+
 public class MSB {
 
+    // This class would contain not only MSB class but also issuer class.
 
     // TODO:
     /*
@@ -13,6 +18,31 @@ public class MSB {
 
     redeemAsset(user_id, asset=F, POP_list) = forwards vefication to TODA API and possibly the ledger; on success updates the balance of user_id
     */
+
+    static CipherParameters public_key;
+    static CipherParameters private_key;
+
+    
+    // This public key generate here could send to Alice wallet, which could be used to blind the message.
+    // Public key could also send to Bob to verify the tokens
+    // Private key generate here could sign for blanded message
+    public static void generate_keypairs(int keySize){
+        AsymmetricCipherKeyPair wallet_keyPair = BlindSignature.generateKeys(keySize);
+        public_key = wallet_keyPair.getPublic();
+        private_key = wallet_keyPair.getPrivate();
+    }
+
+    public static byte[] signBlinded(byte[] msg) {
+        // This could be used by MSBs to sign the Alice blinded message
+        return BlindSignature.signBlinded(private_key,msg);
+    }
+
+    public static CipherParameters share_publickey(){
+        // Call this function to share publickey to Alice or Bob
+        return public_key;
+    }
+
+
 
     // returns true if user_id has at least amount tokens, false otherwise
     public boolean verifyBalance(Connection conn, String user_id, double amount) {
