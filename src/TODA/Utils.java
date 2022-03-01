@@ -4,6 +4,13 @@ import java.util.*;
 import src.POP.*;
 
 public class Utils {
+    public static int ubyte(byte b) {
+        if (b < 0) {
+            return (int)b + 256;
+        }
+        return b;
+    }
+
     public static void appendBits(StringBuilder res, int value, int n) {
         for (int j = 0; j < n; ++ j) {
             if ((value & (1<<j)) == 0) {
@@ -21,14 +28,14 @@ public class Utils {
         }
         StringBuilder res = new StringBuilder();
         for (int i = 0; i < fullLength; ++ i) {
-            int value = arr[i];
-            appendBits(res, arr[i], 8);
+            appendBits(res, ubyte(arr[i]), 8);
         }
-        appendBits(res, arr[arr.length-1], arrLengthBits%8);
+        appendBits(res, ubyte(arr[arr.length-1]), arrLengthBits%8);
         return res.toString();
     }
 
     public static byte[] prefixToBytes(String prefix) {
+        //TODO: double check that negative values are correctly computed
         byte[] res = new byte[(prefix.length()-1)/8 + 1];
         int num_bytes = (prefix.length()-1)/8 + 1;
         int idx = 0;
@@ -40,6 +47,14 @@ public class Utils {
             }
         }
         return res;
+    }
+
+    public static String convertKey(String s) {
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < s.length(); ++ i) {
+            appendBits(res, s.charAt(i), 8);
+        }
+        return res.toString();
     }
 
     public static String getHash(String value) {

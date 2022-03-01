@@ -3,6 +3,8 @@ package src.TODA;
 import java.util.*;
 
 public class MerkleProof {
+    public String leafHash;
+
     public class Frame {
         public String leftBranchHash;
         public byte leftBranchPrefixLength;
@@ -46,6 +48,10 @@ public class MerkleProof {
         null_proof = false;
     }
 
+    public void setHash(String leafHash) {
+        this.leafHash = leafHash;
+    }
+    
     public void addFrame(String leftBranchHash, byte leftBranchPrefixLength, byte[] leftBranchPrefix, String rightBranchHash, byte rightBranchPrefixLength, 
     byte[] rightBranchPrefix, String constructionDataHash) {
         this.frames.add(new Frame(leftBranchHash, leftBranchPrefixLength, leftBranchPrefix,
@@ -60,69 +66,75 @@ public class MerkleProof {
         // will be set to the branch of the immediately next address (or previous in the case of the largest address)
         boolean exceeded_lcp = false;
         //System.out.println("Nf = " + Integer.toString(frames.size()));
-        System.out.println("Proof for " + address);
+        //System.out.println("Proof for " + address);
         for (Frame frame_i: frames) {
-            System.out.println("left branch pref=" + Integer.toString((int)frame_i.leftBranchPrefixLength) + "an first is" +
-            Integer.toString((int)frame_i.leftBranchPrefix[0]));
-            String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, frame_i.leftBranchPrefixLength+1);
-            String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, frame_i.rightBranchPrefixLength+1);
+            int leftBranchPLen = Utils.ubyte(frame_i.leftBranchPrefixLength)+1;
+            int rightBranchPLen = Utils.ubyte(frame_i.rightBranchPrefixLength)+1;
+            //System.out.println("left branch pref len=" + Integer.toString(leftBranchPLen) + "an first is" +
+            //Integer.toString(frame_i.leftBranchPrefix[0]));
+            //System.out.println("right branch pref len=" + Integer.toString(rightBranchPLen) + "an first is" +
+            //Integer.toString(frame_i.rightBranchPrefix[0]));
+            String leftPrefStr = Utils.getStringFromByte(frame_i.leftBranchPrefix, leftBranchPLen);
+            String rightPrefStr = Utils.getStringFromByte(frame_i.rightBranchPrefix, rightBranchPLen);
         
-            String expectedHash = Utils.getHash(leftPrefStr +
-                    frame_i.leftBranchHash +
-                    rightPrefStr +
-                    frame_i.rightBranchHash);
-            System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
+            String expectedHash = Utils.getHash(leftPrefStr + frame_i.leftBranchHash +
+                    rightPrefStr + frame_i.rightBranchHash);
+            //System.out.println(frame_i.rightBranchHash + ";;" + frame_i.leftBranchHash + ";;");
+            //System.out.println("expected hash=" + expectedHash + "actual = " + prevHash + " pref_sz=" + Integer.toString(prefSize));
             int expBranch = address.charAt(prefSize) - 48;
-            if (expBranch == 0)
-            System.out.println("Next preflen= " + Integer.toString((int)frame_i.leftBranchPrefixLength + 1));
-            else
-            System.out.println("Next preflen= " + Integer.toString((int)frame_i.rightBranchPrefixLength + 1));
+            // if (expBranch == 0)
+            // System.out.println("Next preflen= " + Integer.toString(leftBranchPLen));
+            // else
+            // System.out.println("Next preflen= " + Integer.toString(rightBranchPLen));
             if (!expectedHash.equals(prevHash)) {
                 return false;
             }
             
             if (null_proof && chosen_branch != -1) {
                 if (chosen_branch == 0) {
-                    prefSize += (int)frame_i.leftBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += leftBranchPLen; 
                     prevHash = frame_i.leftBranchHash;
                 } else {
-                    prefSize += (int)frame_i.rightBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += rightBranchPLen; 
                     prevHash = frame_i.rightBranchHash;
                 }
             } else {
-                int cmp = (expBranch == 0) ? address.substring(prefSize, prefSize + (int)frame_i.leftBranchPrefixLength + 1).compareTo(leftPrefStr)
-                : address.substring(prefSize, prefSize + (int)frame_i.rightBranchPrefixLength + 1).compareTo(rightPrefStr);
+                int cmp = (expBranch == 0) ? address.substring(prefSize, prefSize + leftBranchPLen).compareTo(leftPrefStr)
+                : address.substring(prefSize, prefSize + rightBranchPLen).compareTo(rightPrefStr);
+
+                //System.out.println("cmp is " + Integer.toString(cmp) + " exp= " + Integer.toString(expBranch));
                 
                 if (!null_proof && cmp != 0) {
                     // the address doesn't match the prefix
                     return false;
                 }
-                // 0, 1
                 if (null_proof) {
-                    if (cmp < 0) {
+                    //System.out.println("NULL proof" + Integer.toString(cmp) + " " + Integer.toString(expBranch));
+                    if (cmp < 0 || (cmp == 0 && (frame_i.leftBranchHash == null || frame_i.leftBranchHash.equals(Utils.getHash(null))) && expBranch == 0)) {
                         chosen_branch = 0;
-                        System.out.println("choose b 0");
+                        //System.out.println("choose b 0");
                         // stay on branch and choose only 0;
-                    } else if (cmp > 0 || (cmp == 0 && frame_i.rightBranchHash == null && expBranch == 1)) {
+                    } else if (cmp > 0 || (cmp == 0 && (frame_i.rightBranchHash == null || frame_i.rightBranchHash.equals(Utils.getHash(null))) && expBranch == 1)) {
                         chosen_branch = expBranch; 
                         expBranch = 1;
-                        System.out.println("choose b 1");
+                       //System.out.println("choose b 1");
                     } // for cmp == 0, chosen_branch remains -1 until address diverges from prefix
                 }
                 if (expBranch == 0) {
-                    prefSize += (int)frame_i.leftBranchPrefixLength + 1; //TODO:check conversion
+                    prefSize += leftBranchPLen; 
                     prevHash = frame_i.leftBranchHash;
                 } else { 
-                    prefSize += (int)frame_i.rightBranchPrefixLength + 1;
+                    prefSize += rightBranchPLen;
                     prevHash = frame_i.rightBranchHash;
                 } 
             }
         }
+        //System.out.println(prefSize);
         if (null_proof && chosen_branch == -1) {
             return false;
         }
         if (!null_proof && (prefSize != address.length() || !(prevHash.equals(leafHash)))) {
-            System.out.println("pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
+            //System.out.println("pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
             return false;
         }
         return true;

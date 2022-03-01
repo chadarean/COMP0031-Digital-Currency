@@ -2,15 +2,31 @@ package src.TODA;
 
 import java.util.*;
 
-import javax.management.RuntimeErrorException;
-
 public class MerkleTrie {
-    final static int ADDRESS_SIZE = 256;
+    public final static int ADDRESS_SIZE = 256;
+
+    public static class StackNode {
+        int pLcp;
+        TrieNode tNode;
+        String addr;
+        int prefLen;
+        public StackNode(int pLcp, TrieNode tNode, String addr, int prefLen) {
+            this.pLcp = pLcp;
+            this.tNode = tNode;
+            this.addr = addr;
+            this.prefLen = prefLen;
+        } 
+    }
 
     public static class TrieNode {
         TrieNode branch[] = new TrieNode[2];
         String prefix; // the branch prefix from its parent to the node, empty string for root
-        String value;
+        public String value;
+        public TrieNode(TrieNode branch0, TrieNode branch1, String value) {
+            this.branch[0] = branch0;
+            this.branch[1] = branch1;
+            this.value = value;
+        }
     }
 
     private static int getLCP(String a, String b) {
@@ -23,18 +39,17 @@ public class MerkleTrie {
         return max_lcp;
     }
 
-    public static TrieNode mergeNodes(Pair<TrieNode, Pair<String, Integer>> data0, Pair<TrieNode, Pair<String, Integer>> data1, int lcp) {
-        System.out.println("Merging " + data0.value.key + " with " + data1.value.key);
-        System.out.println("lcp=" + Integer.toString(lcp) + "and l1=" + Integer.toString(data0.value.value) + " l2=" +Integer.toString(data1.value.value)
-        );
+    public static TrieNode mergeNodes(StackNode lnode, StackNode rnode) {
+        int lcp = rnode.pLcp;
+        //System.out.println("Merging " + lnode.addr + " with " + rnode.addr);
+        //System.out.println("lcp=" + Integer.toString(lcp) + "and l1=" + Integer.toString(lnode.prefLen) + " l2=" +Integer.toString(rnode.prefLen));
         
-        TrieNode par = new TrieNode();
-        par.branch[0] = data0.key;
-        par.branch[1] = data1.key;
-        par.branch[0].prefix = data0.value.key.substring(lcp, data0.value.value);
-        par.branch[1].prefix = data1.value.key.substring(lcp, data1.value.value);
-        par.value = Utils.getHash(data0.value.key.substring(lcp, data0.value.value) + data0.key.value + data1.value.key.substring(lcp, data1.value.value) + data1.key.value);
-        System.out.println("val = " + par.value);
+        String parValue = Utils.getHash(lnode.addr.substring(lcp, lnode.prefLen) + lnode.tNode.value + 
+        rnode.addr.substring(lcp, rnode.prefLen) + rnode.tNode.value);
+        TrieNode par = new TrieNode(lnode.tNode, rnode.tNode, parValue);
+        par.branch[0].prefix = lnode.addr.substring(lcp, lnode.prefLen);
+        par.branch[1].prefix = rnode.addr.substring(lcp, rnode.prefLen);
+        //System.out.println("val = " + par.value);
         return par;
     }
 
@@ -49,61 +64,62 @@ public class MerkleTrie {
         5. Finally, calculate H(File,Value)
          */
 
-        // TODO: forced branch at bit 1 at end of creating trie by embeding NULL in non-existing branch of root
+        /*
+        pseudocode: 1. create initail stack2 with nodes = StackNode{lcp(prev_node, crt_node), node, data_i.key(), data_i.key().length}
+        // TODO: what lcp to add for first node
+        stack1 = first pair {0, 1}
+        2. while (stack1 != empty || stack2 != empty) 
+             while (!stack2.empty() && stack1.peek().lcp < stack2.peek()) {
+               stack1.push(stack2.pop());
+             }
+             if (!stack1.empty()) // is this necessary
+             merge the 2 nodes of top of stack1 and remove top value
+             update lcp at stack2
+        */
+
         int npairs = data.size();
-        if (npairs == 1) {
+        if (npairs == 0) {
+            return null;
+        }
+        
+        System.out.println(npairs);
+        if (npairs == 1 || (data.get(0).key.charAt(0) == data.get(npairs-1).key.charAt(0))) {
             int chr = 49 - data.get(0).key.charAt(0);
-            data.add(new Pair(Integer.toString(chr), null));
+            data.add(chr*npairs, new Pair(Integer.toString(chr), Utils.getHash(null))); // TODO: the paper adds address of length=1, prove that it's correct
             ++ npairs;
         }
 
-        Stack<Pair<TrieNode, Pair<String, Integer>>> nodes = new Stack();
-        // create leaves
-        for (int i = npairs-1; i >= 0; -- i) {
-            TrieNode node = new TrieNode();
+        Stack<StackNode> stack1 = new Stack();
+
+        // create first 2 leaves and add them to stack1
+        for (int i = 0; i < 2; ++ i) {
+            TrieNode node = new TrieNode(null, null, data.get(i).value);
             node.branch[0] = null;
             node.branch[1] = null;
-            node.value = data.get(i).value;
-            nodes.push(new Pair(node, new Pair(data.get(i).key, data.get(i).key.length())));
+            node.value = data.get(i).value; // the node value is the value associated with the i-th key
+            Pair<String, String> data_i = data.get(i);
+            int pLcp = (i > 0) ? getLCP(data_i.key, data.get(i-1).key) : 0;
+            stack1.push(new StackNode(pLcp, node, data_i.key, data_i.key.length()));
         }
-        TrieNode root = new TrieNode();
-        int prev_lcp = getLCP(data.get(0).key, data.get(1).key);
-        for (int i = 0; i < npairs - 1; ++ i) {
-            Pair<TrieNode, Pair<String, Integer>> data0 = nodes.pop();
-            Pair<TrieNode, Pair<String, Integer>> data1 = nodes.pop();
-            if (i == npairs - 2) {
-                if (prev_lcp == 0) {
-                    root = mergeNodes(data0, data1, prev_lcp);
-                } else {
-                    TrieNode[] root_son = new TrieNode[2];
-                    String s0, s1;
-                    if (data0.value.key.charAt(0) == '0') {
-                        s0 = data0.value.key;
-                        s1 = new String("1");
-                    } else {
-                        s1 = data0.value.key;
-                        s0 = new String("0");
-                    }
-                    root_son[data0.value.key.charAt(0)-'0'] = mergeNodes(data0, data1, prev_lcp);
-                    root_son['1'-data0.value.key.charAt(0)] = new TrieNode(); // check if valid null encoding wrt TODA
-                    root = mergeNodes(new Pair(root_son[0], new Pair(s0, 1)), new Pair(root_son[1], new Pair(s1, 1)), 0);
-                }
-                break;
+
+        int stack2Top = 2;
+        int stack2TopLcp = (stack2Top < npairs) ? getLCP(data.get(stack2Top).key, data.get(1).key) : 0;
+        while (stack2Top < npairs || stack1.size() > 1) {
+            //System.out.println("Stack2top = " + Integer.toString(stack2Top) + "lcp2top = " + Integer.toString(stack2TopLcp));
+            while (stack2Top < npairs && (stack1.size() <= 1 || stack1.peek().pLcp <= stack2TopLcp)) {
+                Pair<String, String> stack2TopData = data.get(stack2Top);
+                stack1.push(new StackNode(stack2TopLcp, new TrieNode(null, null, stack2TopData.value), stack2TopData.key, stack2TopData.key.length()));
+                ++ stack2Top;
+                stack2TopLcp = (stack2Top < npairs) ? getLCP(stack2TopData.key, data.get(stack2Top).key) : 0;
             }
-            Pair<TrieNode, Pair<String, Integer>> data2 = nodes.peek();
-            int next_lcp = getLCP(data1.value.key, data2.value.key);
-            if (prev_lcp > next_lcp) {
-                // update element at position i+1 to be i
-                nodes.push(new Pair(mergeNodes(data0, data1, prev_lcp), new Pair(data0.value.key, prev_lcp)));
-                // new value for prev_lcp = lcp(0, 2) = min(lcp(0, 1), lcp(1, 2)) = lcp(1, 2);
-                prev_lcp = next_lcp;
-            } else {
-                nodes.pop();
-                nodes.push(new Pair(mergeNodes(data1, data2, next_lcp), new Pair(data1.value.key, next_lcp)));
-                nodes.push(data0);
-            }
+            StackNode rnode = stack1.pop();
+            StackNode lnode = stack1.pop();
+            // merge the 2 nodes at the top of stack1
+            stack1.add(new StackNode(lnode.pLcp, mergeNodes(lnode, rnode), lnode.addr, rnode.pLcp)); 
+            //stack2TopLcp doesn't change because of the inequality constraint
         }
-        return root;
+
+        return stack1.peek().tNode;
     }
 
     public static String findValueForAddress(String address, TrieNode node) {
@@ -119,11 +135,13 @@ public class MerkleTrie {
     }
 
     public static MerkleProof getMerkleProof(String address, TrieNode node) {
+        if (node == null) {
+            return null;
+        }
+        
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch
-
-        //TODO: implement null proofs
         MerkleProof proof = new MerkleProof();
         String dataHash = node.value;
         int num_f = 0;
@@ -168,6 +186,8 @@ public class MerkleTrie {
         if (index < address.length()) {
             proof.null_proof = true;
         }
+        proof.setHash(node.value);
+        
         // if (proof.null_proof) {
         //     System.out.println("Null proof for address=" + address);
         // }
