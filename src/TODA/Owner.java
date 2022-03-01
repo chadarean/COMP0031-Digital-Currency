@@ -195,6 +195,7 @@ public class Owner {
         // TODO: check that the s(popSlice[numPOPSlices-1].fileId, I_d) == signature
         int numPOPSlices = popSlices.size();
         if (!popSlices.get(numPOPSlices-1).fileDetail.getDestinationAddress().equals(destinationAddress)) {
+            System.out.println("Destination address not matching!");
             return false;
         }
         // if (popSlices.get(0).fileProof == null || popSlices.get(0).fileProof.null_proof) {
@@ -205,11 +206,13 @@ public class Owner {
         for (int i = 0; i < numPOPSlices; ++ i) {
             POPSlice popSlice = popSlices.get(i);
             if (!popSlice.verify(address)) {
+                System.out.println("incorrect POP" + Integer.toString(i));
                 return false;
             }
             if (i != 0 && i != (numPOPSlices - 1)) {
                 if (popSlice.fileProof != null && !popSlice.fileProof.null_proof) {
                     // the owner must prove that they did not transact the asset=>POPSlice must be a null proof 
+                    System.out.println("non-null POP");
                     return false;
                 }
             }
