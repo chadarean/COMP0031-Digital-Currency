@@ -13,10 +13,10 @@ public class Relay {
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
 
     public void addUpdateFromUpstream(String address, String updateHash) {
-        // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) {
+        // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
         currentTransactions.add(new Pair<String, String>(address, updateHash));
     }
 
@@ -46,13 +46,19 @@ public class Relay {
         NCycleTries += 1;
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(currentTransactions); 
         cycleId.put(root.value, NCycleTries);
-        cycleHash.put(NCycleTries, root.value);
+        cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
         while (cycleTrie.size() >= cacheSize) {
             cycleTrie.remove(lastCachedCycleTrieId);
             lastCachedCycleTrieId += 1;
         }
         //TODO: check if memory problems occur due to cacheing
+        // TODO: after deciding how/when relay creates the cycle trie, separate into different function
+        for (Pair<String, String> transaction : currentTransactions) {
+            POPSlice crtPopSlice = getPOPSlice(transaction.key, root.value);
+            crtPopSlice.setUpdateHash(transaction.value);
+        }
+        currentTransactions.clear();
         return root;
     }
 
@@ -70,7 +76,7 @@ public class Relay {
         for (int i = beginCycle+1; i < endCycle; ++ i) {
             pop.add(getPOPSlice(address, cycleHash.get(i)));
         }
-        pop.add(getPOPSlice(address, G_n));
+        // pop.add(getPOPSlice(address, G_n)); it's assumed that the user has the POPSlice for the last cycle
         return pop;
     }
 }

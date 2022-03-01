@@ -34,6 +34,9 @@ public class MerkleTest {
             }
            
             MerkleProof proof = MerkleTrie.getMerkleProof(p.key, root);
+            if (!proof.leafHash.equals(p.value)) {
+                throw new RuntimeException("Incorrect Leaf hash!");
+            }
             if (!proof.verify(p.key, p.value)) {
                 throw new RuntimeException("Incorrect Merkle proof!");
             }

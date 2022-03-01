@@ -9,32 +9,63 @@ import src.POP.*;
 
 public class OwnerTest {
     public static void testOwner(int numTokens) {
-        String C_1 = "C1"; // creation cycle hash
-        String C_2 = "C2"; // update cycle hash
+        ArrayList<String> C_ = new ArrayList<>();
         String aId = "user1";
         String[] addressA = {"00000001", "00000010"};
         String addressB = "10000000";
         Owner a = new Owner(aId);
         ArrayList<Token> tokens = new ArrayList<>();
 
+        a.relay.addUpdateFromDownstream(addressB, Utils.getHash("randomString"));
+        MerkleTrie.TrieNode initialCycle = a.relay.createCycleTrie();
+        C_.add(initialCycle.value); // creation cycle hash
+        System.out.println("init cycle " + C_.get(0));
+        System.out.println(a.relay.cycleId.get(C_.get(0)));
+
         for (int i = 0; i < numTokens; ++ i) {
-            Token asset = a.createAsset(addressA[i%2], i+1);
+            Token asset = a.createAsset(C_.get(0), addressA[i%2], i+1, "");
             tokens.add(asset);
             //System.out.println("Initial file detail " + "for i=" + Integer.toString(i) + " = " + asset.getFileDetail());
-            a.transferAsset(C_2, addressA[i%2], Utils.convertKey(asset.getFileId()), addressB);
+            if (i % 2 == 0) {
+                a.transferAsset(C_.get(0), addressA[i%2], asset, addressB);
+            }
         }
-        a.sendUpdates(C_2, addressA[0]);
-        //a.sendUpdates(C_2, addressA[1]);
+        a.sendUpdates(C_.get(0), addressA[0]);
+        MerkleTrie.TrieNode cycleRootNode1 = a.relay.createCycleTrie();
+        C_.add(cycleRootNode1.value); // update cycle hash
+        POPSlice popSlice1 = a.relay.getPOPSlice(addressA[0], C_.get(1));
+        a.receivePOP(addressA[0], popSlice1);
+        for (int i = 0; i < numTokens; i += 2) {
+            a.getPOP(C_.get(1), addressA[0], tokens.get(i));
+        }
+        for (int i = 1; i < numTokens; i += 2) {
+            a.transferAsset(C_.get(1), addressA[1], tokens.get(i), addressB);
+        }
+
+        a.sendUpdates(C_.get(1), addressA[1]);
+        MerkleTrie.TrieNode cycleRootNode2 = a.relay.createCycleTrie();
+        C_.add(cycleRootNode2.value);
+        POPSlice popSlice2 = a.relay.getPOPSlice(addressA[1], C_.get(2));
+        a.receivePOP(addressA[1], popSlice2);
+        
+
         int addressId = 0;
         for (Token asset : tokens) {
-            MerkleProof proof = a.getFileProof(C_2, addressA[addressId], Utils.convertKey(asset.getFileId()));
+            a.getPOP(C_.get(1+addressId), addressA[addressId], asset);
+            MerkleProof proof = a.getFileProof(C_.get(1), addressA[addressId], Utils.convertKey(asset.getFileId()));
             String fileDetailHash = asset.getFileDetail();
             System.out.println(fileDetailHash);
             if (addressId == 0 && !proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
                 throw new RuntimeException("Incorrect proof created!");
             }
-            if (addressId == 1 && proof != null && proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
-                throw new RuntimeException("Incorrect proof should not be valid!");
+            if (addressId == 1) {
+                if (proof != null && proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
+                    throw new RuntimeException("Incorrect proof should not be valid!");
+                }
+                // proof = a.getFileProof(C_.get(2),  addressA[addressId], Utils.convertKey(asset.getFileId()));
+                // if (!proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
+                //     throw new RuntimeException("Incorrect proof created!");
+                // }
             }
             addressId = 1-addressId;
         }
@@ -42,7 +73,7 @@ public class OwnerTest {
 
     // public static void testMultipleTransactions(int n) {
     //     String C_1 = "C1"; // creation cycle hash
-    //     String C_2 = "C2"; // update cycle hash
+    //     String C_.get(1) = "C2"; // update cycle hash
     //     ArrayList <Owner> users = new ArrayList<>();
     //     for (int i = 0; i < n; ++ i) {
     //         String id = "user" + Integer.toString(i);
@@ -57,10 +88,10 @@ public class OwnerTest {
     //     Owner a = new Owner(aId);
     //     Token asset1 = a.createAsset(addressA1, 1);
 
-    //     a.transferAsset(C_2, addressA1, Utils.convertKey(asset1.getFileId()), addressB);
-    //     a.sendUpdates(C_2, addressA1);
+    //     a.transferAsset(C_.get(1), addressA1, Utils.convertKey(asset1.getFileId()), addressB);
+    //     a.sendUpdates(C_.get(1), addressA1);
     //     // System.out.println("Asset update is " + asset1.getFileDetail());
-    //     MerkleProof proof = a.getFileProof(C_2, addressA1, Utils.convertKey(asset1.getFileId()));
+    //     MerkleProof proof = a.getFileProof(C_.get(1), addressA1, Utils.convertKey(asset1.getFileId()));
     //     String fileDetailHash = asset1.getFileDetail();
     //     if (!proof.verify(Utils.convertKey(asset1.getFileId()), fileDetailHash)) {
     //         throw new RuntimeException("Incorrect proof created!");

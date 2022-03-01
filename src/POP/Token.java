@@ -15,8 +15,8 @@ public class Token {
     public FileDetail fileDetail;
 
     // TODO: Signature
-    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature) {
-        fileKernel = new FileKernel(cycleRoot, creatorAddress, null, null, null);
+    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature, int d) {
+        fileKernel = new FileKernel(cycleRoot, creatorAddress, null, getHashOfString(Integer.toString(d)), null);
         fileDetail = new FileDetail(address, null, null);
         // TODO: Add asset to DB
         return this;
@@ -29,6 +29,10 @@ public class Token {
             + fileKernel.getPayloadHash() 
             + fileKernel.getEncumbranceHash()
         );
+    }
+
+    public String getIssuedCycleRoot() {
+        return fileKernel.issuedCycleRoot;
     }
 
     public String getFileDetail() {

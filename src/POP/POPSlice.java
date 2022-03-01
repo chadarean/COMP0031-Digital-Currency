@@ -22,6 +22,10 @@ public class POPSlice {
         this.fileDetail = fileDetail; // file detail whose hash is equal to f
     }
 
+    public void setUpdateHash(String txpxHash) {
+        this.txpxHash = txpxHash;
+    }
+
     public boolean verify(String address) {
         // Note: It should be safe to only check the signature on the owner side, as the slice validity should not depend on the sender
         if (transactionPacket.address != address) {

@@ -1,3 +1,11 @@
+/** Simplifying assumptions:
+ * 1. a user will not send mixed updates for assets under the same address
+ * 2. the user will receive the POPSlice prooving that the update was included right after the relay constructs the trie 
+ * (if this is not the case, the user could later find the cycle root of the updated by checking a small set of cycle hashes
+ * published in the expected time interval) 
+ * 3. using 2, the user will have the first cycle root required for the POP for each asset
+*/
+
 package src.TODA;
 
 import java.util.*;
@@ -7,50 +15,65 @@ public class Owner {
     // Note: the user balance can either be stored on user side or in an MSB database. The former is more public, but
     // the latter could be more robust against technical failure of user application.
     public String userId;
-    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTries;
-    // fileTries[cycleRoot][address] = fileTrie object with files under address at current cycle root = cycleRoot
-    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTrieCache; // assoctiates addresses with file trie objects for each cycle_root
-    // fileTrieCache[cycleRoot][address] = fileTrie object with files under address in cycleRoot
+    public HashMap<String, MerkleTrie.TrieNode> crtFileTrie;
+    // crtFileTrie[address] = fileTrie object created for the current update of address
+    public HashMap<String, HashMap<String, MerkleTrie.TrieNode>> fileTrieCache; // assoctiates addresses with file trie objects for each cycle root
+    // fileTrieCache[cycleRoot][address] = fileTrie object with files under address in trie with root = cycleRoot
     public HashMap<String, TreeMap<String, FileDetail>> fileDetails; // stores pairs of <file_id, file_detail> sorted by file_id 
     // for each address: fileDetails[address] = sorted set of <file_id, file_detail>
     // Note that a file can have a single valid file detail at a given cycle
-    public HashMap<String, Token> assets; // assets[address]
-    public HashMap<String, POPSlice> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
-    public HashMap<String, String> lastProovedCycle; // lastProovedCycle[assetId] = the latest cycle for which there is non-null proof for assetId
+    public HashMap<String, ArrayList<Token>> assets; // assets[address]
+    public HashMap<String, HashMap<String, POPSlice>> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
+    public HashMap<String, String> updateToCycleRoot; // updateToCycleRoot[address] = the cycle root hash where the update for address was made
     public Relay relay; 
-    public HashMap<String, FileDetail> oldFileDetails;
+    //public HashMap<String, FileDetail> oldFileDetails;
     public HashMap<String, TransactionPacket> txpxs; // assume address has only one update 
 
     public Owner(String userId) {
         this.userId = userId;
-        this.fileTries = new HashMap<>();
+        this.crtFileTrie = new HashMap<>();
         fileTrieCache = new HashMap<>();
         fileDetails = new HashMap<>();
         assets = new HashMap<>();
         relay = new Relay();
+        txpxs = new HashMap<>();
+        addressToPOPSlice = new HashMap<>();
+        updateToCycleRoot = new HashMap<>();
+    }
+
+    public void addAsset(String address, Token asset) {
+        ArrayList<Token> addressAssets = assets.get(address);
+        if (addressAssets == null) {
+            assets.put(address, new ArrayList<>(){{add(asset);}});
+        } else {
+            addressAssets.add(asset);
+        }
     }
 
     public Token createAsset(String address, int d) {
-        String cycleRoot = ""; // TODO: getCurrentCycleRoot() from Relay DB? via MSB?
+        String cycleRoot = ""; // TODO: getCurrentCycleRoot() from Relay DB? via MSB? 
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
+        //TODO: should cycleRoot and signature be obtained by the wallet?
         Token token = new Token();
-        token.createAsset(cycleRoot, address, address, signature);
+        token.createAsset(cycleRoot, address, address, signature, d);
         //String fileIdAddress = Utils.convertKey(token.getFileId());
-        assets.put(address, token);
-        lastProovedCycle.put(Utils.convertKey(token.getFileId()), cycleRoot);
+        addAsset(address, token);
+        // TODO: get signature for asset
         // TODO: should we add the token to a DB
         return token;
     }
 
-    public void sendUpdate(String address, String txpxHash) {
-        relay.addUpdateFromDownstream(address, txpxHash);
-        // sends request to Relay
-        // TODO: the relay could send back the POP after creating the trie
-    } 
+    public Token createAsset(String cycleRoot, String address, int d, String signature) {
+        Token token = new Token();
+        token.createAsset(cycleRoot, address, address, signature, d);
+        addAsset(address, token);
+        return token;
+    }
 
     public void transferAsset(String cycleRoot, String address, Token asset, String destPk) {
         // creates update for assetId to be transferred to destPk at a cycle following cycleRoot
         // using a map ensures that an address makes a single update in a cycle for an assetId
+        // Note: in this version, cycleRoot = issuance cycle root
         String assetId = Utils.convertKey(asset.getFileId());
         asset.createUpdate(address, destPk);
         FileDetail fileDetail = asset.fileDetail; //TODO: is proofs packet hash required?
@@ -61,6 +84,12 @@ public class Owner {
         }
     }
 
+    public void sendUpdate(String address, String txpxHash) {
+        relay.addUpdateFromDownstream(address, txpxHash);
+        // sends request to Relay
+        // TODO: the relay could send back the POP after creating the trie
+    } 
+
     public void removeCycleRootData(ArrayList<String> cycleRoots) {
         for (String cycleRoot: cycleRoots) {
             // TODO: should it remove the addresses too or set the value to null?
@@ -70,7 +99,13 @@ public class Owner {
     // TODO: implement function that detects the time when it is safe to remove the POPs data 
 
     private MerkleTrie.TrieNode getFileTrieForAddress(String cycleRoot, String address) {
-        HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTries.get(cycleRoot);
+        // returns the file trie for the address at trie with root = cycleRoot. if cycleRoot is null, then it returns the current cycle trie
+        if (cycleRoot == null) {
+            return crtFileTrie.get(address); // current file Trie for the most recent update under address
+            // Note: once user has the proof for this update (and consequently the cycleRoot), the fileTrie will be cleared
+            // and moved to the cache
+        } 
+        HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTrieCache.get(cycleRoot);
         if (crtFileTries == null) {
             return null;
         }
@@ -85,42 +120,74 @@ public class Owner {
         if (t == null) {
             return fileDetailPairs;
         }
-
+        System.out.println(t.entrySet().size());
         for (Map.Entry<String, FileDetail> entry : t.entrySet()) {
-            String entryFleId = entry.getKey();
+            //String entryFleId = entry.getKey();
             FileDetail entryFileDetail = entry.getValue();
-            if (!entryFileDetail.getDestinationAddress().equals(address)) {
-                // remove file ids transferred to a different address (assuming that the address doesn't belong to the same user).
-                assets.remove(entryFleId);
-            }
-            
             fileDetailPairs.add(new Pair<String, String>(entry.getKey(), Token.getHashOfString(entryFileDetail.toString())));
             System.out.println("Adding " + entry.getKey() + " and val=" + Token.getHashOfString(entryFileDetail.toString()));
         }
+        System.out.println(fileDetailPairs.size());
         return fileDetailPairs;
     }
 
-    public MerkleTrie.TrieNode createFileTrie(String cycleRoot, String address) {
-        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address));
-        HashMap<String, MerkleTrie.TrieNode> crtFileTrie = fileTries.get(cycleRoot);
-        if (crtFileTrie != null) {
-            crtFileTrie.put(address, fileTrie);
-        } else {
-            fileTries.put(cycleRoot, new HashMap<String, MerkleTrie.TrieNode>() {{put(address, fileTrie);}});
+    public void clearFileDetails() {
+        fileDetails.clear(); // does this remove all objects in fileDetails?
+    }
+
+    public MerkleTrie.TrieNode createFileTrie(String address) {
+        System.out.println("Creating file Trie for " + address);
+        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address)); 
+        System.out.println("Done file Trie for " + address);
+        if (crtFileTrie.containsKey(address)) {
+            throw new RuntimeException("The address is not allowed to create a new file trie! This limitation can be removed at the cost of additional memory!");
         }
-        
+
         return fileTrie;
     }
 
     public void sendUpdates(String cycleRoot, String address) {
-        MerkleTrie.TrieNode fileTrie = createFileTrie(cycleRoot, address);
+        updateToCycleRoot.remove(address);
+        // send updates for address to relay; cycleRoot = cycleRoot at the time when the files transacted were created
+        MerkleTrie.TrieNode fileTrie = createFileTrie(address);
+        crtFileTrie.put(address, fileTrie);
         String signature = ""; // TODO: should this be user's signature, now that bsig is handled per file or null?
         TransactionPacket txpx = new TransactionPacket(cycleRoot, address, fileTrie.value, null, signature);
-        addressTxpx.put(address, txpx);
+        txpxs.put(address, txpx);
         sendUpdate(address, Token.getTransactionPacket(txpx));
+        // a thread executing this method could block until the relay returns the initial POPSlice
+        clearFileDetails();
     }
 
+    // Called either when relay sends the POPSlice for the cycle when the transaction for address took place
+    // or when receiving the full POP.
+    public void receivePOP(String address, POPSlice popSlice) {
+        String cycleRoot = popSlice.cycleRoot;
+        // adds the POPSlice to the cache containing popslices for address in trie with root = cycleRoot
+        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(cycleRoot);
+        if (addressPOPSlice == null) {
+            addressToPOPSlice.put(cycleRoot, new HashMap<>(){{put(address, popSlice);}});
+        } else {
+            addressPOPSlice.put(address, popSlice);
+        }
+        if (!updateToCycleRoot.containsKey(address)) {
+            MerkleTrie.TrieNode addressCrtFileTrie = crtFileTrie.get(address);
+            HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTrieCache.get(cycleRoot);
+            if (crtFileTries == null) {
+                fileTrieCache.put(cycleRoot, new HashMap<>(){{put(address, addressCrtFileTrie);}});
+            } else {
+                crtFileTries.put(address, addressCrtFileTrie);
+            }
+            System.out.println("Putting file Trie for " + address + " at cy root=" + cycleRoot);
+            
+            crtFileTrie.remove(address);
+            updateToCycleRoot.put(address, cycleRoot);
+        }
+    }
+
+
     public MerkleProof getFileProof(String cycleRoot, String address, String assetId) {
+        // Returns the Merkle File Proof for assetId in the fileTrie created for address in trie with cycle root = cycleRoot
         MerkleTrie.TrieNode fileTrie = getFileTrieForAddress(cycleRoot, address);
         return MerkleTrie.getMerkleProof(assetId, fileTrie);
     }
@@ -131,10 +198,10 @@ public class Owner {
         if (!popSlices.get(numPOPSlices-1).fileDetail.getDestinationAddress().equals(destinationAddress)) {
             return false;
         }
-        if (popSlices.get(0).fileProof == null || popSlices.get(0).fileProof.null_proof) {
-            // the first POP slice should not be a null proof
-            return false;
-        }
+        // if (popSlices.get(0).fileProof == null || popSlices.get(0).fileProof.null_proof) {
+        //     // the first POP slice should not be a null proof
+        //     return false;
+        // }
 
         for (int i = 0; i < numPOPSlices; ++ i) {
             POPSlice popSlice = popSlices.get(i);
@@ -143,6 +210,7 @@ public class Owner {
             }
             if (i != 0 && i != (numPOPSlices - 1)) {
                 if (popSlice.fileProof != null && !popSlice.fileProof.null_proof) {
+                    // the owner must prove that they did not transact the asset=>POPSlice must be a null proof 
                     return false;
                 }
             }
@@ -154,17 +222,31 @@ public class Owner {
         return txpxs.get(txpx);
     }
 
-    public void getPOPSliceForCycle(String address, String fileId, String cycleRoot) {
-        POPSlice popSlice = relay.getPOPSlice(address, cycleRoot);
+    public void completePOPSlice(POPSlice popSlice, String address, String fileId) {
         popSlice.transactionPacket = getTxpx(popSlice.addressProof.leafHash);
         popSlice.fileId = fileId;
-        popSlice.fileDetail = fileDetails.get(popSlice.transactionPacket.getCurrentCycleRoot()).get(fileId);
-        popSlice.fileProof = getFileProof(popSlice.transactionPacket.getCurrentCycleRoot(), address, fileId);
+        popSlice.fileDetail = fileDetails.get(popSlice.cycleRoot).get(fileId);
+        popSlice.fileProof = getFileProof(popSlice.cycleRoot, address, fileId);
     }
 
-    public void getPOP(String cycleRoot, String address, String fileId) {
-        ArrayList<POPSlice> pop = relay.getPOP(address, lastProovedCycle.get(fileId), cycleRoot);
-        // TODO: remove first POPs with null proof
+    public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) {
+        // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
+        POPSlice popSlice = relay.getPOPSlice(address, cycleRoot);
+        receivePOP(address, popSlice);
+        completePOPSlice(popSlice, address, fileId);
+        return popSlice;
+    }
+
+    public void getPOP(String cycleRoot, String address, Token asset) {
+        // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
+        // containing the update to asset
+        ArrayList<POPSlice> pop = relay.getPOP(address, asset.getIssuedCycleRoot(), cycleRoot);
+        for (POPSlice popSlice: pop) {
+            if (!popSlice.addressProof.null_proof) {
+                // cycle Root contained in popSlice, but not known to user
+                completePOPSlice(popSlice, address, asset.getFileId());
+            }
+        }
         
     }
 
@@ -172,7 +254,7 @@ public class Owner {
         if (!verifyPOP(popSlices, address, destinationAddress, signature)) {
             return false;
         }
-        assets.put(token.getFileId(), token); //store the token under receiver's address
+        addAsset(destinationAddress, token); //store the token under receiver's address
         return true;
     }
 
