@@ -92,14 +92,6 @@ public class MerkleTest {
                     "1100010000000000000011", "1100111100000000000011", "0000100000000000000011", "0000000000000000000010")));
     }
 
-    public static String getRandomXBitAddr(Random rand, int addrSize) {
-        StringBuilder addr = new StringBuilder();
-        for (int j = 0; j < MerkleTrie.ADDRESS_SIZE; ++ j) {
-            addr.append(Integer.toString(rand.nextInt(2)));
-        }
-        return addr.toString();
-    }
-
     public static void randomTest(int numAddresses) {
         Random rand = new Random();
         HashMap <String, Boolean> usedAddresses = new HashMap<>();
@@ -109,7 +101,7 @@ public class MerkleTest {
         for (int i = 0; i < numAddresses; ++ i) {
             String addrString;
             while (true) {
-                addrString = getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
+                addrString = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                 if (!usedAddresses.containsKey(addrString)) {
                     break;
                 }
@@ -123,7 +115,7 @@ public class MerkleTest {
         }
         Collections.sort(addresses);
         for (String addr : addresses) {
-            updates.add(new Pair<String, String>(addr, Utils.getHash(getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE))));
+            updates.add(new Pair<String, String>(addr, Utils.getHash(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE))));
         }
         System.out.println("Time before:");
         System.out.println(new Timestamp(System.currentTimeMillis()));

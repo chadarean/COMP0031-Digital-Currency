@@ -28,11 +28,17 @@ public class POPSlice {
 
     public boolean verify(String address) {
         // Note: It should be safe to only check the signature on the owner side, as the slice validity should not depend on the sender
-        if (transactionPacket.address != address) {
+        if (addressProof != null && !addressProof.null_proof && transactionPacket.address != address) {
             return false;
         }
         if (!addressProof.verify(transactionPacket.address, Utils.getHash(transactionPacket.toString()))) { //TODO: write toString() methods
             return false;
+        }
+        if (fileDetail == null && fileProof != null && !fileProof.null_proof) {
+            return false;
+        }
+        if (fileProof == null || (fileDetail == null && fileProof.null_proof)) {
+            return true;
         }
         if (!fileProof.verify(fileId, Utils.getHash(fileDetail.toString()))) {
             return false;

@@ -4,20 +4,23 @@ import src.TODA.*;
 
 import java.text.NumberFormat.Style;
 import java.util.ArrayList;
+import java.util.Random;
 
 import src.POP.*;
 
 public class OwnerTest {
+    public static Random rand = new Random();
+
     public static void testOwner(int numTokens) {
         ArrayList<String> C_ = new ArrayList<>();
         String aId = "user1";
-        String[] addressA = {"00000001", "00000010"};
-        String addressB = "10000000";
+        String[] addressA = {TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)};
+        String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
         Owner a = new Owner(aId);
         ArrayList<Token> tokens = new ArrayList<>();
 
-        a.relay.addUpdateFromDownstream(addressB, Utils.getHash("randomString"));
-        MerkleTrie.TrieNode initialCycle = a.relay.createCycleTrie();
+        MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);
+
         C_.add(initialCycle.value); // creation cycle hash
         System.out.println("init cycle " + C_.get(0));
         System.out.println(a.relay.cycleId.get(C_.get(0)));
@@ -62,10 +65,10 @@ public class OwnerTest {
                 if (proof != null && proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
                     throw new RuntimeException("Incorrect proof should not be valid!");
                 }
-                // proof = a.getFileProof(C_.get(2),  addressA[addressId], Utils.convertKey(asset.getFileId()));
-                // if (!proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
-                //     throw new RuntimeException("Incorrect proof created!");
-                // }
+                proof = a.getFileProof(C_.get(2),  addressA[addressId], Utils.convertKey(asset.getFileId()));
+                if (!proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
+                    throw new RuntimeException("Incorrect proof created!");
+                }
             }
             addressId = 1-addressId;
         }

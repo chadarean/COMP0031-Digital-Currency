@@ -156,7 +156,6 @@ public class Owner {
         txpxs.put(address, txpx);
         sendUpdate(address, Token.getTransactionPacket(txpx));
         // a thread executing this method could block until the relay returns the initial POPSlice
-        clearFileDetails();
     }
 
     // Called either when relay sends the POPSlice for the cycle when the transaction for address took place
@@ -218,14 +217,20 @@ public class Owner {
         return true;
     }
 
-    public TransactionPacket getTxpx(String txpx) {
-        return txpxs.get(txpx);
+    public TransactionPacket getTxpx(String address, String txpxHash) {
+        TransactionPacket txpx = txpxs.get(address);
+        if (!Token.getTransactionPacket(txpx).equals(txpxHash)) {
+            throw new RuntimeException("Error transaction packet doesn't match!");
+        }
+        return txpx;
     }
 
     public void completePOPSlice(POPSlice popSlice, String address, String fileId) {
-        popSlice.transactionPacket = getTxpx(popSlice.addressProof.leafHash);
+        popSlice.transactionPacket = getTxpx(address, popSlice.addressProof.leafHash);
         popSlice.fileId = fileId;
-        popSlice.fileDetail = fileDetails.get(popSlice.cycleRoot).get(fileId);
+        System.out.println(fileDetails.keySet());
+        System.out.println(address);
+        popSlice.fileDetail = fileDetails.get(address).get(fileId);
         popSlice.fileProof = getFileProof(popSlice.cycleRoot, address, fileId);
     }
 
@@ -237,17 +242,21 @@ public class Owner {
         return popSlice;
     }
 
-    public void getPOP(String cycleRoot, String address, Token asset) {
+    public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
         ArrayList<POPSlice> pop = relay.getPOP(address, asset.getIssuedCycleRoot(), cycleRoot);
+        pop.add(addressToPOPSlice.get(cycleRoot).get(address));
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {
                 // cycle Root contained in popSlice, but not known to user
-                completePOPSlice(popSlice, address, asset.getFileId());
+                completePOPSlice(popSlice, address, Utils.convertKey(asset.getFileId()));
+            } else {
+                popSlice.transactionPacket = new TransactionPacket(null, address, null, null, null);
             }
         }
-        
+       // fileDetails.get(address).remove(Utils.convertKey(asset.getFileId()));
+        return pop;
     }
 
     public boolean receiveAsset(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature, Token token) {

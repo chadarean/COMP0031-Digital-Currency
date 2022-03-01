@@ -8,6 +8,7 @@ import java.util.*;
 import src.POP.*;
 
 public class RelayUserTest {
+    public static Random rand = new Random();
     public void test() {
         /** 
          * step 1: create k owners, (TODO: integrate balances)
@@ -41,30 +42,45 @@ public class RelayUserTest {
          * */
     }
 
-    public void testSingleTransaction() {
-        ArrayList<String> cycleRoots = new ArrayList<>((List<String>)Arrays.asList({"C_0", "C_1", "C_2", "C_3", "C_4"}));
+    public static void testSingleTransaction(int addressSize) {
+        ArrayList<String> cycleRoots = new ArrayList<>();
+        Relay r = new Relay();
+        MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createGenesisCycleTrie(r);
+        cycleRoots.add(genesisCycleRoot.value);
+
         Owner a = new Owner("userA");
-        String addressA = "01010101010101011";
+        a.relay = r;
+        String addressA = TestUtils.getRandomXBitAddr(rand, addressSize);
         int d = 2;
-        Token asset = a.createAsset(addressA, d); 
+        Token asset = a.createAsset(cycleRoots.get(0), addressA, d, ""); 
         // blind token.getFileId() and request signature for blinded version
         // unblind signature 
         String signature = "asdfghjkl";
-        String destPk = "00000110101010101";
-        a.transferAsset(cycleRoots.get(1), addressA, assetId, destPk);
-        a.sendUpdates(cycleRoots.get(1), address);
-        ArrayList<POPSlice> popSlices1 = relay.sendPOP(addressA, cycleRoots.get(2), cycleRoots.get(2));
-        ArrayList<POPSlice> popSlices2 = relay.sendPOP(addressA, cycleRoots.get(2), cycleRoots.get(4));
-        ArrayList<POPSlice> popSlices3 = relay.sendPOP(addressA, cycleRoots.get(0), cycleRoots.get(1));
+        String destPk = TestUtils.getRandomXBitAddr(rand, addressSize);
+        a.transferAsset(cycleRoots.get(0), addressA, asset, destPk);
+        a.sendUpdates(cycleRoots.get(0), addressA);
+        MerkleTrie.TrieNode cycleRootNode1 = r.createCycleTrie();
+        cycleRoots.add(cycleRootNode1.value); // update1 cycle hash
+        POPSlice popSlice1 = r.getPOPSlice(addressA, cycleRoots.get(1));
+        a.receivePOP(addressA, popSlice1);
+        System.out.println(r.cycleId.keySet());
+        System.out.println(cycleRoots);
+        ArrayList<POPSlice> pop = a.getPOP(cycleRoots.get(1), addressA, asset);
+        
+
         Owner b = new Owner("userB");
-        if (!b.verifyPOP(popSlices1, addressA, destPk, signature)) {
+        if (!b.verifyPOP(pop, addressA, destPk, signature)) {
             throw new RuntimeException("Valid POP is not correctly verified!");
         }
-        if (!b.verifyPOP(popSlices2, addressA, destPk, signature)) {
-            throw new RuntimeException("Valid POP is not correctly verified!");
-        }
-        if (b.verifyPOP(popSlices3, addressA, destPk, signature)) {
-            throw new RuntimeException("Invalid POP is considered valid!");
-        }
+        // if (!b.verifyPOP(popSlices2, addressA, destPk, signature)) {
+        //     throw new RuntimeException("Valid POP is not correctly verified!");
+        // }
+        // if (b.verifyPOP(popSlices3, addressA, destPk, signature)) {
+        //     throw new RuntimeException("Invalid POP is considered valid!");
+        // }
+    }
+
+    public static void main(String[] args) {
+        testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
     }
 }
