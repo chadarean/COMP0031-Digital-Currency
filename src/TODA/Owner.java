@@ -85,7 +85,6 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) {
-        System.out.println("add update:" + address + "||||" + txpxHash);
         relay.addUpdateFromDownstream(address, txpxHash);
         // sends request to Relay
         // TODO: the relay could send back the POP after creating the trie
@@ -121,14 +120,10 @@ public class Owner {
         if (t == null) {
             return fileDetailPairs;
         }
-        //System.out.println(t.entrySet().size());
         for (Map.Entry<String, FileDetail> entry : t.entrySet()) {
-            //String entryFleId = entry.getKey();
             FileDetail entryFileDetail = entry.getValue();
             fileDetailPairs.add(new Pair<String, String>(entry.getKey(), Token.getHashOfString(entryFileDetail.toString())));
-           // System.out.println("Adding " + entry.getKey() + " and val=" + Token.getHashOfString(entryFileDetail.toString()));
         }
-        //System.out.println(fileDetailPairs.size());
         return fileDetailPairs;
     }
 
@@ -137,9 +132,8 @@ public class Owner {
     }
 
     public MerkleTrie.TrieNode createFileTrie(String address) {
-        System.out.println("Creating file Trie for " + address);
         MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address)); 
-        System.out.println("Done file Trie for " + address);
+        
         if (crtFileTrie.containsKey(address)) {
             throw new RuntimeException("The address is not allowed to create a new file trie! This limitation can be removed at the cost of additional memory!");
         }
@@ -155,7 +149,6 @@ public class Owner {
         String signature = ""; // TODO: should this be user's signature, now that bsig is handled per file or null?
         TransactionPacket txpx = new TransactionPacket(cycleRoot, address, fileTrie.value, null, signature);
         txpxs.put(address, txpx);
-        System.out.println("hash is=" + Token.getTransactionPacket(txpx));
         sendUpdate(address, Token.getTransactionPacket(txpx));
         // a thread executing this method could block until the relay returns the initial POPSlice
     }
@@ -163,7 +156,6 @@ public class Owner {
     // Called either when relay sends the POPSlice for the cycle when the transaction for address took place
     // or when receiving the full POP.
     public void receivePOP(String address, POPSlice popSlice) {
-        System.out.printf("Add=%s receives popSlice for cycle%d\n", address.substring(240), relay.cycleId.get(popSlice.cycleRoot));
         String cycleRoot = popSlice.cycleRoot;
         popSlice.transactionPacket = getTxpx(address, popSlice.addressProof.leafHash);
         if (popSlice.transactionPacket == null) {
@@ -184,7 +176,6 @@ public class Owner {
             } else {
                 crtFileTries.put(address, addressCrtFileTrie);
             }
-            System.out.println("Putting file Trie for " + address + " at cy root=" + cycleRoot);
             
             crtFileTrie.remove(address);
             updateToCycleRoot.put(address, cycleRoot);
@@ -215,7 +206,6 @@ public class Owner {
 
         for (int i = 0; i < numPOPSlices; ++ i) {
             POPSlice popSlice = popSlices.get(i);
-            System.out.println("Verif " + Integer.toString(i) + ";" + Integer.toString(numPOPSlices));
             if (!popSlice.verify(address)) {
                 System.out.println("incorrect POP" + Integer.toString(i));
                 return false;
@@ -234,8 +224,6 @@ public class Owner {
     public TransactionPacket getTxpx(String address, String txpxHash) {
         TransactionPacket txpx = txpxs.get(address);
         if (!Token.getTransactionPacket(txpx).equals(txpxHash)) {
-            System.out.println("update value=" + txpxHash);
-            System.out.println("txpx object value=" + Token.getTransactionPacket(txpx));
             throw new RuntimeException("Error transaction packet doesn't match!");
         }
         txpxs.remove(address);
@@ -268,14 +256,6 @@ public class Owner {
                 // cycle Root contained in popSlice, but not known to user
                 if (popSlice.transactionPacket == null) {
                     HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(popSlice.cycleRoot);
-                    if (crtCycleSlice == null || crtCycleSlice.get(address) == null) {
-                        throw new RuntimeException("Error!");
-                    } 
-                    if (!popSlice.addressProof.leafHash.equals(crtCycleSlice.get(address).addressProof.leafHash)) {
-                        System.out.println(popSlice.addressProof.leafHash);
-                        System.out.println(crtCycleSlice.get(address).addressProof.leafHash);
-                        throw new RuntimeException("wtf");
-                    }
                     popSlice.transactionPacket = crtCycleSlice.get(address).transactionPacket;
                     
                 }

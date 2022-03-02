@@ -73,10 +73,8 @@ public class Relay {
     }
 
     public POPSlice getPOPSlice(String address, String cycleRoot) {
-        System.out.printf("Proof for a=%s at cyr=%d\n", address, cycleId.get(cycleRoot));
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        System.out.printf("Proof has=%s and len=%d\n", addressProof.leafHash, addressProof.frames.size());
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 

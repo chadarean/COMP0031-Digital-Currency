@@ -47,7 +47,7 @@ public class RelayUserTest {
                 while (activeUsers.containsKey(consumerIdx)) {
                     consumerIdx = Math.abs(rand.nextInt()) % numConsumers;
                 }
-                System.out.printf("Consumer=%d\n", consumerIdx);
+                
                 activeUsers.put(consumerIdx, true);
                 int merchantIdx = Math.abs(rand.nextInt()) % numMerchants;
                 Owner a = consumers.get(consumerIdx);
@@ -58,11 +58,9 @@ public class RelayUserTest {
                     a.transferAsset(cycleRoots.get(cycle-1), addressA, ownerAsset.get(consumerIdx).get(numTokensToTransact*(cycle-1)+j), addressB);
                 }
                 pairs.add(new Pair<Integer, Integer>(consumerIdx, merchantIdx));
-                System.out.println(Integer.toString(cycle) + " and ct=" + Integer.toString(r.currentTransactions.size()));
-                //System.out.println("Sedn upd from:" + Integer.toString(consumerIdx));
                 a.sendUpdates(cycleRoots.get(cycle-1), addressA);
             }
-            System.out.println("Creating trie for cycle" + Integer.toString(cycle) + " and ct=" + Integer.toString(r.currentTransactions.size()));
+
             MerkleTrie.TrieNode cycleRootNode = r.createCycleTrie();
             cycleRoots.add(cycleRootNode.value); // update cycle hash
             for (Pair<Integer, Integer> p: pairs) {
@@ -71,7 +69,7 @@ public class RelayUserTest {
                 String addressA = ownerPubKey.get(a);
                 String addressB = ownerPubKey.get(b);
                 POPSlice popSlice = r.getPOPSlice(addressA, cycleRoots.get(cycle));
-                System.out.printf("comsumer %d receives pop for cycle%d\n", p.key, cycle);
+            
                 a.receivePOP(addressA, popSlice);
                 for (int i = 0; i < numTokensToTransact; ++ i) {
                     Token asset = ownerAsset.get(p.key).get(numTokensToTransact*(cycle-1)+i);
@@ -90,7 +88,6 @@ public class RelayUserTest {
         Relay r = new Relay();
         MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createGenesisCycleTrie(r);
         cycleRoots.add(genesisCycleRoot.value);
-        // Issuer has I and 
         Owner a = new Owner("userA");
         a.relay = r;
         String addressA = TestUtils.getRandomXBitAddr(rand, addressSize);
@@ -107,8 +104,6 @@ public class RelayUserTest {
         cycleRoots.add(cycleRootNode1.value); // update1 cycle hash
         POPSlice popSlice1 = r.getPOPSlice(addressA, cycleRoots.get(1));
         a.receivePOP(addressA, popSlice1);
-        System.out.println(r.cycleId.keySet());
-        System.out.println(cycleRoots);
         ArrayList<POPSlice> pop = a.getPOP(cycleRoots.get(1), addressA, asset);
         
 
@@ -124,7 +119,7 @@ public class RelayUserTest {
     }
 
     public static void main(String[] args) {
-        //testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
+        testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
         testMutipleTransactions(100, 4, 40, 4, 10);
     }
 }
