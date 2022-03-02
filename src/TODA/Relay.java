@@ -7,7 +7,7 @@ public class Relay {
     public int NCycleTries = 0;
     public int lastCachedCycleTrieId = 1;
     public static final int cacheSize = 3600;
-    public ArrayList<Pair<String, String>> currentTransactions = new ArrayList<>();
+    public TreeMap<String, String> currentTransactions = new TreeMap<>();
     public HashMap<String, Integer> cycleId = new HashMap<>();
     public HashMap<Integer, String> cycleHash = new HashMap<>();
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
@@ -17,7 +17,7 @@ public class Relay {
 
     public void addUpdateFromDownstream(String address, String updateHash) {
         // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
-        currentTransactions.add(new Pair<String, String>(address, updateHash));
+        currentTransactions.put(address, updateHash);
     }
 
     public void publishHash(String hash) {
@@ -42,9 +42,19 @@ public class Relay {
         return MerkleTrie.createMerkleTrie(pairs); 
     }
 
+    public ArrayList<Pair<String, String>>  getSortedTransactions() {
+        ArrayList<Pair<String, String>> crtTransactions = new ArrayList<>();
+        for (Map.Entry<String, String> entry : currentTransactions.entrySet()) {
+            crtTransactions.add(new Pair<String, String>(entry.getKey(), entry.getValue()));
+        }
+        //Collections.sort(crtTransactions);
+        return crtTransactions;
+    }
+
     public MerkleTrie.TrieNode createCycleTrie() {
         NCycleTries += 1;
-        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(currentTransactions); 
+
+        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(getSortedTransactions()); 
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
@@ -54,17 +64,19 @@ public class Relay {
         }
         //TODO: check if memory problems occur due to cacheing
         // TODO: after deciding how/when relay creates the cycle trie, separate into different function
-        for (Pair<String, String> transaction : currentTransactions) {
-            POPSlice crtPopSlice = getPOPSlice(transaction.key, root.value);
-            crtPopSlice.setUpdateHash(transaction.value);
-        }
+        // for (Pair<String, String> transaction : currentTransactions) {
+        //     POPSlice crtPopSlice = getPOPSlice(transaction.key, root.value);
+        //     //crtPopSlice.setUpdateHash(transaction.value);
+        // }
         currentTransactions.clear();
         return root;
     }
 
     public POPSlice getPOPSlice(String address, String cycleRoot) {
+        System.out.printf("Proof for a=%s at cyr=%d\n", address, cycleId.get(cycleRoot));
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+        System.out.printf("Proof has=%s and len=%d\n", addressProof.leafHash, addressProof.frames.size());
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 

@@ -74,33 +74,6 @@ public class OwnerTest {
         }
     }
 
-    // public static void testMultipleTransactions(int n) {
-    //     String C_1 = "C1"; // creation cycle hash
-    //     String C_.get(1) = "C2"; // update cycle hash
-    //     ArrayList <Owner> users = new ArrayList<>();
-    //     for (int i = 0; i < n; ++ i) {
-    //         String id = "user" + Integer.toString(i);
-    //         ArrayList<String> addresses = new ArrayList<>();
-    //         for (int j = 0; j < 1 + (i % 5); ++ j) {
-    //             addresses
-    //         }
-    //     }
-        
-    //     String addressA1 = "00000001";
-    //     String addressB = "10000000";
-    //     Owner a = new Owner(aId);
-    //     Token asset1 = a.createAsset(addressA1, 1);
-
-    //     a.transferAsset(C_.get(1), addressA1, Utils.convertKey(asset1.getFileId()), addressB);
-    //     a.sendUpdates(C_.get(1), addressA1);
-    //     // System.out.println("Asset update is " + asset1.getFileDetail());
-    //     MerkleProof proof = a.getFileProof(C_.get(1), addressA1, Utils.convertKey(asset1.getFileId()));
-    //     String fileDetailHash = asset1.getFileDetail();
-    //     if (!proof.verify(Utils.convertKey(asset1.getFileId()), fileDetailHash)) {
-    //         throw new RuntimeException("Incorrect proof created!");
-    //     }
-    // }
-
     public static void main(String args[]) {
         testOwner(10);
     }

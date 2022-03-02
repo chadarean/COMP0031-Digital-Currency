@@ -82,7 +82,6 @@ public class MerkleTrie {
             return null;
         }
         
-        System.out.println(npairs);
         if (npairs == 1 || (data.get(0).key.charAt(0) == data.get(npairs-1).key.charAt(0))) {
             int chr = 49 - data.get(0).key.charAt(0);
             data.add(chr*npairs, new Pair(Integer.toString(chr), Utils.getHash(null))); // TODO: the paper adds address of length=1, prove that it's correct
