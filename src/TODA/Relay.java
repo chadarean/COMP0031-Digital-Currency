@@ -2,6 +2,7 @@ package src.TODA;
 
 import src.POP.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Relay {
     public int NCycleTries = 0;
@@ -11,6 +12,15 @@ public class Relay {
     public HashMap<String, Integer> cycleId = new HashMap<>();
     public HashMap<Integer, String> cycleHash = new HashMap<>();
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
+    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+
+    public Relay() {
+        executorService.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                // calls insertNewCycleTrie(Connection conn)
+            }
+        }, 0, 1, TimeUnit.HOURS);
+    }
 
     public void addUpdateFromUpstream(String address, String updateHash) {
     }
