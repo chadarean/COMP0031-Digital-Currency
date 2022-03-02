@@ -78,6 +78,12 @@ public class Relay {
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
+    public POPSlice getPOPSlice(String address, Integer cycleRootId) {
+        MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
+        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+        return new POPSlice(root.value, addressProof, null, null, null); 
+    }
+
     public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) {
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
         int beginCycle = cycleId.get(G_k);

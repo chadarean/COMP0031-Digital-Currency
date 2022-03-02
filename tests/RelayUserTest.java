@@ -40,6 +40,7 @@ public class RelayUserTest {
         }
 
         for (int cycle = 1; cycle <= X; ++ cycle) {
+            System.out.printf("cycle=%d\n", cycle);
             ArrayList<Pair<Integer, Integer>> pairs = new ArrayList<>();
             HashMap<Integer, Boolean> activeUsers = new HashMap<>();
             for (int i = 0; i < numConsumers/2; ++ i) {
@@ -73,7 +74,7 @@ public class RelayUserTest {
                 a.receivePOP(addressA, popSlice);
                 for (int i = 0; i < numTokensToTransact; ++ i) {
                     Token asset = ownerAsset.get(p.key).get(numTokensToTransact*(cycle-1)+i);
-                    ArrayList<POPSlice> pop = a.getPOP(cycleRoots.get(cycle), addressA, asset);
+                    ArrayList<POPSlice> pop = a.getPOPUsingCache(cycleRoots.get(cycle), addressA, asset);
                     if (!b.verifyPOP(pop, addressA, addressB, "")) {
                         throw new RuntimeException("Valid POP is not correctly verified!");
                     }
@@ -104,7 +105,7 @@ public class RelayUserTest {
         cycleRoots.add(cycleRootNode1.value); // update1 cycle hash
         POPSlice popSlice1 = r.getPOPSlice(addressA, cycleRoots.get(1));
         a.receivePOP(addressA, popSlice1);
-        ArrayList<POPSlice> pop = a.getPOP(cycleRoots.get(1), addressA, asset);
+        ArrayList<POPSlice> pop = a.getPOPUsingCache(cycleRoots.get(1), addressA, asset);
         
 
         Owner b = new Owner("userB");
@@ -120,6 +121,7 @@ public class RelayUserTest {
 
     public static void main(String[] args) {
         testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
-        testMutipleTransactions(100, 4, 40, 4, 10);
+        testMutipleTransactions(200, 4, 400, 4, 100);
+        System.out.println("Tests passed!");
     }
 }

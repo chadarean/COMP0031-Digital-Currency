@@ -23,7 +23,7 @@ public class Owner {
     // for each address: fileDetails[address] = sorted set of <file_id, file_detail>
     // Note that a file can have a single valid file detail at a given cycle
     public HashMap<String, ArrayList<Token>> assets; // assets[address]
-    public HashMap<String, HashMap<String, POPSlice>> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
+    public HashMap<Integer, HashMap<String, POPSlice>> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
     public HashMap<String, String> updateToCycleRoot; // updateToCycleRoot[address] = the cycle root hash where the update for address was made
     public Relay relay; 
     //public HashMap<String, FileDetail> oldFileDetails;
@@ -162,9 +162,9 @@ public class Owner {
             throw new RuntimeException(popSlice.addressProof.leafHash);
         }
         // adds the POPSlice to the cache containing popslices for address in trie with root = cycleRoot
-        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(cycleRoot);
+        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(relay.cycleId.get(cycleRoot));
         if (addressPOPSlice == null) {
-            addressToPOPSlice.put(cycleRoot, new HashMap<>(){{put(address, popSlice);}});
+            addressToPOPSlice.put(relay.cycleId.get(cycleRoot), new HashMap<>(){{put(address, popSlice);}});
         } else {
             addressPOPSlice.put(address, popSlice);
         }
@@ -244,14 +244,35 @@ public class Owner {
         return popSlice;
     }
 
+    public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) {
+        int beginCycle = relay.cycleId.get(asset.getIssuedCycleRoot());
+        int endCycle = relay.cycleId.get(cycleRoot);
+        ArrayList<POPSlice> pop = new ArrayList<>();
+        for (int i = beginCycle; i <= endCycle; ++ i) {
+            HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(i);
+            POPSlice popSlice;
+            if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
+                popSlice = relay.getPOPSlice(address, i);
+            } else {
+                popSlice = crtCycleSlice.get(address);
+            }
+            if (!popSlice.addressProof.null_proof) {
+                completePOPSlice(popSlice, address,  Utils.convertKey(asset.getFileId()));
+            } else {
+                popSlice.transactionPacket = new TransactionPacket(null, address, null, null, null);
+            }
+            pop.add(popSlice);
+        }
+        return pop;
+    }
+
     public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
         ArrayList<POPSlice> pop = relay.getPOP(address, asset.getIssuedCycleRoot(), cycleRoot);
-        pop.add(addressToPOPSlice.get(cycleRoot).get(address));
-        int idx =0;
+        pop.add(addressToPOPSlice.get(relay.cycleId.get(cycleRoot)).get(address));
+    
         for (POPSlice popSlice: pop) {
-            idx += 1;
             if (!popSlice.addressProof.null_proof) {
                 // cycle Root contained in popSlice, but not known to user
                 if (popSlice.transactionPacket == null) {
