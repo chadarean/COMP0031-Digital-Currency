@@ -11,6 +11,10 @@ package src.TODA;
 import java.util.*;
 import src.POP.*;
 
+// memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
+// min memory required: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
+// assets memory: crtFileTrie+fileDetails+assets
+
 public class Owner {
     // Note: the user balance can either be stored on user side or in an MSB database. The former is more public, but
     // the latter could be more robust against technical failure of user application.
@@ -199,10 +203,6 @@ public class Owner {
             System.out.println("Destination address not matching!");
             return false;
         }
-        // if (popSlices.get(0).fileProof == null || popSlices.get(0).fileProof.null_proof) {
-        //     // the first POP slice should not be a null proof
-        //     return false;
-        // }
 
         for (int i = 0; i < numPOPSlices; ++ i) {
             POPSlice popSlice = popSlices.get(i);

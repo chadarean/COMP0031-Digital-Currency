@@ -26,7 +26,7 @@ public class POPSlice {
         if (addressProof != null && !addressProof.null_proof && transactionPacket.address != address) {
             return false;
         }
-        if (!addressProof.verify(transactionPacket.address, Token.getTransactionPacket(transactionPacket))) { //TODO: write toString() methods
+        if (!addressProof.verify(transactionPacket.address, Token.getTransactionPacket(transactionPacket))) { 
             return false;
         }
         if (fileDetail == null && fileProof != null && !fileProof.null_proof) {
