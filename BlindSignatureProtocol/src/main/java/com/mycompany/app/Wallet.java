@@ -3,18 +3,24 @@ package com.mycompany.app;
 import java.math.BigInteger;
 //import java.security.SecureRandom;
 
+import com.mycompany.app.POP.Token;
 import com.mycompany.app.TODA.Owner;
+import com.mycompany.app.TODA.Utils;
 
-//import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 
 public class Wallet {
+
+    // Each Asset has an public key
+    // Write a method to generate a public key each time when create an asset. 
     
-    public String userId; // Link to the specific user.
-    Owner new_owner = new Owner(userId); // Create an owner object to do asset releated actions.
+    public static String userId; // Link to the specific user.
+    static Owner new_owner = new Owner(userId); // Create an owner object to do asset releated actions.
     
     static CipherParameters issuer_public_key;
-    // static CipherParameters private_key;
+    static CipherParameters private_key;
+    static CipherParameters public_key;
     static BigInteger blindingFactor;
     
     /*
@@ -27,20 +33,20 @@ public class Wallet {
     */
 
     public Wallet(String userId) {
-        this.userId = userId;
+        Wallet.userId = userId;
     }
 
     
     // No longer useful to generate keypairs for Alice or Bob, using MSbs' public key in current design 
 
-    // public static void generate_keypairs(int keySize){
-    //     // Calling BlindSignature class to generate key pairs (A,A*)
-    //     // A* is private key and keep for users
-    //     // A is public key which would be put in the asset, represent the address of this wallet. 
-    //     AsymmetricCipherKeyPair wallet_keyPair = BlindSignature.generateKeys(keySize);
-    //     public_key = wallet_keyPair.getPublic();
-    //     private_key = wallet_keyPair.getPrivate();
-    // }
+    public static void generate_keypairs(int keySize){
+        // Calling BlindSignature class to generate key pairs (A,A*)
+        // A* is private key and keep for users
+        // A is public key which would be put in the asset, represent the address of this wallet. 
+        AsymmetricCipherKeyPair wallet_keyPair = BlindSignature.generateKeys(keySize);
+        public_key = wallet_keyPair.getPublic();
+        private_key = wallet_keyPair.getPrivate();
+    }
     
     public static void get_issuer_publickey(CipherParameters key){
         issuer_public_key = key;
@@ -65,5 +71,14 @@ public class Wallet {
         return BlindSignature.verify(issuer_public_key, msg, sig);
     }
 
+    public static Token create_asset(String address, int d){
+        return new_owner.createAsset(address,d);
+    }
+
+    public static byte[] convert_token_to_byte(Token asset){
+        String fileId = asset.getFileId();
+        byte[] byte_msg = Utils.prefixToBytes(fileId);
+        return byte_msg;
+    }
 
 }
