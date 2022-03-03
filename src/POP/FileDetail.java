@@ -1,4 +1,4 @@
-package src.POP;
+package POP;
 
 public class FileDetail {
     

@@ -1,7 +1,7 @@
-package src.TODA;
+package TODA;
 
 import java.util.*;
-import src.POP.*;
+import POP.*;
 
 public class Utils {
     public static int ubyte(byte b) {

@@ -1,8 +1,14 @@
-package src.TODA;
+package TODA;
 
-import src.POP.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import POP.POPSlice;
 
 public class Relay {
     public int NCycleTries = 0;
@@ -14,12 +20,24 @@ public class Relay {
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
+    // For testing purposes
+    int noOfCyclesIssued = 0;
+
     public Relay() {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
             }
         }, 0, 1, TimeUnit.HOURS);
+    }
+
+    public Relay(int time, TimeUnit unit) {
+        executorService.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                // calls insertNewCycleTrie(Connection conn)
+                noOfCyclesIssued++;
+            }
+        }, 0, time, unit);
     }
 
     public void addUpdateFromUpstream(String address, String updateHash) {
@@ -104,5 +122,9 @@ public class Relay {
         }
         // pop.add(getPOPSlice(address, G_n)); it's assumed that the user has the POPSlice for the last cycle
         return pop;
+    }
+
+    public int getNoOfCyclesIssued() {
+        return noOfCyclesIssued;
     }
 }
