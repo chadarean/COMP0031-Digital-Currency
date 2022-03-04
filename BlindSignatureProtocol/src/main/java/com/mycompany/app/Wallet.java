@@ -81,4 +81,20 @@ public class Wallet {
         return byte_msg;
     }
 
+    public static void transferAsset(String cycleRoot, String address, Token asset, String destPk){
+        new_owner.transferAsset(cycleRoot, address, asset, destPk);
+    }
+
+    public void sendUpdate(String address, String txpxHash){
+        new_owner.sendUpdate(address, txpxHash);
+    }
+
+    public static boolean verifyPOP(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature){
+        return new_owner.verifyPOP(popSlices,address,destinationAddress,signature);
+    }
+
+    public boolean receiveAsset(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature, Token token) {
+       return new_owner.receiveAsset(popSlices,address,destinationAddress,signature,token);
+    }
+
 }
