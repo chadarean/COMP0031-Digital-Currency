@@ -5,6 +5,7 @@ import src.TODA.*;
 import java.text.NumberFormat.Style;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import src.POP.*;
 
@@ -34,7 +35,15 @@ public class OwnerTest {
             }
         }
         a.sendUpdates(C_.get(0), addressA[0]);
-        MerkleTrie.TrieNode cycleRootNode1 = a.relay.createCycleTrie();
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        MerkleTrie.TrieNode cycleRootNode1 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode1.value); // update cycle hash
         POPSlice popSlice1 = a.relay.getPOPSlice(addressA[0], C_.get(1));
         a.receivePOP(addressA[0], popSlice1);
@@ -46,7 +55,13 @@ public class OwnerTest {
         }
 
         a.sendUpdates(C_.get(1), addressA[1]);
-        MerkleTrie.TrieNode cycleRootNode2 = a.relay.createCycleTrie();
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        MerkleTrie.TrieNode cycleRootNode2 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode2.value);
         POPSlice popSlice2 = a.relay.getPOPSlice(addressA[1], C_.get(2));
         a.receivePOP(addressA[1], popSlice2);
@@ -76,6 +91,7 @@ public class OwnerTest {
 
     public static void main(String args[]) {
         testOwner(10);
+        System.out.println("Test passed");
     }
 
 }

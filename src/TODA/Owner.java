@@ -6,10 +6,10 @@
  * 3. using 2, the user will have the first cycle root required for the POP for each asset
 */
 
-package TODA;
+package src.TODA;
 
 import java.util.*;
-import POP.*;
+import src.POP.*;
 
 // memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
 // min memory required: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs

@@ -1,12 +1,12 @@
 package tests;
 
-import src.TODA.*;
+import TODA.*;
 
 import java.lang.reflect.Array;
 import java.lang.Math;
 import java.util.*;
 
-import src.POP.*;
+import POP.*;
 
 public class RelayUserTest {
     public static Random rand = new Random();

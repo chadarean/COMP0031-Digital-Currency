@@ -1,8 +1,8 @@
-package TODA;
+package src.TODA;
 
 import java.util.concurrent.TimeUnit;
 
-import TODA.Relay;
+import src.TODA.Relay;
 
 public class RelaySchedulerTest {
 

@@ -1,5 +1,6 @@
-package TODA;
+package src.TODA;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import POP.POPSlice;
+import src.POP.POPSlice;
 
 public class Relay {
     public int NCycleTries = 0;
@@ -20,22 +21,21 @@ public class Relay {
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
-    // For testing purposes
-    int noOfCyclesIssued = 0;
 
     public Relay() {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
+                createCycleTrie();
             }
-        }, 0, 1, TimeUnit.HOURS);
+        }, 1, 5, TimeUnit.SECONDS);
     }
 
     public Relay(int time, TimeUnit unit) {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
-                noOfCyclesIssued++;
+                createCycleTrie();
             }
         }, 0, time, unit);
     }
@@ -81,7 +81,9 @@ public class Relay {
 
     public MerkleTrie.TrieNode createCycleTrie() {
         NCycleTries += 1;
-
+        if (currentTransactions.size() == 0) {
+            return null;
+        }
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(getSortedTransactions()); 
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value); 
@@ -125,6 +127,10 @@ public class Relay {
     }
 
     public int getNoOfCyclesIssued() {
-        return noOfCyclesIssued;
+        return NCycleTries;
+    }
+
+    public MerkleTrie.TrieNode getMostRecentCycTrieNode() {
+        return cycleTrie.get(NCycleTries);
     }
 }
