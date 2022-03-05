@@ -53,13 +53,15 @@ public class MeasurePOPSize {
         for (int i = 0; i < numTokens; i ++) {
             ArrayList<POPSlice> pop;
             pop = a.getPOP(C_.get(1), addressA, tokens.get(i));
-            popSizeSum += Utils.getObjectSize(pop);
+            for (POPSlice popSlice: pop) {
+                popSizeSum += popSlice.getSize();
+            }
             tokenSizeSum += Utils.getObjectSize(tokens.get(i));
         }
         
         for (Token asset : tokens) {
             MerkleProof proof = a.getFileProof(C_.get(1), addressA, Utils.convertKey(asset.getFileId()));
-            MerkleProofSizesSum += Utils.getObjectSize(proof);
+            MerkleProofSizesSum += proof.getSize();
             String fileDetailHash = asset.getFileDetail();
             if (!proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
                 throw new RuntimeException("Incorrect proof created!");

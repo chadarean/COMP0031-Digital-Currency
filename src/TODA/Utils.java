@@ -62,6 +62,9 @@ public class Utils {
     }
 
     public static long getObjectSize(Object object) {
+        if (object == null) {
+            return 0;
+        }
         return InstrumentationAgent.getObjectSize(object);
     }
 
