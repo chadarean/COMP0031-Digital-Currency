@@ -87,6 +87,10 @@ public class OwnerTest {
             }
             addressId = 1-addressId;
         }
+        
+        Utils.printObjectSize(a.assets);
+        Utils.printObjectSize(a.fileDetails);
+        Utils.printObjectSize(a.assets);
     }
 
     public static void main(String args[]) {

@@ -60,4 +60,12 @@ public class Utils {
     public static String getHash(String value) {
         return Token.getHashOfString(value);
     }
+
+    public static long getObjectSize(Object object) {
+        return InstrumentationAgent.getObjectSize(object);
+    }
+
+    public static void printObjectSize(Object object) {
+        System.out.println("Object type: " + object.getClass() + ", size: " + InstrumentationAgent.getObjectSize(object) + " bytes");
+    }
 }
