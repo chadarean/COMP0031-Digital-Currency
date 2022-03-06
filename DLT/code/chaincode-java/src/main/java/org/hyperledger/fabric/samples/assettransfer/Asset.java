@@ -28,7 +28,7 @@ public final class Asset {
         return cycleRootHash;
     }
 
-    public Asset(@JsonProperty("getCycleRootID") final String cycleRootID,
+    public Asset(@JsonProperty("cycleRootID") final String cycleRootID,
                  @JsonProperty("cycleRootHash") final String cycleRootHash) {
         this.cycleRootID = cycleRootID;
         this.cycleRootHash = cycleRootHash;
