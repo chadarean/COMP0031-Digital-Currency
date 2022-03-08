@@ -84,11 +84,10 @@ public final class AssetFunctions implements ContractInterface {
      *
      * @param ctx the transaction context
      * @param cycleRootID
-     * @param cycleRootHash
      * @return the asset found on the ledger if there was one
      */
     @Transaction(intent = Transaction.TYPE.EVALUATE)
-    public Asset ReadAsset(final Context ctx, final String cycleRootID, final String cycleRootHash) {
+    public Asset ReadAsset(final Context ctx, final String cycleRootID) {
         ChaincodeStub stub = ctx.getStub();
         String assetJSON = stub.getStringState(cycleRootID);
 
