@@ -12,12 +12,10 @@ import java.util.*;
 
 import javax.swing.text.Utilities;
 
-import org.jcp.xml.dsig.internal.dom.Utils;
-
 import src.POP.*;
 
 // memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
-// min memory required: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
+// min memory required:     crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
 // assets memory: crtFileTrie+fileDetails+assets
 
 public class Owner {
@@ -44,10 +42,13 @@ public class Owner {
         fileTrieCache = new HashMap<>();
         fileDetails = new HashMap<>();
         assets = new HashMap<>();
-        relay = new Relay();
         txpxs = new HashMap<>();
         addressToPOPSlice = new HashMap<>();
         updateToCycleRoot = new HashMap<>();
+    }
+
+    public void setRelay(Relay r) {
+        this.relay = r;
     }
 
     public void addAsset(String address, Token asset) {
@@ -302,46 +303,24 @@ public class Owner {
         return true;
     }
 
-    private <T, R> long getSize(HashMap<T, HashMap<T, R>> map) {
-        long size = 0;
-        for(var res : map.keySet()) {
-            for(var r : map.get(res).keySet()) {
-                size += Utils.getObjectSize(map.get(res).get(r));
-            }
-        }
-        return size;
-    }
-
-    private <T, R> long getSizeMapAndList(HashMap<T, List<R>> map) {
-        long size = 0;
-        for(var res : map.keySet()) {
-            for(var r : map.get(res)) {
-                size += Utils.getObjectSize(r);
-            }
-        }
-        return size;
-    }
-
-    private <T, R> long getSizeCrt(HashMap<T, R> map) {
-        long size = 0;
-        for(var res : map.keySet()) {
-            size += Utils.getObjectSize(map.get(res)); 
-        }
-        return size;
-    }
-
-    public long getSize() {
+    public long getSize(boolean addCache) {
         long size = Utils.getObjectSize(userId) + // done
-        getSizeCrt(crtFileTrie) +
-        getSize(fileTrieCache) + 
-        getSize(fileDetails) + 
-        getSizeMapAndList(assets) +
-        getSize(addressToPOPSlice) + 
+        Utils.getSizeCrt(crtFileTrie) +
+        Utils.getSize(fileTrieCache) + 
+        Utils.getSizeT(fileDetails) + 
+        Utils.getSizeMapAndList(assets) +
         Utils.getObjectSize(updateToCycleRoot) +
-        Utils.getObjectSize(relay) + 
-        txpxs.getSize(); 
+        Utils.getSizeCrt(txpxs); 
+        // TODO: how to consider the size of the relay?
+        if (addCache) {
+            size += Utils.getSize(addressToPOPSlice);
+        }
 
         return size;
+    }
+    public long getAssetsSize() {
+        long size = Utils.getSizeCrt(crtFileTrie) + Utils.getSizeT(fileDetails) + Utils.getSizeMapAndList(assets);
+        return size; 
     }
 
 // TODO: verifyIntegrity(POP_list) queries the ledger for the hashes contained in POP_lists and returns True/False depending on validity

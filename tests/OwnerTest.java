@@ -14,10 +14,12 @@ public class OwnerTest {
 
     public static void testOwner(int numTokens) {
         ArrayList<String> C_ = new ArrayList<>();
+        Relay r = new Relay();
         String aId = "user1";
         String[] addressA = {TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)};
         String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
         Owner a = new Owner(aId);
+        a.setRelay(r);
         ArrayList<Token> tokens = new ArrayList<>();
 
         MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);

@@ -18,7 +18,7 @@ public class Token {
     // TODO: Signature
     public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature, int d) {
         fileKernel = new FileKernel(cycleRoot, creatorAddress, null, getHashOfString(Integer.toString(d)), null);
-        fileDetail = new FileDetail(address, null, null);
+        fileDetail = new FileDetail(address, signature, null);
         // TODO: Add asset to DB
         return this;
     }

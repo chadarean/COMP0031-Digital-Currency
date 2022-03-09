@@ -1,18 +1,19 @@
 package tests;
 
-import TODA.*;
+import src.TODA.*;
 
 import java.lang.reflect.Array;
 import java.lang.Math;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-import POP.*;
+import src.POP.*;
 
 public class RelayUserTest {
     public static Random rand = new Random();
     public static void testMutipleTransactions(int numConsumers, int numMerchants, int numTokens, int numTokensToTransact, int X) {
         ArrayList<String> cycleRoots = new ArrayList<>();
-        Relay r = new Relay();
+        Relay r = new Relay(10, 10, TimeUnit.HOURS);
         MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createGenesisCycleTrie(r);
         cycleRoots.add(genesisCycleRoot.value);
         ArrayList<Owner> consumers = new ArrayList<>();

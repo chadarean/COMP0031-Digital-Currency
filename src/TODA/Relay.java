@@ -31,13 +31,13 @@ public class Relay {
         }, 1, 5, TimeUnit.SECONDS);
     }
 
-    public Relay(int time, TimeUnit unit) {
+    public Relay(int delay, int time, TimeUnit unit) {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
                 createCycleTrie();
             }
-        }, 0, time, unit);
+        }, delay, time, unit);
     }
 
     public void addUpdateFromUpstream(String address, String updateHash) {

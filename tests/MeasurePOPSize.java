@@ -12,27 +12,29 @@ import src.POP.*;
 public class MeasurePOPSize {
     public static Random rand = new Random();
 
-    public static void measureXTokensPerAddress(int numTokens) {
+    public static void measureXTokensYAddresses(int nTokens, int nAddr) {
         ArrayList<String> C_ = new ArrayList<>();
+        Relay r = new Relay();
+        MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(r);
+
+        C_.add(initialCycle.value); // creation cycle hash
+        System.out.println("init cycle " + C_.get(0));
+        System.out.println(r.cycleId.get(C_.get(0)));
+
         String aId = "user1";
         String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // generate pubKey for A=user1
 
         String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // generate pubKey for B=user2
         Owner a = new Owner(aId);
+        a.setRelay(r);
         ArrayList<Token> tokens = new ArrayList<>();
-
-        MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);
-
-        C_.add(initialCycle.value); // creation cycle hash
-        System.out.println("init cycle " + C_.get(0));
-        System.out.println(a.relay.cycleId.get(C_.get(0)));
-
-        for (int i = 0; i < numTokens; ++ i) {
-            Token asset = a.createAsset(C_.get(0), addressA, i+1, "");
+        for (int i = 0; i < nTokens; ++ i) {
+            String signature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
+            Token asset = a.createAsset(C_.get(0), addressA, i+1, signature);
             tokens.add(asset);
             a.transferAsset(C_.get(0), addressA, asset, addressB);
         }
-        a.sendUpdates(C_.get(0), addressA);
+        a.sendUpdates(C_.get(0), addressA); //sendUpdates for tokens withdrawn at C_.get(0) for addressA
 
         try {
             TimeUnit.SECONDS.sleep(5);
@@ -41,16 +43,16 @@ public class MeasurePOPSize {
             e.printStackTrace();
         }
 
-        MerkleTrie.TrieNode cycleRootNode1 = a.relay.getMostRecentCycTrieNode();
+        MerkleTrie.TrieNode cycleRootNode1 = r.getMostRecentCycTrieNode();
         C_.add(cycleRootNode1.value); // update cycle hash
-        POPSlice popSlice1 = a.relay.getPOPSlice(addressA, C_.get(1));
+        POPSlice popSlice1 = r.getPOPSlice(addressA, C_.get(1));
         a.receivePOP(addressA, popSlice1);
 
         long popSizeSum = 0;
         long tokenSizeSum = 0;
         long MerkleProofSizesSum = 0;
         
-        for (int i = 0; i < numTokens; i ++) {
+        for (int i = 0; i < nTokens; i ++) {
             ArrayList<POPSlice> pop;
             pop = a.getPOP(C_.get(1), addressA, tokens.get(i));
             for (POPSlice popSlice: pop) {
@@ -72,13 +74,14 @@ public class MeasurePOPSize {
         Utils.printObjectSize(a.fileDetails);
         Utils.printObjectSize(a.fileTrieCache);
         Utils.printObjectSize(a.crtFileTrie);
-        System.out.printf("POP averge size = %f\n token average size = %f\n Merkle Proofs average size = %f\n", (float)popSizeSum / numTokens, 
-        (float)tokenSizeSum / numTokens, 
-        (float)MerkleProofSizesSum / numTokens);
+        System.out.printf("POP averge size = %f\n token average size = %f\n Merkle Proofs average size = %f\n", (float)popSizeSum / nTokens, 
+        (float)tokenSizeSum / nTokens, 
+        (float)MerkleProofSizesSum / nTokens);
     }
 
     public static void main(String[] args) {
-        measureXTokensPerAddress(10);
-        measureXTokensPerAddress(100);
+        measureXTokensYAddresses(10, 1);
+        measureXTokensYAddresses(100, 1);
+        System.out.println("Passed");
     }
 }
