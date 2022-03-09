@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import src.TODA.MerkleTrie;
+import src.TODA.Utils;
 
 public class Token {
 
@@ -16,11 +17,15 @@ public class Token {
     public FileDetail fileDetail;
 
     // TODO: Signature
-    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature, int d) {
+    public Token createAsset(String cycleRoot, String creatorAddress, String signature, int d) {
         fileKernel = new FileKernel(cycleRoot, creatorAddress, null, getHashOfString(Integer.toString(d)), null);
-        fileDetail = new FileDetail(address, signature, null);
+        fileDetail = new FileDetail(null, null, null);
         // TODO: Add asset to DB
         return this;
+    }
+
+    public void addSignature(String signature) {
+        this.fileDetail.proofsPacketHash = signature;
     }
 
     public String getFileId() {
@@ -72,5 +77,10 @@ public class Token {
             nullHashStr.append("0");
         }
         return nullHashStr.toString();
+    }
+
+    public long getSize() {
+        // todo: method that returns the size of fileKernel and fileDetail
+        return Utils.getObjectSize(fileKernel) + Utils.getObjectSize(fileDetail);
     }
 }

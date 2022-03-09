@@ -22,7 +22,7 @@ public class OwnerTest {
         a.setRelay(r);
         ArrayList<Token> tokens = new ArrayList<>();
 
-        MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);
+        MerkleTrie.TrieNode initialCycle = TestUtils.createRandomCycleTrie(a.relay);
 
         C_.add(initialCycle.value); // creation cycle hash
         System.out.println("init cycle " + C_.get(0));

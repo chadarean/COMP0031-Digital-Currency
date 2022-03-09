@@ -65,7 +65,7 @@ public class Owner {
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
         //TODO: should cycleRoot and signature be obtained by the wallet?
         Token token = new Token();
-        token.createAsset(cycleRoot, address, address, signature, d);
+        token.createAsset(cycleRoot, address, signature, d);
         //String fileIdAddress = Utils.convertKey(token.getFileId());
         addAsset(address, token);
         // TODO: get signature for asset
@@ -73,10 +73,10 @@ public class Owner {
         return token;
     }
 
-    public Token createAsset(String cycleRoot, String address, int d, String signature) {
+    public Token createAsset(String cycleRoot, String creatorAddress, int d, String signature) {
         Token token = new Token();
-        token.createAsset(cycleRoot, address, address, signature, d);
-        addAsset(address, token);
+        token.createAsset(cycleRoot, creatorAddress, signature, d);
+        addAsset(creatorAddress, token);
         return token;
     }
 

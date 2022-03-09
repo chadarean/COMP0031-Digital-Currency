@@ -14,7 +14,7 @@ public class RelayUserTest {
     public static void testMutipleTransactions(int numConsumers, int numMerchants, int numTokens, int numTokensToTransact, int X) {
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay(10, 10, TimeUnit.HOURS);
-        MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createGenesisCycleTrie(r);
+        MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createRandomCycleTrie(r);
         cycleRoots.add(genesisCycleRoot.value);
         ArrayList<Owner> consumers = new ArrayList<>();
         ArrayList<Owner> merchants = new ArrayList<>();
@@ -88,7 +88,7 @@ public class RelayUserTest {
     public static void testSingleTransaction(int addressSize) {
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay();
-        MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createGenesisCycleTrie(r);
+        MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createRandomCycleTrie(r);
         cycleRoots.add(genesisCycleRoot.value);
         Owner a = new Owner("userA");
         a.relay = r;

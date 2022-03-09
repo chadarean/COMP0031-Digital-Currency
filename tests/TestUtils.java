@@ -14,7 +14,7 @@ public class TestUtils {
         return addr.toString();
     }
 
-    public static MerkleTrie.TrieNode createGenesisCycleTrie(Relay r) {
+    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) {
         r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
         return r.createCycleTrie();
     }
