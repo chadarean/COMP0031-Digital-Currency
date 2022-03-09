@@ -1,5 +1,7 @@
 package src.POP;
 
+import src.TODA.Utils;
+
 public class TransactionPacket {
     String currentCycleRoot;
     String address;
@@ -38,6 +40,14 @@ public class TransactionPacket {
 
     public String getSignaturePacket() {
         return this.signaturePacket;
+    }
+
+    public long getSize() {
+        return Utils.getObjectSize(currentCycleRoot) +
+        Utils.getObjectSize(address) +
+        Utils.getObjectSize(fileTrieRoot) +
+        Utils.getObjectSize(expansionSlot) +
+        Utils.getObjectSize(signaturePacket);
     }
 
 

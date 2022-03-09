@@ -9,6 +9,11 @@
 package src.TODA;
 
 import java.util.*;
+
+import javax.swing.text.Utilities;
+
+import org.jcp.xml.dsig.internal.dom.Utils;
+
 import src.POP.*;
 
 // memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
@@ -295,6 +300,48 @@ public class Owner {
         }
         addAsset(destinationAddress, token); //store the token under receiver's address
         return true;
+    }
+
+    private <T, R> long getSize(HashMap<T, HashMap<T, R>> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            for(var r : map.get(res).keySet()) {
+                size += Utils.getObjectSize(map.get(res).get(r));
+            }
+        }
+        return size;
+    }
+
+    private <T, R> long getSizeMapAndList(HashMap<T, List<R>> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            for(var r : map.get(res)) {
+                size += Utils.getObjectSize(r);
+            }
+        }
+        return size;
+    }
+
+    private <T, R> long getSizeCrt(HashMap<T, R> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            size += Utils.getObjectSize(map.get(res)); 
+        }
+        return size;
+    }
+
+    public long getSize() {
+        long size = Utils.getObjectSize(userId) + // done
+        getSizeCrt(crtFileTrie) +
+        getSize(fileTrieCache) + 
+        getSize(fileDetails) + 
+        getSizeMapAndList(assets) +
+        getSize(addressToPOPSlice) + 
+        Utils.getObjectSize(updateToCycleRoot) +
+        Utils.getObjectSize(relay) + 
+        txpxs.getSize(); 
+
+        return size;
     }
 
 // TODO: verifyIntegrity(POP_list) queries the ledger for the hashes contained in POP_lists and returns True/False depending on validity
