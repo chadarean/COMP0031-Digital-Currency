@@ -1,11 +1,11 @@
-package POP;
+package src.POP;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-import TODA.MerkleTrie;
+import src.TODA.MerkleTrie;
 
 public class Token {
 
@@ -15,9 +15,9 @@ public class Token {
     public FileDetail fileDetail;
 
     // TODO: Signature
-    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature, int d) {
+    public Token createAsset(String cycleRoot, String creatorAddress, String signature, int d) {
         fileKernel = new FileKernel(cycleRoot, creatorAddress, null, getHashOfString(Integer.toString(d)), null);
-        fileDetail = new FileDetail(address, null, null);
+        fileDetail = new FileDetail(null, null, null);
         // TODO: Add asset to DB
         return this;
     }

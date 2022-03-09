@@ -1,9 +1,9 @@
-package POP;
+package src.POP;
 
 import java.util.*;
-import TODA.*;
+import src.TODA.*;
 
-import TODA.MerkleTrie;
+import src.TODA.MerkleTrie;
 
 public class POPSlice {
     public String fileId;

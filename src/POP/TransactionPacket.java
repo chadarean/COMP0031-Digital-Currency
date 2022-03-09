@@ -1,4 +1,4 @@
-package POP;
+package src.POP;
 
 public class TransactionPacket {
     String currentCycleRoot;

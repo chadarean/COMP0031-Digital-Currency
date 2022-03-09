@@ -1,4 +1,4 @@
-package TODA;
+package src.TODA;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import POP.POPSlice;
+import src.POP.POPSlice;
 
 public class Relay {
     public int NCycleTries = 0;
@@ -31,13 +31,13 @@ public class Relay {
         }, 0, 1, TimeUnit.HOURS);
     }
 
-    public Relay(int time, TimeUnit unit) {
+    public Relay(int delay, int time, TimeUnit unit) {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
                 noOfCyclesIssued++;
             }
-        }, 0, time, unit);
+        }, delay, time, unit);
     }
 
     public void addUpdateFromUpstream(String address, String updateHash) {

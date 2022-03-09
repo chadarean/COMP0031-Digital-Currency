@@ -5,6 +5,7 @@ import src.TODA.*;
 import java.text.NumberFormat.Style;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import src.POP.*;
 
@@ -13,11 +14,14 @@ public class OwnerTest {
 
     public static void testOwner(int numTokens) {
         ArrayList<String> C_ = new ArrayList<>();
+        Relay r = new Relay(1, 1, TimeUnit.DAYS);
+        
         String aId = "user1";
         String[] addressA = {TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)};
         String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
         Owner a = new Owner(aId);
         ArrayList<Token> tokens = new ArrayList<>();
+        a.setRelay(r);
 
         MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);
 
@@ -57,7 +61,7 @@ public class OwnerTest {
             a.getPOP(C_.get(1+addressId), addressA[addressId], asset);
             MerkleProof proof = a.getFileProof(C_.get(1), addressA[addressId], Utils.convertKey(asset.getFileId()));
             String fileDetailHash = asset.getFileDetail();
-            System.out.println(fileDetailHash);
+            //System.out.println(fileDetailHash);
             if (addressId == 0 && !proof.verify(Utils.convertKey(asset.getFileId()), fileDetailHash)) {
                 throw new RuntimeException("Incorrect proof created!");
             }
@@ -76,6 +80,7 @@ public class OwnerTest {
 
     public static void main(String args[]) {
         testOwner(10);
+        System.out.println("Passed");
     }
 
 }

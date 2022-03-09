@@ -6,13 +6,16 @@
  * 3. using 2, the user will have the first cycle root required for the POP for each asset
 */
 
-package TODA;
+package src.TODA;
 
 import java.util.*;
-import POP.*;
+
+import javax.swing.text.Utilities;
+
+import src.POP.*;
 
 // memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
-// min memory required: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
+// min memory required:     crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
 // assets memory: crtFileTrie+fileDetails+assets
 
 public class Owner {
@@ -39,10 +42,13 @@ public class Owner {
         fileTrieCache = new HashMap<>();
         fileDetails = new HashMap<>();
         assets = new HashMap<>();
-        relay = new Relay();
         txpxs = new HashMap<>();
         addressToPOPSlice = new HashMap<>();
         updateToCycleRoot = new HashMap<>();
+    }
+
+    public void setRelay(Relay r) {
+        this.relay = r;
     }
 
     public void addAsset(String address, Token asset) {
@@ -59,7 +65,7 @@ public class Owner {
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
         //TODO: should cycleRoot and signature be obtained by the wallet?
         Token token = new Token();
-        token.createAsset(cycleRoot, address, address, signature, d);
+        token.createAsset(cycleRoot, address, signature, d);
         //String fileIdAddress = Utils.convertKey(token.getFileId());
         addAsset(address, token);
         // TODO: get signature for asset
@@ -67,10 +73,10 @@ public class Owner {
         return token;
     }
 
-    public Token createAsset(String cycleRoot, String address, int d, String signature) {
+    public Token createAsset(String cycleRoot, String creatorAddress, int d, String signature) {
         Token token = new Token();
-        token.createAsset(cycleRoot, address, address, signature, d);
-        addAsset(address, token);
+        token.createAsset(cycleRoot, creatorAddress, signature, d);
+        addAsset(creatorAddress, token);
         return token;
     }
 
@@ -224,6 +230,8 @@ public class Owner {
     public TransactionPacket getTxpx(String address, String txpxHash) {
         TransactionPacket txpx = txpxs.get(address);
         if (!Token.getTransactionPacket(txpx).equals(txpxHash)) {
+            System.out.println(txpxHash);
+            System.out.println(Token.getTransactionPacket(txpx));
             throw new RuntimeException("Error transaction packet doesn't match!");
         }
         txpxs.remove(address);
