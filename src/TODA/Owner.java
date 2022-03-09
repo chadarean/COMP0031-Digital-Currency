@@ -230,6 +230,8 @@ public class Owner {
     public TransactionPacket getTxpx(String address, String txpxHash) {
         TransactionPacket txpx = txpxs.get(address);
         if (!Token.getTransactionPacket(txpx).equals(txpxHash)) {
+            System.out.println(txpxHash);
+            System.out.println(Token.getTransactionPacket(txpx));
             throw new RuntimeException("Error transaction packet doesn't match!");
         }
         txpxs.remove(address);

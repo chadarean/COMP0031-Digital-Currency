@@ -19,4 +19,12 @@ public class TestUtils {
         return r.createCycleTrie();
     }
 
+    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) {
+        for (int i = 0; i < nUpdates; ++ i) {
+            r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
+        }
+        return r.createCycleTrie();
+    }
+
+
 }

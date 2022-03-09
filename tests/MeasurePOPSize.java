@@ -4,6 +4,7 @@ import src.TODA.*;
 
 import java.text.NumberFormat.Style;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -32,24 +33,36 @@ public class MeasurePOPSize {
 
     public static Random rand = new Random();
 
-    public static Structs measureXTokensYAddresses(int nTokens, int nAddr) {
-        ArrayList<String> C_ = new ArrayList<>();
-        Relay r = new Relay(1, 1, TimeUnit.DAYS);
-        MerkleTrie.TrieNode initialCycle = TestUtils.createRandomCycleTrie(r);
+    static ArrayList<String> C_;
+    static Relay r;
+    static MerkleTrie.TrieNode initialCycle;
+    static ArrayList<ArrayList<Token>> tokens;
+    static ArrayList<Owner> users;
+    static ArrayList<Pair<String, String>> transactions; // transactions.get(i) = <souceAddr, destAddr> for transaction made by user i
+    static HashMap <String, Integer> addrToId;
+    
+    public static void setup(int nTokens, int nAddr){
+        tokens = new ArrayList<>();
+        users = new ArrayList<>();
+        transactions = new ArrayList<>();
+        addrToId = new HashMap<>();
+        C_ = new ArrayList<>();
+        r = new Relay(1, 1, TimeUnit.DAYS);
+        initialCycle = TestUtils.createRandomCycleTrie(r);
 
         C_.add(initialCycle.value); // creation cycle hash
         System.out.println("initial cycle " + C_.get(0));
         System.out.println(r.cycleId.get(C_.get(0)));
-
-        ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
-        ArrayList<Owner> users = new ArrayList<>();
-        ArrayList<Pair<String, String>> transactions = new ArrayList<>(); // transactions.get(i) = <souceAddr, destAddr> for transaction made by user i
 
         for (int i = 0; i < nAddr; ++ i) {
             String aId = "user" + Integer.toString(i);
             Owner a = new Owner(aId);
             users.add(a);
             String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // generate pubKey for A = user_i
+            while (addrToId.containsKey(addressA)) {
+                addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
+            }
+            addrToId.put(addressA, i);
             String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // generate pubKey for B = destination 
             transactions.add(new Pair<String,String>(addressA, addressB));
             a.setRelay(r); // link the user to the relay
@@ -58,9 +71,27 @@ public class MeasurePOPSize {
                 String certSignature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // certificate signature s((I_d, d), I)
                 // create asset for addressA, issuance cycle root C_.get(0), denominator j+1 and certSignature 
                 Token asset = a.createAsset(C_.get(0), addressA, j+1, certSignature);
+                tokens.get(i).add(asset);
+            }
+        }
+    }
+
+    public static Structs measureXTokensYAddressesZWaitingCycles(int nTokens, int nAddr, int nWaitingCycles) {
+        setup(nTokens, nAddr);
+
+        for (int i = 0; i < nWaitingCycles; ++ i) {
+            TestUtils.createRandomCycleTrie(r, nAddr);
+        }
+
+        for (int i = 0; i < nAddr; ++ i) {
+            Owner a = users.get(i);
+            String addressA = transactions.get(i).key;
+            String addressB = transactions.get(i).value;
+
+            for (int j = 0; j < nTokens; ++ j) {
+                Token asset = tokens.get(i).get(j);
                 String signature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // unblinded bsig for asset.fileKernel
                 asset.addSignature(signature);
-                tokens.get(i).add(asset);
                 a.transferAsset(C_.get(0), addressA, asset, addressB);
             }
             a.sendUpdates(C_.get(0), addressA); //sendUpdates for tokens withdrawn at C_.get(0) for addressA
@@ -132,7 +163,7 @@ public class MeasurePOPSize {
         for (int nTokens: nTokenValues) {
             for (int nAddr: nAddrValue) {
                 // todo: repeat x times and add average
-                Structs res = measureXTokensYAddresses(nTokens, nAddr);
+                Structs res = measureXTokensYAddressesZWaitingCycles(nTokens, nAddr, 0);
                 System.out.printf("Full user storage =%d\n user storage=%d\n assets storage=%d\n", res.fullUserStorage, res.userStorage, res.assetsStorage);
             }
         }
@@ -146,18 +177,19 @@ public class MeasurePOPSize {
     public static void measureForXWaitingCycles() {
         int nTokenValues[] = {8};
         int nAddrValue[] = {1024};
-        int nWaitingCyclesValues[] = {1, 2, 4, 8, 16};
+        int nWaitingCyclesValues[] = {0, 1, 2, 4, 8, 16};
         for (int nTokens: nTokenValues) {
             for (int nAddr: nAddrValue) {
                 for (int nWaitingCycles: nWaitingCyclesValues) {
-                    measureForXWaitingCyclesNTokensNAddr(nTokens, nAddr, nWaitingCycles);
+                    measureXTokensYAddressesZWaitingCycles(nTokens, nAddr, nWaitingCycles);
                 }
             }
         }
     }
 
     public static void main(String[] args) {
-        measureForNTokensNAddresses();
+        //measureForNTokensNAddresses();
+        measureForXWaitingCycles();
         System.out.println("Passed");
     }
 }
