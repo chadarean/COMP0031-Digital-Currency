@@ -65,8 +65,46 @@ public class Utils {
         if (object == null) {
             return 0;
         }
+
+        if (object.getClass().getName().equals("src.TODA.MerkleTrie$TrieNode")) {
+            // slow recursive method
+            return ((MerkleTrie.TrieNode)object).getSize();
+        }
+    
+        if (object.getClass().getName().equals("src.TODA.MerkleProof")) {
+            return ((MerkleProof)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.TODA.MerkleProof$Frame")) {
+            return ((MerkleProof.Frame)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.FileDetail")) {
+            return 0;
+        }
+
+        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
+            return ((TransactionPacket)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
+            return ((TransactionPacket)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.POPSlice")) {
+            return ((POPSlice)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.Token")) {
+            return ((Token)object).getSize();
+        }
+
+        if (object.getClass().getName().contains("src") && !object.getClass().getName().contains("File"))
+        System.out.println(object.getClass().getName());
+
         // TODO: change it to call .getSize() if object is of type \in {Token, TransactionPacket, POPSlice, FileDetail,
-        // MerkleTrie.TrieNode, }
+        // MerkleTrie.TrieNode, MerkleProof}
+
         return InstrumentationAgent.getObjectSize(object);
     }
 

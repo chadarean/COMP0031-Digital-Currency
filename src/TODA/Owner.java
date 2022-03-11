@@ -261,6 +261,11 @@ public class Owner {
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
                 popSlice = relay.getPOPSlice(address, i);
+                if (crtCycleSlice == null) {
+                    addressToPOPSlice.put(i, new HashMap<String, POPSlice>(){{put(address, popSlice);}});
+                } else {
+                    crtCycleSlice.put(address, popSlice);
+                }
             } else {
                 popSlice = crtCycleSlice.get(address);
             }

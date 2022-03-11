@@ -12,17 +12,12 @@ public class POPSlice {
     public FileDetail fileDetail;
 
     public long getSize() {
-        long size = Utils.getObjectSize(fileId) +
+        return Utils.getObjectSize(fileId) +
         Utils.getObjectSize(cycleRoot) +
         Utils.getObjectSize(transactionPacket) + 
-        Utils.getObjectSize(fileDetail);
-        if (addressProof != null) {
-            size += addressProof.getSize();
-        }
-        if (fileProof != null) {
-            size += fileProof.getSize();
-        }
-        return size;
+        Utils.getObjectSize(fileDetail) +
+        Utils.getObjectSize(addressProof) + 
+        Utils.getObjectSize(fileProof);
     }
 
     public POPSlice(String cycleRoot, MerkleProof addressProof, TransactionPacket transactionPacket, MerkleProof fileProof, FileDetail fileDetail) {

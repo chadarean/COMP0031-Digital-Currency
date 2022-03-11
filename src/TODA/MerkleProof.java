@@ -34,6 +34,12 @@ public class MerkleProof {
             this.rightBranchPrefix = Arrays.copyOf(rightBranchPrefix, rightBranchPrefix.length);
             this.constructionDataHash = constructionDataHash;
         }
+
+        public long getSize() {
+            return Utils.getObjectSize(this.leftBranchHash) + Utils.getObjectSize(this.leftBranchPrefix) + 
+            Utils.getObjectSize(this.leftBranchPrefixLength) + Utils.getObjectSize(this.rightBranchHash) + Utils.getObjectSize(this.rightBranchPrefix) + 
+            Utils.getObjectSize(this.rightBranchPrefixLength);
+        }
     }
 
     public ArrayList<Frame> frames;
