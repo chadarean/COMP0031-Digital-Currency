@@ -63,10 +63,11 @@ public final class App {
 	private static final String overrideAuth = "peer0.org1.example.com";
 
 	private final Contract contract;
-	private final String assetId = "asset" + Instant.now().toEpochMilli();
 	private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 	public static void main(final String[] args) throws Exception {
+		System.out.println(System.getProperty("user.dir"));
+
 		// The gRPC client connection should be shared by all Gateway connections to
 		// this endpoint.
 		ManagedChannel channel = newGrpcConnection();
@@ -122,7 +123,7 @@ public final class App {
 
 	public void run() throws GatewayException, CommitException {
 		// Initialize a set of asset data on the ledger using the chaincode 'InitLedger' function.
-		initLedger();
+//		initLedger();
 
 		// Return all the current assets on the ledger.
 		getAllAssets();
@@ -130,14 +131,9 @@ public final class App {
 		// Create a new asset on the ledger.
 		createAsset();
 
-		// Update an existing asset asynchronously.
-		transferAssetAsync();
-
 		// Get the asset details by assetID.
 		readAssetById();
 
-		// Update an asset which does not exist.
-		updateNonExistentAsset();
 	}
 	
 	/**
@@ -180,77 +176,18 @@ public final class App {
 	private void createAsset() throws EndorseException, SubmitException, CommitStatusException, CommitException {
 		System.out.println("\n--> Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments");
 
-		contract.submitTransaction("CreateAsset", assetId, "yellow", "5", "Tom", "1300");
-
+		contract.submitTransaction("CreateAsset",  "root6", "fakeHash6");
 		System.out.println("*** Transaction committed successfully");
 	}
 
-	/**
-	 * Submit transaction asynchronously, allowing the application to process the
-	 * smart contract response (e.g. update a UI) while waiting for the commit
-	 * notification.
-	 */
-	private void transferAssetAsync() throws EndorseException, SubmitException, CommitStatusException {
-		System.out.println("\n--> Async Submit Transaction: TransferAsset, updates existing asset owner");
-		
-		SubmittedTransaction commit = contract.newProposal("TransferAsset")
-				.addArguments(assetId, "Saptha")
-				.build()
-				.endorse()
-				.submitAsync();
-
-		byte[] result = commit.getResult();
-		String oldOwner = new String(result, StandardCharsets.UTF_8);
-
-		System.out.println("*** Successfully submitted transaction to transfer ownership from " + oldOwner + " to Saptha");
-		System.out.println("*** Waiting for transaction commit");
-		
-		Status status = commit.getStatus();
-		if (!status.isSuccessful()) {
-			throw new RuntimeException("Transaction " + status.getTransactionId() +
-					" failed to commit with status code " + status.getCode());
-		}
-		
-		System.out.println("*** Transaction committed successfully");
-	}
 
 	private void readAssetById() throws GatewayException {
 		System.out.println("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes");
 		
-		byte[] evaluateResult = contract.evaluateTransaction("ReadAsset", assetId);
+		byte[] evaluateResult = contract.evaluateTransaction("ReadAsset", "root6");
 		
 		System.out.println("*** Result:" + prettyJson(evaluateResult));
 	}
 
-	/**
-	 * submitTransaction() will throw an error containing details of any error
-	 * responses from the smart contract.
-	 */
-	private void updateNonExistentAsset() {
-		try {
-			System.out.println("\n--> Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error");
-			
-			contract.submitTransaction("UpdateAsset", "asset70", "blue", "5", "Tomoko", "300");
-			
-			System.out.println("******** FAILED to return an error");
-		} catch (EndorseException | SubmitException | CommitStatusException e) {
-			System.out.println("*** Successfully caught the error: ");
-			e.printStackTrace(System.out);
-			System.out.println("Transaction ID: " + e.getTransactionId());
 
-			List<ErrorDetail> details = e.getDetails();
-			if (!details.isEmpty()) {
-				System.out.println("Error Details:");
-				for (ErrorDetail detail : details) {
-					System.out.println("- address: " + detail.getAddress() + ", mspId: " + detail.getMspId()
-							+ ", message: " + detail.getMessage());
-				}
-			}
-		} catch (CommitException e) {
-			System.out.println("*** Successfully caught the error: " + e);
-			e.printStackTrace(System.out);
-			System.out.println("Transaction ID: " + e.getTransactionId());
-			System.out.println("Status code: " + e.getCode());
-		}
-	}
 }
