@@ -49,12 +49,13 @@ public final class App {
 	private static final String chaincodeName = "basic";
 
 	// Path to crypto materials.
-	private static final Path cryptoPath = Paths.get("..", "..", "test-network", "organizations", "peerOrganizations", "org1.example.com");
-	// Path to user certificate.
-	private static final Path certPath = cryptoPath.resolve(Paths.get("users", "User1@org1.example.com", "msp", "signcerts", "cert.pem"));
+	private static final Path cryptoPath = Paths.get("DLT",  "BasicNetwork-2.0",
+													"testfolder","fabric-samples","test-network","organizations", "peerOrganizations", "org1.example.com");
+	// Path to user certificate.																				
+	private static final Path certPath = cryptoPath.resolve(Paths.get("users", "User1@org1.example.com", "msp", "signcerts", "User1@org1.example.com-cert.pem"));
 	// Path to user private key directory.
 	private static final Path keyDirPath = cryptoPath.resolve(Paths.get("users", "User1@org1.example.com", "msp", "keystore"));
-	// Path to peer tls certificate.
+	// Path to peer tls certificate
 	private static final Path tlsCertPath = cryptoPath.resolve(Paths.get("peers", "peer0.org1.example.com", "tls", "ca.crt"));
 
 	// Gateway peer end point.
