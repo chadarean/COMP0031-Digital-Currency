@@ -232,19 +232,19 @@ public class MeasurePOPSize {
         HashMap<String, ArrayList<Token>> tokensForAddr = new HashMap<>();
         for (int c = 0; c < nCycles - 1; ++ c) {
             if (c + nWaitingCycles < nCycles - 1) {
-                int nTransactions = Math.abs(rand.nextInt()) % nUsers + 1;
+                int nTransactions = Math.abs(TestUtils.getNextInt()) % nUsers + 1;
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
                 // create nTransactions for cycle
                 ArrayList<Pair<Integer, Pair<String, String>>> t_c = new ArrayList<>();
 
                 nTrans += nTransactions;
                 for (int i = 0; i < nTransactions; ++ i) {
-                    int user_i = Math.abs(rand.nextInt()) % nUsers;
+                    int user_i = Math.abs(TestUtils.getNextInt()) % nUsers;
                     Owner a = users.get(user_i);
                     String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     // create asset for user_i
-                    int tokens_i = Math.abs(rand.nextInt()) % nTokens + 1;
+                    int tokens_i = Math.abs(TestUtils.getNextInt()) % nTokens + 1;
                     nTokensTrans += tokens_i;
 
                     tokensForAddr.put(addressA, new ArrayList<Token>());
@@ -261,7 +261,7 @@ public class MeasurePOPSize {
                 transactions.add(t_c);
             }
             if (c < nWaitingCycles) {
-                MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, Math.abs(rand.nextInt()) % nUsers + 1);
+                MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, Math.abs(TestUtils.getNextInt()) % nUsers + 1);
                 C_.add(crtCycle.value);
             } else {
                 // c >= nWaitingCycles
@@ -345,7 +345,7 @@ public class MeasurePOPSize {
     public static void measureRandomExperim() {
         int nTokenValues[] = {8};
         int nAddrValues[] = {512};
-        int nWaitingCyclesValues[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+        int nWaitingCyclesValues[] = {0, 1, 2, 4, 8, 16}; //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         // TODO: use the same random numbers for each experiment
         int nCyclesValues[] = {33};
         try {
@@ -354,6 +354,7 @@ public class MeasurePOPSize {
                 for (int nAddr:  nAddrValues) {
                     for (int nWaitingCycles : nWaitingCyclesValues) {
                         for (int nCycles : nCyclesValues) {
+                            TestUtils.resetState();
                             Structs res = measureRandom(nTokens, nAddr, nWaitingCycles, nCycles);
                             for (int reps = 1; reps < 5; ++ reps) {
                                 res.add(measureRandom(nTokens, nAddr, nWaitingCycles, nCycles));
@@ -374,6 +375,7 @@ public class MeasurePOPSize {
     }
 
     public static void main(String[] args) {
+        TestUtils.setRandomNumbers();
         //measureRandom(4, 1024, 3, 20);
         measureRandomExperim();
         //measureForXWaitingCycles();

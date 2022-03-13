@@ -35,6 +35,7 @@ public class Owner {
     public Relay relay; 
     //public HashMap<String, FileDetail> oldFileDetails;
     public HashMap<String, TransactionPacket> txpxs; // assume address has only one update before receiving its POP
+    long storedPopSize = 0;
 
     public Owner(String userId) {
         this.userId = userId;
@@ -178,6 +179,7 @@ public class Owner {
         } else {
             addressPOPSlice.put(address, popSlice);
         }
+        storedPopSize += popSlice.getSize();
         if (!updateToCycleRoot.containsKey(address)) {
             MerkleTrie.TrieNode addressCrtFileTrie = crtFileTrie.get(address);
             HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTrieCache.get(cycleRoot);
@@ -186,7 +188,6 @@ public class Owner {
             } else {
                 crtFileTries.put(address, addressCrtFileTrie);
             }
-            
             crtFileTrie.remove(address);
             updateToCycleRoot.put(address, cycleRoot);
         }
@@ -321,6 +322,8 @@ public class Owner {
         // TODO: how to consider the size of the relay?
         if (addCache) {
             size += Utils.getSize(addressToPOPSlice);
+        } else {
+            size += storedPopSize;
         }
 
         return size;
