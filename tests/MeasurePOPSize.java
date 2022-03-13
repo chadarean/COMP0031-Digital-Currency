@@ -201,15 +201,24 @@ public class MeasurePOPSize {
     public static void measureForNTokensNAddresses() {
         int nTokenValues[] = {1, 4, 8};
         int nAddrValue[] = {1024, 1700, 2048};
-
-        for (int nTokens: nTokenValues) {
-            for (int nAddr: nAddrValue) {
-                // todo: repeat x times and add average
-                Structs res = measureXTokensYAddressesZWaitingCycles(nTokens, nAddr, 0);
-                System.out.printf("Full user storage =%d\n user storage=%d\n assets storage=%d\n", res.fullUserStorage, res.userStorage, res.assetsStorage);
+        try {
+            PrintWriter results = new PrintWriter("fixedExperiment.txt");
+            for (int nTokens: nTokenValues) {
+                for (int nAddr: nAddrValue) {
+                    // todo: repeat x times and add average
+                    Structs res = measureXTokensYAddressesZWaitingCycles(nTokens, nAddr, 0);
+                    for (int reps = 1; reps < 5; ++ reps) {
+                        res.add(measureXTokensYAddressesZWaitingCycles(nTokens, nAddr, 0));
+                    }
+                    res.divBy(5);
+                    results.printf("%d %d %f %f %f %f %f\n", nTokens, nAddr, res.addressProofSize, res.fileProofSize, res.popSize, res.userStorage, res.fullUserStorage);
+                    System.out.printf("Full user storage =%d\n user storage=%d\n assets storage=%d\n", res.fullUserStorage, res.userStorage, res.assetsStorage);
+                }
             }
+            results.close();
+        } catch (IOException e) {
+            System.out.println("IO Error");
         }
-        // todo, either create plot in Java or write results to a file and use Python 
     }
 
     public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles) {
@@ -342,14 +351,12 @@ public class MeasurePOPSize {
         }
     }
 
-    public static void measureRandomExperim() {
-        int nTokenValues[] = {8};
-        int nAddrValues[] = {512};
-        int nWaitingCyclesValues[] = {0, 1, 2, 4, 8, 16}; //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    public static void measureRandomExperim(String fileName, int nTokenValues[], int nAddrValues[], int nWaitingCyclesValues[]) {
+         //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         // TODO: use the same random numbers for each experiment
         int nCyclesValues[] = {33};
         try {
-            PrintWriter results = new PrintWriter("randomExperiment.txt");
+            PrintWriter results = new PrintWriter(fileName);
             for (int nTokens: nTokenValues) {
                 for (int nAddr:  nAddrValues) {
                     for (int nWaitingCycles : nWaitingCyclesValues) {
@@ -377,8 +384,7 @@ public class MeasurePOPSize {
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
         //measureRandom(4, 1024, 3, 20);
-        measureRandomExperim();
-        //measureForXWaitingCycles();
+        measureRandomExperim("randomExperiment.txt");
         System.out.println("Passed");
     }
 }
