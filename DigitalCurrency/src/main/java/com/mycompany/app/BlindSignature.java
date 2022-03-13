@@ -96,37 +96,40 @@ public class BlindSignature {
 
         AsymmetricCipherKeyPair alice_keyPair = BlindSignature.generateKeys(1024);
         AsymmetricCipherKeyPair bob_keyPair = BlindSignature.generateKeys(1024);
-
         try {
-            byte[] msg = "OK".getBytes("UTF-8");
-
-            //Alice-Generating blinding factor based on Bob's public key
-            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
-
-            //Alice-Blinding message with Bob's public key
-            byte[] blinded_msg =
-                    BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
-
-            //Alice-Signing blinded message with Alice's private key
-            byte[] sig = BlindSignature.sign(alice_keyPair.getPrivate(), blinded_msg);
-
-            //Bob-Verifying alice's signature
-            if (BlindSignature.verify(alice_keyPair.getPublic(), blinded_msg, sig)) {
-
-                //Bob-Signing blinded message with bob's private key
-                byte[] sigBybob =
-                        BlindSignature.signBlinded(bob_keyPair.getPrivate(), blinded_msg);
-
-                //Alice-Unblinding bob's signature 
-                byte[] unblindedSigBybob =
-                        BlindSignature.unblind(bob_keyPair.getPublic(), blindingFactor, sigBybob);
-
-                //Alice-Verifying bob's unblinded signature
-                System.out.println(BlindSignature.verify(bob_keyPair.getPublic(), msg,
-                        unblindedSigBybob));
-                        
-               // Now alice has bob's signature for the original message
-            }
+            // byte[] msg = "Hello There".getBytes("UTF-8");
+            // System.out.println(msg);
+            // //Alice::Generating blinding factor based on Bob's public key
+            // BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
+            // //Alice::Blinding message with Bob's public key
+           
+            // byte[] blinded_msg = BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
+           
+            // //Alice::Signing blinded message with Alice's private key
+            // byte[] sig = BlindSignature.sign(alice_keyPair.getPrivate(), blinded_msg);
+            // //Bob::Verifying alice's signature
+            // if (BlindSignature.verify(alice_keyPair.getPublic(), blinded_msg, sig)) {
+            //     //Bob::Signing blinded message with bob's private key
+            //     byte[] sigBybob =BlindSignature.signBlinded(bob_keyPair.getPrivate(), blinded_msg);
+            //     //Alice::Unblinding bob's signature 
+            //     byte[] unblindedSigBybob =BlindSignature.unblind(bob_keyPair.getPublic(), blindingFactor, sigBybob);
+            //     //Alice::Verifying bob's unblinded signature
+            //     System.out.println("hello");
+            //     System.out.println(BlindSignature.verify(bob_keyPair.getPublic(), msg, unblindedSigBybob));
+            // }
+            //AsymmetricCipherKeyPair alice = BlindSignature.generateKeys(1024);
+            AsymmetricCipherKeyPair msb = BlindSignature.generateKeys(1024);
+            byte[] msg = "Hello There".getBytes("UTF-8");
+            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(msb.getPublic());
+            //System.out.println(msb.getPublic());
+            // System.out.println(blindingFactor);
+            byte[] blinded_msg = BlindSignature.blind(msb.getPublic(), blindingFactor, msg);
+            byte[] sigBymsb = BlindSignature.signBlinded(msb.getPrivate(), blinded_msg);
+            byte[] unblindedSigBymsb = BlindSignature.unblind(msb.getPublic(), blindingFactor, sigBymsb);
+            System.out.println(BlindSignature.verify(msb.getPublic(), msg, unblindedSigBymsb));
+            // Object key = (Object) msb.getPublic();
+            // String new_key = (String) key;
+            // System.out.println(new_key);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -18,12 +18,12 @@ public class Wallet {
     // Write a method to generate a public key each time when create an asset. 
     
     public static String userId; // Link to the specific user.
-    static Owner new_owner = new Owner(userId); // Create an owner object to do asset releated actions.
+    Owner new_owner = new Owner(userId); // Create an owner object to do asset releated actions.
     
-    static CipherParameters issuer_public_key;
-    static CipherParameters private_key;
-    static CipherParameters public_key;
-    static BigInteger blindingFactor;
+    CipherParameters issuer_public_key;
+    CipherParameters private_key;
+    CipherParameters public_key;
+    BigInteger blindingFactor;
     
     /*
       1. Wallet could create asset 
@@ -41,7 +41,7 @@ public class Wallet {
     
     // No longer useful to generate keypairs for Alice or Bob, using MSbs' public key in current design 
 
-    public static void generate_keypairs(int keySize){
+    public void generate_keypairs(int keySize){
         // Calling BlindSignature class to generate key pairs (A,A*)
         // A* is private key and keep for users
         // A is public key which would be put in the asset, represent the address of this wallet. 
@@ -50,40 +50,40 @@ public class Wallet {
         private_key = wallet_keyPair.getPrivate();
     }
     
-    public static void get_issuer_publickey(CipherParameters key){
+    public void get_issuer_publickey(CipherParameters key){
         issuer_public_key = key;
     }
     // Generate blinding factor using own public key
-    public static void setBlindingFactor(){
+    public void setBlindingFactor(){
         blindingFactor = BlindSignature.generateBlindingFactor(issuer_public_key);
     }
 
     // Blinding message using own public key and blinding factor
-    public static byte[] blind_message(byte[] msg){
+    public byte[] blind_message(byte[] msg){
         return BlindSignature.blind(issuer_public_key, blindingFactor, msg);
     }
 
     // Unblind message using own private key and blinding factor
-    public static byte[] unblind_message(byte[] msg){
-        return BlindSignature.blind(issuer_public_key, blindingFactor, msg);
+    public byte[] unblind_message(byte[] msg){
+        return BlindSignature.unblind(issuer_public_key, blindingFactor, msg);
     }
 
     // Asset could be verified through central bank's public key 
-    public static boolean verify_message(byte[] msg, byte[] sig){
+    public boolean verify_message(byte[] msg, byte[] sig){
         return BlindSignature.verify(issuer_public_key, msg, sig);
     }
 
-    public static Token create_asset(String address, int d){
+    public Token create_asset(String address, int d){
         return new_owner.createAsset(address,d);
     }
 
-    public static byte[] convert_token_to_byte(Token asset){
+    public byte[] convert_token_to_byte(Token asset){
         String fileId = asset.getFileId();
         byte[] byte_msg = Utils.prefixToBytes(fileId);
         return byte_msg;
     }
 
-    public static void transferAsset(String cycleRoot, String address, Token asset, String destPk){
+    public void transferAsset(String cycleRoot, String address, Token asset, String destPk){
         new_owner.transferAsset(cycleRoot, address, asset, destPk);
     }
 
@@ -91,7 +91,7 @@ public class Wallet {
         new_owner.sendUpdate(address, txpxHash);
     }
 
-    public static boolean verifyPOP(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature){
+    public boolean verifyPOP(ArrayList<POPSlice> popSlices, String address, String destinationAddress, String signature){
         return new_owner.verifyPOP(popSlices,address,destinationAddress,signature);
     }
 
