@@ -4,7 +4,7 @@
 The Hyperledger Fabric network is an open source enterprise-grade permissioned distributed ledger technology (DLT) platform, 
 designed for use in enterprise contexts. In this project, we utilise the network provided by Fabric to keep an immutable log of transactions, represented by the `cyclerootID` and `cyclerootHash` that are stored as key value pairs. 
 
-## Installing Prerequisites
+### Installing Prerequisites
 Before you begin, there are a number of prerequisites that need to be installed.
 
 Install docker
@@ -15,7 +15,7 @@ Install docker compose
 
 `sudo apt install docker-compose`
 
-## Deploying the test network
+### Deploying the test network
 
 First, clone the repository
 
