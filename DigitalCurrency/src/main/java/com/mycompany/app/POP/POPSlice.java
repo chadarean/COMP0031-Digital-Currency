@@ -13,6 +13,15 @@ public class POPSlice {
     public MerkleProof fileProof;
     public FileDetail fileDetail;
 
+    public long getSize() {
+        return Utils.getObjectSize(fileId) +
+        Utils.getObjectSize(cycleRoot) +
+        Utils.getObjectSize(transactionPacket) +
+        Utils.getObjectSize(fileDetail) +
+        Utils.getObjectSize(addressProof) +
+        Utils.getObjectSize(fileProof);
+    }
+
     public POPSlice(String cycleRoot, MerkleProof addressProof, TransactionPacket transactionPacket, MerkleProof fileProof, FileDetail fileDetail) {
         this.cycleRoot = cycleRoot; // the Cycle hash Ck
         this.addressProof = addressProof; // Merkle proof associating the (possibly null) value p with the address a in the cycle trie whose root hash is Ck

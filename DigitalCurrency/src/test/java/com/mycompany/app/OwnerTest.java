@@ -14,15 +14,16 @@ public class OwnerTest {
     public static void testOwner(int numTokens) {
         ArrayList<String> C_ = new ArrayList<>();
         Relay r = new Relay(1, 1, TimeUnit.DAYS);
-        
+
         String aId = "user1";
         String[] addressA = {TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)};
         String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
         Owner a = new Owner(aId);
+        a.setRelay(r);
         ArrayList<Token> tokens = new ArrayList<>();
         a.setRelay(r);
 
-        MerkleTrie.TrieNode initialCycle = TestUtils.createGenesisCycleTrie(a.relay);
+        MerkleTrie.TrieNode initialCycle = TestUtils.createRandomCycleTrie(a.relay);
 
         C_.add(initialCycle.value); // creation cycle hash
         System.out.println("init cycle " + C_.get(0));
@@ -37,7 +38,15 @@ public class OwnerTest {
             }
         }
         a.sendUpdates(C_.get(0), addressA[0]);
-        MerkleTrie.TrieNode cycleRootNode1 = a.relay.createCycleTrie();
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        MerkleTrie.TrieNode cycleRootNode1 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode1.value); // update cycle hash
         POPSlice popSlice1 = a.relay.getPOPSlice(addressA[0], C_.get(1));
         a.receivePOP(addressA[0], popSlice1);
@@ -49,7 +58,13 @@ public class OwnerTest {
         }
 
         a.sendUpdates(C_.get(1), addressA[1]);
-        MerkleTrie.TrieNode cycleRootNode2 = a.relay.createCycleTrie();
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        MerkleTrie.TrieNode cycleRootNode2 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode2.value);
         POPSlice popSlice2 = a.relay.getPOPSlice(addressA[1], C_.get(2));
         a.receivePOP(addressA[1], popSlice2);
@@ -75,11 +90,15 @@ public class OwnerTest {
             }
             addressId = 1-addressId;
         }
+
+        Utils.printObjectSize(a.assets);
+        Utils.printObjectSize(a.fileDetails);
+        Utils.printObjectSize(a.assets);
     }
 
     public static void main(String args[]) {
         testOwner(10);
-        System.out.println("Passed");
+        System.out.println("Test passed");
     }
 
 }

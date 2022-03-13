@@ -40,5 +40,13 @@ public class TransactionPacket {
         return this.signaturePacket;
     }
 
+    public long getSize() {
+        return Utils.getObjectSize(currentCycleRoot) +
+        Utils.getObjectSize(address) +
+        Utils.getObjectSize(fileTrieRoot) +
+        Utils.getObjectSize(expansionSlot) +
+        Utils.getObjectSize(signaturePacket);
+    }
+
 
 }

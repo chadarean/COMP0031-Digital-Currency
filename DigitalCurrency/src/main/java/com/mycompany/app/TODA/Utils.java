@@ -60,4 +60,93 @@ public class Utils {
     public static String getHash(String value) {
         return Token.getHashOfString(value);
     }
+
+    public static long getObjectSize(Object object) {
+        if (object == null) {
+            return 0;
+        }
+
+        if (object.getClass().getName().equals("src.TODA.MerkleTrie$TrieNode")) {
+            // slow recursive method
+            return ((MerkleTrie.TrieNode)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.TODA.MerkleProof")) {
+            return ((MerkleProof)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.TODA.MerkleProof$Frame")) {
+            return ((MerkleProof.Frame)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.FileDetail")) {
+            return 0;
+        }
+
+        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
+            return ((TransactionPacket)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
+            return ((TransactionPacket)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.POPSlice")) {
+            return ((POPSlice)object).getSize();
+        }
+
+        if (object.getClass().getName().equals("src.POP.Token")) {
+            return ((Token)object).getSize();
+        }
+
+        if (object.getClass().getName().contains("src") && !object.getClass().getName().contains("File"))
+        System.out.println(object.getClass().getName());
+
+        // TODO: change it to call .getSize() if object is of type \in {Token, TransactionPacket, POPSlice, FileDetail,
+        // MerkleTrie.TrieNode, MerkleProof}
+
+        return InstrumentationAgent.getObjectSize(object);
+    }
+
+    public static void printObjectSize(Object object) {
+        System.out.println("Object type: " + object.getClass() + ", size: " + InstrumentationAgent.getObjectSize(object) + " bytes");
+    }
+
+    public static <T1, R, T2> long getSize(HashMap<T1, HashMap<T2, R>> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            for(var r : map.get(res).keySet()) {
+                size += Utils.getObjectSize(map.get(res).get(r));
+            }
+        }
+        return size;
+    }
+
+    public static <T, R> long getSizeT(HashMap<T, TreeMap<T, R>> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            for(var r : map.get(res).keySet()) {
+                size += Utils.getObjectSize(map.get(res).get(r));
+            }
+        }
+        return size;
+    }
+
+    public static <T, R> long getSizeMapAndList(HashMap<T, ArrayList<R>> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            for(var r : map.get(res)) {
+                size += Utils.getObjectSize(r);
+            }
+        }
+        return size;
+    }
+
+    public static <T, R> long getSizeCrt(HashMap<T, R> map) {
+        long size = 0;
+        for(var res : map.keySet()) {
+            size += Utils.getObjectSize(map.get(res));
+        }
+        return size;
+    }
 }

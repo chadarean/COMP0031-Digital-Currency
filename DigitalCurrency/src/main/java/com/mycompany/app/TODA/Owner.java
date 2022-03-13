@@ -39,6 +39,7 @@ public class Owner {
     public Relay relay; 
     //public HashMap<String, FileDetail> oldFileDetails;
     public HashMap<String, TransactionPacket> txpxs; // assume address has only one update before receiving its POP
+    long storedPopSize = 0;
 
     public Owner(String userId) {
         this.userId = userId;
@@ -185,6 +186,7 @@ public class Owner {
         } else {
             addressPOPSlice.put(address, popSlice);
         }
+        storedPopSize += popSlice.getSize();
         if (!updateToCycleRoot.containsKey(address)) {
             final MerkleTrie.TrieNode addressCrtFileTrie = crtFileTrie.get(address);
             HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTrieCache.get(cycleRoot);
@@ -193,7 +195,6 @@ public class Owner {
             } else {
                 crtFileTries.put(address, addressCrtFileTrie);
             }
-            
             crtFileTrie.remove(address);
             updateToCycleRoot.put(address, cycleRoot);
         }
@@ -268,6 +269,11 @@ public class Owner {
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
                 popSlice = relay.getPOPSlice(address, i);
+                if (crtCycleSlice == null) {
+                    addressToPOPSlice.put(i, new HashMap<String, POPSlice>(){{put(address, popSlice);}});
+                } else {
+                    crtCycleSlice.put(address, popSlice);
+                }
             } else {
                 popSlice = crtCycleSlice.get(address);
             }
@@ -310,6 +316,28 @@ public class Owner {
         }
         addAsset(destinationAddress, token); //store the token under receiver's address
         return true;
+    }
+
+    public long getSize(boolean addCache) {
+        long size = Utils.getObjectSize(userId) + // done
+        Utils.getSizeCrt(crtFileTrie) +
+        Utils.getSize(fileTrieCache) +
+        Utils.getSizeT(fileDetails) +
+        Utils.getSizeMapAndList(assets) +
+        Utils.getObjectSize(updateToCycleRoot) +
+        Utils.getSizeCrt(txpxs);
+        // TODO: how to consider the size of the relay?
+        if (addCache) {
+            size += Utils.getSize(addressToPOPSlice);
+        } else {
+            size += storedPopSize;
+        }
+
+        return size;
+    }
+    public long getAssetsSize() {
+        long size = Utils.getSizeCrt(crtFileTrie) + Utils.getSizeT(fileDetails) + Utils.getSizeMapAndList(assets);
+        return size;
     }
 
 // TODO: verifyIntegrity(POP_list) queries the ledger for the hashes contained in POP_lists and returns True/False depending on validity

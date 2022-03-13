@@ -34,6 +34,12 @@ public class MerkleProof {
             this.rightBranchPrefix = Arrays.copyOf(rightBranchPrefix, rightBranchPrefix.length);
             this.constructionDataHash = constructionDataHash;
         }
+
+        public long getSize() {
+            return Utils.getObjectSize(this.leftBranchHash) + Utils.getObjectSize(this.leftBranchPrefix) +
+            Utils.getObjectSize(this.leftBranchPrefixLength) + Utils.getObjectSize(this.rightBranchHash) + Utils.getObjectSize(this.rightBranchPrefix) +
+            Utils.getObjectSize(this.rightBranchPrefixLength);
+        }
     }
 
     public ArrayList<Frame> frames;
@@ -42,7 +48,15 @@ public class MerkleProof {
     // if on branch 0 and addr_pref < pref, stay on branch 0 and take only 0s
     // if on branch 1 and addr_pref > pref, stay on branch 1 and take only 1s, resulting in immediately prev addr
     // if on branch 1 and addr_pref < pref, stay on branch 1 and take only 0s
-    
+
+    public long getSize() {
+        long proofSize = Utils.getObjectSize(leafHash) + Utils.getObjectSize(null_proof);
+        for (Frame f: frames) {
+            proofSize += Utils.getObjectSize(f);
+        }
+        return proofSize;
+    }
+
     public MerkleProof() {
         this.frames = new ArrayList<Frame>();
         null_proof = false;
