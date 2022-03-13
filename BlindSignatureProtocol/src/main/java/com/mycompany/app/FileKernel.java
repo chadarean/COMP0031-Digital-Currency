@@ -1,4 +1,4 @@
-package com.mycompany.app.POP;
+package com.mycompany.app;
 
 public class FileKernel {
 

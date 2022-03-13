@@ -1,4 +1,6 @@
-package com.mycompany.app.POP;
+package com.mycompany.app;
+
+//import com.mycompany.app.*;
 
 public class FileDetail {
     

@@ -1,11 +1,11 @@
-package com.mycompany.app.POP;
+package com.mycompany.app;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-import com.mycompany.app.TODA.MerkleTrie;
+//import src.TODA.MerkleTrie;
 
 public class Token {
 
@@ -13,18 +13,11 @@ public class Token {
 
     FileKernel fileKernel;
     public FileDetail fileDetail;
-    MerkleTrie fileTrie;
-    TransactionPacket transactionPacket;
-    MerkleTrie cycleTrie;
 
     // TODO: Signature
-    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature) {
-         
-        // TODO: Issued cycle root - will we get this from the DB?
-        fileKernel = new FileKernel(cycleRoot, creatorAddress, null, null, null);
+    public Token createAsset(String cycleRoot, String creatorAddress, String address, String signature, int d) {
+        fileKernel = new FileKernel(cycleRoot, creatorAddress, null, getHashOfString(Integer.toString(d)), null);
         fileDetail = new FileDetail(address, null, null);
-        transactionPacket = null;
-        
         // TODO: Add asset to DB
         return this;
     }
@@ -38,11 +31,15 @@ public class Token {
         );
     }
 
+    public String getIssuedCycleRoot() {
+        return fileKernel.issuedCycleRoot;
+    }
+
     public String getFileDetail() {
         return getHashOfString(fileDetail.getDestinationAddress() + fileDetail.getProofsPacketHash() + fileDetail.getMetadataHash());
     }
 
-    public String getTransactionPacket() {
+    public static String getTransactionPacket(TransactionPacket transactionPacket) {
          return getHashOfString(transactionPacket.getFileTrieRoot() 
             + transactionPacket.getCurrentCycleRoot() 
             + transactionPacket.getAddress() 
@@ -50,13 +47,8 @@ public class Token {
         );
     }
 
-    public MerkleTrie getFileTrie(String fileId, String fileDetail) {
-        // TODO: getFileTrie([key=file_id, value=file_detail]) // files can be retrieved from DB and kept in memory when building the trie)
-        return null;
-    }
-
     public void createUpdate(String address, String destinationAddress) {
-        // TODO: Create txpx
+        fileDetail.destinationAddress = destinationAddress;
     }
 
     public static String getHashOfString(String concatenation) {
@@ -67,7 +59,7 @@ public class Token {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));
             String encoded = Base64.getEncoder().encodeToString(hash);
-            return encoded;
+            return encoded.substring(0, 32);
         } catch(NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
@@ -80,5 +72,4 @@ public class Token {
         }
         return nullHashStr.toString();
     }
-
 }

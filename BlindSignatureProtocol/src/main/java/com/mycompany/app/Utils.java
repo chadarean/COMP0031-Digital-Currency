@@ -1,7 +1,7 @@
-package com.mycompany.app.TODA;
+package com.mycompany.app;
 
 import java.util.*;
-import com.mycompany.app.POP.*;
+//import src.POP.*;
 
 public class Utils {
     public static int ubyte(byte b) {
@@ -47,6 +47,14 @@ public class Utils {
             }
         }
         return res;
+    }
+
+    public static String convertKey(String s) {
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < s.length(); ++ i) {
+            appendBits(res, s.charAt(i), 8);
+        }
+        return res.toString();
     }
 
     public static String getHash(String value) {

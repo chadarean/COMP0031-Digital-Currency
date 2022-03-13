@@ -1,8 +1,6 @@
-package com.mycompany.app.TODA; 
+package com.mycompany.app; 
 
 import java.util.*;
-
-import javax.management.RuntimeErrorException;
 
 public class MerkleTrie {
     public final static int ADDRESS_SIZE = 256;
@@ -23,7 +21,7 @@ public class MerkleTrie {
     public static class TrieNode {
         TrieNode branch[] = new TrieNode[2];
         String prefix; // the branch prefix from its parent to the node, empty string for root
-        String value;
+        public String value;
         public TrieNode(TrieNode branch0, TrieNode branch1, String value) {
             this.branch[0] = branch0;
             this.branch[1] = branch1;
@@ -80,6 +78,11 @@ public class MerkleTrie {
         */
 
         int npairs = data.size();
+        if (npairs == 0) {
+            return null;
+        }
+        
+        System.out.println(npairs);
         if (npairs == 1 || (data.get(0).key.charAt(0) == data.get(npairs-1).key.charAt(0))) {
             int chr = 49 - data.get(0).key.charAt(0);
             data.add(chr*npairs, new Pair(Integer.toString(chr), Utils.getHash(null))); // TODO: the paper adds address of length=1, prove that it's correct
@@ -132,6 +135,10 @@ public class MerkleTrie {
     }
 
     public static MerkleProof getMerkleProof(String address, TrieNode node) {
+        if (node == null) {
+            return null;
+        }
+        
         int index = 0;
         //TODO: prove that MerkleTree construction guarantees no parent will have a null branch: bc
         // the parent will be combined with the non null branch
@@ -179,6 +186,8 @@ public class MerkleTrie {
         if (index < address.length()) {
             proof.null_proof = true;
         }
+        proof.setHash(node.value);
+        
         // if (proof.null_proof) {
         //     System.out.println("Null proof for address=" + address);
         // }

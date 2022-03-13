@@ -1,4 +1,4 @@
-package com.mycompany.app.TODA;
+package com.mycompany.app;
 
 public class Pair<U, V> {
     public final U key; // 2^256 bits address

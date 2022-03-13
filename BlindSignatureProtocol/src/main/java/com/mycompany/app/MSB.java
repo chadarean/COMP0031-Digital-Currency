@@ -42,7 +42,14 @@ public class MSB {
         return public_key;
     }
 
-
+    public boolean redeemAsset(Connection conn, String user_id, double amount){
+        double success = updateBalanceOfUser(conn,user_id,amount);
+        if(success == -1){
+            return false;
+        }else{
+            return true;
+        }
+    }
 
     // returns true if user_id has at least amount tokens, false otherwise
     public boolean verifyBalance(Connection conn, String user_id, double amount) {

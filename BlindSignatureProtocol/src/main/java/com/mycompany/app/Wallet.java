@@ -2,10 +2,7 @@ package com.mycompany.app;
 
 import java.math.BigInteger;
 //import java.security.SecureRandom;
-
-import com.mycompany.app.POP.Token;
-import com.mycompany.app.TODA.Owner;
-import com.mycompany.app.TODA.Utils;
+import java.util.ArrayList;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
