@@ -1,10 +1,12 @@
 package com.mycompany.app.POP;
 
+import java.sql.Timestamp;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Utils;
 
 public class Token {
 
@@ -19,6 +21,10 @@ public class Token {
         fileDetail = new FileDetail(null, null, null);
         // TODO: Add asset to DB
         return this;
+    }
+
+    public void addSignature(String signature) {
+        this.fileDetail.proofsPacketHash = signature;
     }
 
     public String getFileId() {
@@ -70,5 +76,10 @@ public class Token {
             nullHashStr.append("0");
         }
         return nullHashStr.toString();
+    }
+
+    public long getSize() {
+        // todo: method that returns the size of fileKernel and fileDetail
+        return Utils.getObjectSize(fileKernel) + Utils.getObjectSize(fileDetail);
     }
 }

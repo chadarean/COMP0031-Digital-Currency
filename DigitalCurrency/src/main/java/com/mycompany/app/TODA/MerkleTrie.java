@@ -27,6 +27,10 @@ public class MerkleTrie {
             this.branch[1] = branch1;
             this.value = value;
         }
+
+        public long getSize() {
+            return Utils.getObjectSize(prefix) + Utils.getObjectSize(value) + Utils.getObjectSize(branch[0]) + Utils.getObjectSize(branch[1]);
+        }
     }
 
     private static int getLCP(String a, String b) {

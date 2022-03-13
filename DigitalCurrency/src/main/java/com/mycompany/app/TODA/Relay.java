@@ -1,5 +1,6 @@
 package com.mycompany.app.TODA;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,22 +21,21 @@ public class Relay {
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
-    // For testing purposes
-    int noOfCyclesIssued = 0;
 
     public Relay() {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
+                createCycleTrie();
             }
-        }, 0, 1, TimeUnit.HOURS);
+        }, 1, 5, TimeUnit.SECONDS);
     }
 
     public Relay(int delay, int time, TimeUnit unit) {
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 // calls insertNewCycleTrie(Connection conn)
-                noOfCyclesIssued++;
+                createCycleTrie();
             }
         }, delay, time, unit);
     }
@@ -43,7 +43,7 @@ public class Relay {
     public void addUpdateFromUpstream(String address, String updateHash) {
     }
 
-    public void addUpdateFromDownstream(String address, String updateHash) {
+    public void addUpdateFromDownstream(String address, String updateHash) { //*
         // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
         currentTransactions.put(address, updateHash);
     }
@@ -81,7 +81,9 @@ public class Relay {
 
     public MerkleTrie.TrieNode createCycleTrie() {
         NCycleTries += 1;
-
+        if (currentTransactions.size() == 0) {
+            return null;
+        }
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(getSortedTransactions()); 
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value); 
@@ -112,7 +114,7 @@ public class Relay {
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
-    public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) {
+    public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) { //*
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
         int beginCycle = cycleId.get(G_k);
         int endCycle = cycleId.get(G_n);
@@ -125,6 +127,10 @@ public class Relay {
     }
 
     public int getNoOfCyclesIssued() {
-        return noOfCyclesIssued;
+        return NCycleTries;
+    }
+
+    public MerkleTrie.TrieNode getMostRecentCycTrieNode() {
+        return cycleTrie.get(NCycleTries);
     }
 }
