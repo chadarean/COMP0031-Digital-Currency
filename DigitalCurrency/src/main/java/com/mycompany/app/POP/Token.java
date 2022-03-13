@@ -1,9 +1,9 @@
 package com.mycompany.app.POP;
 
-import java.sql.Timestamp;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 import com.mycompany.app.TODA.MerkleTrie;
 import com.mycompany.app.TODA.Utils;
@@ -63,7 +63,7 @@ public class Token {
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));
-            String encoded = org.bouncycastle.util.encoders.Base64.toBase64String(hash);
+            String encoded = Base64.getEncoder().encodeToString(hash);
             return encoded.substring(0, 32);
         } catch(NoSuchAlgorithmException e) {
             throw new RuntimeException(e);

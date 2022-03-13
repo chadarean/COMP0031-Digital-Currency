@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package com.mycompany.app.test;
 
 import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;

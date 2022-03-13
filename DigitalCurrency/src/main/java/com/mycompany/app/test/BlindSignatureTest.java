@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package com.mycompany.app.test;
 
 import static org.junit.Assert.assertTrue;
 
@@ -6,6 +6,8 @@ import org.junit.Test;
 import java.io.UnsupportedEncodingException;
 
 import org.bouncycastle.crypto.CipherParameters;
+import test.MSB;
+import test.Wallet;
 
 /**
  * Unit test for simple App.
@@ -18,7 +20,7 @@ public class BlindSignatureTest
     @Test
     public void shouldAnswerWithTrue()
     {
-        assertTrue( true );
+        Assert.assertTrue( true );
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException{

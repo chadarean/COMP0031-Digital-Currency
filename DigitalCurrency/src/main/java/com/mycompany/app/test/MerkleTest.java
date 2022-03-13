@@ -1,8 +1,12 @@
-package com.mycompany.app;
+package com.mycompany.app.test;
 
 import java.util.*;
 import java.sql.Timestamp;
 import com.mycompany.app.TODA.*;
+import com.mycompany.app.TODA.MerkleProof;
+import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Pair;
+import com.mycompany.app.TODA.Utils;
 
 public class MerkleTest {
     public static void MerkleTreeTest(ArrayList<Pair<String, String>> pairs, ArrayList<String> idleAddresses) {

@@ -1,7 +1,6 @@
-package com.mycompany.app;
+package com.mycompany.app.TODA;
 
 import java.util.*;
-import com.mycompany.app.TODA.*;
 
 public class TestUtils {
     public static Random rand = new Random();

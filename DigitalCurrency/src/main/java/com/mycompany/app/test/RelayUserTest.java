@@ -1,13 +1,15 @@
-package com.mycompany.app;
+package com.mycompany.app.test;
 
-import com.mycompany.app.TODA.*;
-
-import java.lang.reflect.Array;
 import java.lang.Math;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import com.mycompany.app.POP.*;
+import com.mycompany.app.POP.POPSlice;
+import com.mycompany.app.POP.Token;
+import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Owner;
+import com.mycompany.app.TODA.Pair;
+import com.mycompany.app.TODA.Relay;
 
 public class RelayUserTest {
     public static Random rand = new Random();
@@ -22,7 +24,7 @@ public class RelayUserTest {
         HashMap<Integer, ArrayList<Token>> ownerAsset = new HashMap<>();
 
         for (int i = 0; i < numConsumers+numMerchants; ++ i) {
-            if (i < numConsumers) {git
+            if (i < numConsumers) {
                 Owner a = new Owner(Integer.toString(i));
                 String address = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                 consumers.add(a);

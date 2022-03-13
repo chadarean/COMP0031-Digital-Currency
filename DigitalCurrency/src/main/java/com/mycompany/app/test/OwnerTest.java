@@ -1,12 +1,12 @@
-package com.mycompany.app;
-
-import com.mycompany.app.TODA.*;
+package com.mycompany.app.test;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import com.mycompany.app.POP.*;
+import com.mycompany.app.POP.POPSlice;
+import com.mycompany.app.POP.Token;
+import com.mycompany.app.TODA.*;
 
 public class OwnerTest {
     public static Random rand = new Random();
