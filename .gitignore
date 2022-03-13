@@ -1,7 +1,4 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/java,maven,jetbrains+all,windows,macos
-# Edit at https://www.toptal.com/developers/gitignore?templates=java,maven,jetbrains+all,windows,macos
-
 ### Java ###
 # Compiled class file
 *.class
@@ -190,4 +187,19 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/java,maven,jetbrains+all,windows,macos
+.gradle
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
