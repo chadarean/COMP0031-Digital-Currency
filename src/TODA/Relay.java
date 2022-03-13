@@ -42,8 +42,8 @@ public class Relay {
 
     public void addUpdateFromUpstream(String address, String updateHash) {
     }
-
-    public void addUpdateFromDownstream(String address, String updateHash) {
+ 
+    public void addUpdateFromDownstream(String address, String updateHash) { //*
         // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
         currentTransactions.put(address, updateHash);
     }
@@ -114,7 +114,7 @@ public class Relay {
         return new POPSlice(root.value, addressProof, null, null, null); 
     }
 
-    public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) {
+    public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) { //*
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
         int beginCycle = cycleId.get(G_k);
         int endCycle = cycleId.get(G_n);
