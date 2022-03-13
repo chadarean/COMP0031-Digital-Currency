@@ -1,10 +1,9 @@
-package src.TODA;
+package com.mycompany.app;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
-import src.POP.FileKernel;
+import com.mycompany.app.POP.FileKernel;
+import com.mycompany.app.TODA.InstrumentationAgent;
+import com.mycompany.app.TODA.MerkleProof;
 
 public class InstrumentationTest {
 

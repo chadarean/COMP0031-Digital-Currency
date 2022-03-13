@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Utils;
 
 public class Token {
 

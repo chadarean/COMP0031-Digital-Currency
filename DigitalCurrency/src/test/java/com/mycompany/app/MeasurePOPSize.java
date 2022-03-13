@@ -1,17 +1,17 @@
-package tests;
+package com.mycompany.app;
 
-import src.TODA.*;
+import com.mycompany.app.POP.POPSlice;
+import com.mycompany.app.POP.Token;
+import com.mycompany.app.TODA.*;
 
 import java.io.PrintWriter; 
 import java.io.IOException;  
-import java.text.NumberFormat.Style;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import src.POP.*;
 
 public class MeasurePOPSize {
     public static class Structs {
