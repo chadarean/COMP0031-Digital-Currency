@@ -2,7 +2,7 @@
 
 # Distributed Ledger Technology 
 The Hyperledger Fabric network is an open source enterprise-grade permissioned distributed ledger technology (DLT) platform, 
-designed for use in enterprise contexts. In this project, we utilise the network provided by Fabric to keep an immutable log of transactions, represented by the 'cyclerootID' and 'cyclerootHash' that are stored as key value pairs. 
+designed for use in enterprise contexts. In this project, we utilise the network provided by Fabric to keep an immutable log of transactions, represented by the `cyclerootID` and `cyclerootHash` that are stored as key value pairs. 
 
 ## Installing Prerequisites
 Before you begin, there are a number of prerequisites that need to be installed.
