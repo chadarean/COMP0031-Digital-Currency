@@ -47,3 +47,37 @@ After you have used the network.sh to create a channel, you can start a chaincod
 
 `./network.sh deployCC -ccn basic -ccp -ccl java`
 
+### Interacting with the network
+
+Make sure that you are operating from the test-network directory. You can find the peer binaries in the bin folder of the fabric-samples repository. Use the following command to add those binaries to your CLI Path:
+
+`export PATH=${PWD}/../bin:$PATH`
+
+You also need to set the FABRIC_CFG_PATH to point to the core.yaml file in the fabric-samples repository:
+
+`export FABRIC_CFG_PATH=$PWD/../config/`
+
+You can now set the environment variables that allow you to operate the peer CLI as Org1:
+
+`export CORE_PEER_TLS_ENABLED=true`
+
+`export CORE_PEER_LOCALMSPID="Org1MSP"`
+
+`export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt`
+
+`export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp`
+
+`export CORE_PEER_ADDRESS=localhost:7051`
+
+Run the following command to initialise the ledger with the assets
+
+`peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C mychannel -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"function":"InitLedger","Args":[]}'`
+
+You can now query the ledger from your CLI. The following command can be used to get the list of assets that were added to your channel ledger:
+
+`peer chaincode query -C mychannel -n basic -c '{"Args":["GetAllAssets"]}'`
+
+Chaincodes are invoked when a network member wants to transfer or change an asset on the ledger. Use the following command to change the owner of an asset on the ledger by invoking the asset-transfer (basic) chaincode:
+
+`peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C mychannel -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"function":"TransferAsset","Args":["asset6","Christopher"]}'`
+
