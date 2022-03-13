@@ -1,10 +1,21 @@
-package com.mycompany.app;
+package com.mycompany.app.MSB;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
+import com.google.gson.Gson;
+import com.mycompany.app.BlindSignature;
+import com.mycompany.app.StandardResponse;
+import com.mycompany.app.StatusResponse;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
-
+import static spark.Spark.delete;
+import static spark.Spark.get;
+import static spark.Spark.options;
+import static spark.Spark.post;
+import static spark.Spark.put;
+import static spark.Spark.port;
 
 public class MSB {
 
@@ -19,8 +30,8 @@ public class MSB {
     redeemAsset(user_id, asset=F, POP_list) = forwards vefication to TODA API and possibly the ledger; on success updates the balance of user_id
     */
 
-    CipherParameters public_key;
-    CipherParameters private_key;
+    static CipherParameters public_key;
+    static CipherParameters private_key;
 
     
     // This public key generate here could send to Alice wallet, which could be used to blind the message.
@@ -177,6 +188,27 @@ public class MSB {
         msb.selectAll();
         msb.deleteUserData(c);
         msb.selectAll();
+
+        port(8080);
+
+        get("/MSB/requestKey", (request, response) -> {
+            response.type("application/json");
+            String publicKey=public_key.toString();
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("ByteKey:"+publicKey)));
+        });
+
+        post("/MSB/requestSign/:blindedmsg", (request, response) -> {
+            response.type("application/json");
+            String msg=request.attribute(":blindedmsg");
+            byte[] blinded_message=msg.getBytes(StandardCharsets.UTF_8);
+            byte[] signed_message=BlindSignature.signBlinded(private_key, blinded_message);
+
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("SignedBling"+signed_message.toString())));
+        });
+
+
         try {
             c.close();
         } catch (SQLException e) {
