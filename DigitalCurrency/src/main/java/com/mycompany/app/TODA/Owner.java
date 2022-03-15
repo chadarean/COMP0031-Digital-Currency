@@ -183,6 +183,7 @@ public class Owner {
         } else {
             addressPOPSlice.put(address, popSlice);
         }
+        //if (popSlice.getSize() > storedPopSize)
         storedPopSize += popSlice.getSize();
         if (!updateToCycleRoot.containsKey(address)) {
             final MerkleTrie.TrieNode addressCrtFileTrie = crtFileTrie.get(address);
@@ -261,13 +262,15 @@ public class Owner {
         int beginCycle = relay.cycleId.get(asset.getIssuedCycleRoot());
         int endCycle = relay.cycleId.get(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
+
         for (int i = beginCycle; i <= endCycle; ++ i) {
-            HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(i);
+            int cycleIdx = i;
+            HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(cycleIdx);
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
-                popSlice = relay.getPOPSlice(address, i);
+                popSlice = relay.getPOPSlice(address, cycleIdx);
                 if (crtCycleSlice == null) {
-                    addressToPOPSlice.put(i, new HashMap<String, POPSlice>(){{put(address, popSlice);}});
+                    addressToPOPSlice.put(cycleIdx, new HashMap<String, POPSlice>(){{put(address, popSlice);}});
                 } else {
                     crtCycleSlice.put(address, popSlice);
                 }

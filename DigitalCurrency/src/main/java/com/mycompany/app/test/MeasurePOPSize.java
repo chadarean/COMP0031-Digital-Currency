@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +18,7 @@ public class MeasurePOPSize {
     public static class Structs {
         double addressProofSize;
         double fileProofSize;
-        double popSize; 
+        double popSize;
         double tokenSize;
         double userStorage;
         double fullUserStorage;
@@ -77,7 +78,7 @@ public class MeasurePOPSize {
         // System.out.println("initial cycle " + C_.get(0));
         // System.out.println(r.cycleId.get(C_.get(0)));
     }
-    
+
     public static void setupTransactions(int nTokens, int nAddr, boolean useRandom){
         createUsers(nAddr);
 
@@ -181,20 +182,20 @@ public class MeasurePOPSize {
             fullUserStorageSum += a.getSize(true);
             assetsStorageSum += a.getAssetsSize();
         }
-        
+
         System.out.printf("POP avg size = %f\n token avg size = %f\n Merkle File Proofs avg size = %f\n Address Proof avg size = %f\n",
-        (double)(popSizeSum / nTokens) / nAddr, 
-        (double)(tokenSizeSum / nTokens) / nAddr, 
-        (double)(fileProofSizesSum / nFileProofs),
-        (double)(addressProofSizeSum / nAddrPfoofs));
+                (double)(popSizeSum / nTokens) / nAddr,
+                (double)(tokenSizeSum / nTokens) / nAddr,
+                (double)(fileProofSizesSum / nFileProofs),
+                (double)(addressProofSizeSum / nAddrPfoofs));
         Structs structs = new Structs(((double)addressProofSizeSum / nAddrPfoofs),
-        ((double)fileProofSizesSum / nFileProofs), 
-        ((double)popSizeSum / nTokens) / nAddr, 
-        ((double)tokenSizeSum / nTokens) / nAddr, 
-        (double)userStorageSum / nAddr, 
-        (double)fullUserStorageSum / nAddr, 
-        assetsStorageSum / nAddr);
-        
+                ((double)fileProofSizesSum / nFileProofs),
+                ((double)popSizeSum / nTokens) / nAddr,
+                ((double)tokenSizeSum / nTokens) / nAddr,
+                (double)userStorageSum / nAddr,
+                (double)fullUserStorageSum / nAddr,
+                assetsStorageSum / nAddr);
+
         return structs;
     }
 
@@ -212,9 +213,11 @@ public class MeasurePOPSize {
         // todo, either create plot in Java or write results to a file and use Python 
     }
 
-    public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles) {
+    public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) {
         setup(); // create initial cycle
         createUsers(nUsers);
+
+        HashMap<Integer, Integer> transactingUser = new HashMap<>();
 
         long popSizeSum = 0;
         long tokenSizeSum = 0;
@@ -227,38 +230,44 @@ public class MeasurePOPSize {
         int nTokensTrans = 0;
         int nAddrProofs = 0;
         int nFileProofs = 0;
+        int nTransRec = 0;
 
         ArrayList<ArrayList<Pair<Integer, Pair<String, String>>>> transactions = new ArrayList<>();
         HashMap<String, ArrayList<Token>> tokensForAddr = new HashMap<>();
         for (int c = 0; c < nCycles - 1; ++ c) {
             if (c + nWaitingCycles < nCycles - 1) {
-                int nTransactions = Math.abs(TestUtils.getNextInt()) % nUsers + 1;
+                int nTransactions = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
                 // create nTransactions for cycle
-                ArrayList<Pair<Integer, Pair<String, String>>> t_c = new ArrayList<>();
+                transactions.add(new ArrayList<>());
 
                 nTrans += nTransactions;
                 for (int i = 0; i < nTransactions; ++ i) {
                     int user_i = Math.abs(TestUtils.getNextInt()) % nUsers;
+                    if (oneTransaction) {
+                        while (transactingUser.containsKey(user_i)) {
+                            user_i = Math.abs(TestUtils.getNextInt()) % nUsers;
+                        }
+                        transactingUser.put(user_i, -1);
+                    }
                     Owner a = users.get(user_i);
                     String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     // create asset for user_i
                     int tokens_i = Math.abs(TestUtils.getNextInt()) % nTokens + 1;
-                    nTokensTrans += tokens_i;
 
                     tokensForAddr.put(addressA, new ArrayList<Token>());
-                    for (int j = 0; j < tokens_i; ++ j) {
+                    for (int j = 0; j < tokens_i; ++j) {
                         String certSignature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // certificate signature s((I_d, d), I)
                         // create asset for addressA, issuance cycle root C_.get(0), denominator j+1 and certSignature 
-                        Token asset = a.createAsset(C_.get(c), addressA, j+1, certSignature);
+                        Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature);
                         String signature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // unblinded bsig for asset.fileKernel
                         asset.addSignature(signature);
                         tokensForAddr.get(addressA).add(asset);
                     }
-                    t_c.add(new Pair<Integer, Pair<String, String>>(i, new Pair<String, String> (addressA, addressB)));
+
+                    transactions.get(c).add(new Pair<Integer, Pair<String, String>>(user_i, new Pair<String, String>(addressA, addressB)));
                 }
-                transactions.add(t_c);
             }
             if (c < nWaitingCycles) {
                 MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, Math.abs(TestUtils.getNextInt()) % nUsers + 1);
@@ -287,15 +296,26 @@ public class MeasurePOPSize {
                     String addressB = t.value.value;
                     POPSlice popSlice_t = r.getPOPSlice(addressA, C_.get(c+1));
                     a.receivePOP(addressA, popSlice_t);
+
+                    ++ nTransRec;
+                    int pops = 0;
                     ArrayList<Token> tokens_i = tokensForAddr.get(addressA);
                     for (Token token_j : tokens_i) {
                         ArrayList<POPSlice> pop;
                         pop = a.getPOPUsingCache(C_.get(c+1), addressA, token_j);
+                        nTokensTrans += 1;
                         for (POPSlice popSlice: pop) {
+                            if (popSlice.getSize() != a.addressToPOPSlice.get(a.relay.cycleId.get(popSlice.cycleRoot)).get(addressA).getSize()) {
+                                throw new RuntimeException("Incorrect!");
+                            }
+//                            System.out.printf("pop for cycle %s and slice_sz=%d cache_slice_sz=%d\n", a.relay.cycleId.get(popSlice.cycleRoot),
+//                                    popSlice.getSize(), a.addressToPOPSlice.get(a.relay.cycleId.get(popSlice.cycleRoot)).get(addressA).getSize());
+                            //System.out.printf("cycle1 = %d cycle2 = %d", a.relay.cycleId.get(popSlice.cycleRoot), )
                             popSizeSum += popSlice.getSize();
                             nAddrProofs += 1;
                             addressProofSizeSum += popSlice.addressProof.getSize();
                         }
+                        pops += pop.size();
                         tokenSizeSum += token_j.getSize();
                         MerkleProof proof = a.getFileProof(C_.get(c+1), addressA, Utils.convertKey(token_j.getFileId()));
                         fileProofSizesSum += proof.getSize();
@@ -305,27 +325,38 @@ public class MeasurePOPSize {
                             throw new RuntimeException("Incorrect proof created!");
                         }
                     }
+                    transactingUser.put(t.key, a.addressToPOPSlice.size());
+//                    if (a.addressToPOPSlice.size() < pops) {
+//                        throw new RuntimeException(Integer.toString(a.addressToPOPSlice.size()));
+//                    }
                 }
             }
         }
-        
+
         int nActiveUsers = 0;
-        for (Owner a: users) {
-            if (a.assets.size() > 0) {
-                ++ nActiveUsers;
+        for (HashMap.Entry<Integer, Integer> entry: transactingUser.entrySet()) {
+            if (entry.getValue() == -1) {
+                throw new RuntimeException("wtf");
             }
-            userStorageSum += a.getSize(false);
-            fullUserStorageSum += a.getSize(true);
-            assetsStorageSum += a.getAssetsSize();
+            //System.out.printf("userid=%d val1=%d exp=%d\n", entry.getKey(), entry.getValue(), users.get(entry.getKey()).addressToPOPSlice.size());
         }
+        for (Owner a: users) {
+            if (a.addressToPOPSlice.size() > 0) {
+                ++ nActiveUsers;
+                userStorageSum += a.getSize(false);
+                fullUserStorageSum += a.getSize(true);
+                assetsStorageSum += a.getAssetsSize();
+            }
+        }
+
         Structs structs = new Structs(((double)addressProofSizeSum / nAddrProofs),
-        ((double)fileProofSizesSum / nFileProofs), 
-        ((double)popSizeSum / nTokensTrans), 
-        ((double)tokenSizeSum / nTrans), 
-        (double)userStorageSum / nActiveUsers, 
-        (double)fullUserStorageSum / nActiveUsers, 
-        (double)assetsStorageSum / nActiveUsers);
-        
+                ((double)fileProofSizesSum / nFileProofs),
+                ((double)popSizeSum / nTokensTrans),
+                ((double)tokenSizeSum / nTrans),
+                (double)userStorageSum / nActiveUsers,
+                (double)fullUserStorageSum / nActiveUsers,
+                (double)assetsStorageSum / nActiveUsers);
+
         return structs;
     }
 
@@ -342,28 +373,25 @@ public class MeasurePOPSize {
         }
     }
 
-    public static void measureRandomExperim() {
-        int nTokenValues[] = {8};
-        int nAddrValues[] = {512};
-        int nWaitingCyclesValues[] = {0, 1, 2, 4, 8, 16}; //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-        // TODO: use the same random numbers for each experiment
+    public static void measureRandomExperim(String fileName, int nTokenValues[], int nAddrValues[], int nWaitingCyclesValues[], boolean oneTransaction) {
+//       {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
         int nCyclesValues[] = {33};
         try {
-            PrintWriter results = new PrintWriter("randomExperiment.txt");
+            PrintWriter results = new PrintWriter(fileName);
             for (int nTokens: nTokenValues) {
                 for (int nAddr:  nAddrValues) {
                     for (int nWaitingCycles : nWaitingCyclesValues) {
                         for (int nCycles : nCyclesValues) {
                             TestUtils.resetState();
-                            Structs res = measureRandom(nTokens, nAddr, nWaitingCycles, nCycles);
+                            Structs res = measureRandom(nTokens, nAddr, nWaitingCycles, nCycles, oneTransaction);
                             for (int reps = 1; reps < 5; ++ reps) {
-                                res.add(measureRandom(nTokens, nAddr, nWaitingCycles, nCycles));
+                                res.add(measureRandom(nTokens, nAddr, nWaitingCycles, nCycles, oneTransaction));
                             }
                             res.divBy(5);
                             results.printf("%d %d %d %d %f %f %f %f %f\n", nTokens, nAddr, nWaitingCycles, nCycles, res.addressProofSize, res.fileProofSize, res.popSize, res.userStorage, res.fullUserStorage);
                             System.out.printf
-                            ("address proof avg sz = %f \n file proof avg sz = %f \n pop avg sz = %f\nuser storage avg = %f\n+cache storage = %f\n", 
-                            res.addressProofSize, res.fileProofSize, res.popSize, res.userStorage, res.fullUserStorage);
+                                    ("address proof avg sz = %f \n file proof avg sz = %f \n pop avg sz = %f\nuser storage avg = %f\n+cache storage = %f\n",
+                                            res.addressProofSize, res.fileProofSize, res.popSize, res.userStorage, res.fullUserStorage);
                         }
                     }
                 }
@@ -376,8 +404,9 @@ public class MeasurePOPSize {
 
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
-        //measureRandom(4, 1024, 3, 20);
-        measureRandomExperim();
+        //measureRandomExperim("varyTokenSizes.txt", new int[]{1, 2, 4, 8, 16}, new int[]{512}, new int[]{0}, false);
+        //measureRandomExperim("varyAddrSizes.txt", new int[]{8}, new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+        measureRandomExperim("varyWaitingCycles.txt", new int[]{8}, new int[]{512*33}, new int[]{16}, true);
         //measureForXWaitingCycles();
         System.out.println("Passed");
     }
