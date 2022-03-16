@@ -1,43 +1,109 @@
 package com.mycompany.app.test;
 
-import static org.junit.Assert.assertTrue;
+import com.mycompany.app.BlindSignature;
+import org.junit.Assert;
+import java.math.BigInteger;
 
-import com.mycompany.app.MSB.MSB;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.junit.Before;
 import org.junit.Test;
-import java.io.UnsupportedEncodingException;
 
-import org.bouncycastle.crypto.CipherParameters;
 
-/**
- * Unit test for simple App.
- */
 public class BlindSignatureTest
 {
-    /**
-     * Rigorous Test :-)
-     */
+    AsymmetricCipherKeyPair alice_keyPair;
+    AsymmetricCipherKeyPair bob_keyPair;
+
+    @Before
+    public void setup(){
+        AsymmetricCipherKeyPair alice_keyPair = BlindSignature.generateKeys(1024);
+        AsymmetricCipherKeyPair bob_keyPair = BlindSignature.generateKeys(1024);
+    }
+
     @Test
-    public void shouldAnswerWithTrue()
+    public void fullProtocolTest()
     {
-        assertTrue( true );
+        try {
+            byte[] msg = "Hello There".getBytes("UTF-8");
+            //Alice::Generating blinding factor based on Bob's public key
+            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
+            //Alice::Blinding message with Bob's public key
+            byte[] blinded_msg =BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
+            //Alice::Signing blinded message with Alice's private key
+            //Message is signed by Alice so that one blinded process produces at most one valid signed message
+            //https://eprint.iacr.org/2001/002.pdf
+            byte[] sig = BlindSignature.sign(alice_keyPair.getPrivate(), blinded_msg);
+            //Bob::Verifying alice's signature
+            if (BlindSignature.verify(alice_keyPair.getPublic(), blinded_msg, sig)) {
+                //Bob::Signing blinded message with bob's private key
+                byte[] sigBybob =BlindSignature.signBlinded(bob_keyPair.getPrivate(), blinded_msg);
+                //Alice::Unblinding bob's signature
+                byte[] unblindedSigBybob =BlindSignature.unblind(bob_keyPair.getPublic(), blindingFactor, sigBybob);
+                //Alice::Verifying bob's unblinded signature
+                Assert.assertTrue(BlindSignature.verify(bob_keyPair.getPublic(), msg, unblindedSigBybob));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    public void blindUnblindMessageTest(){
+        try {
+            byte[] msg = "Hello There".getBytes("UTF-8");
+            //Alice::Generating blinding factor based on Bob's public key
+            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
+            //Alice::Blinding message with Bob's public key
+            byte[] blinded_msg =BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
+            //Alice::Signing blinded message with Alice's private key
+            byte[] unblinded_msg =BlindSignature.unblind(bob_keyPair.getPublic(), blindingFactor, blinded_msg);
+            //Bob::Verifying alice's signature
+            Assert.assertEquals(msg, unblinded_msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    public void verifySignatureTest(){
+        try {
+            byte[] msg = "Hello There".getBytes("UTF-8");
+            //Alice::Generating blinding factor based on Bob's public key
+            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
+            //Alice::Blinding message with Bob's public key
+            byte[] blinded_msg =BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
+            //Alice::Signing blinded message with Alice's private key
+            byte[] sig = BlindSignature.sign(alice_keyPair.getPrivate(), blinded_msg);
+            Assert.assertTrue(BlindSignature.verify(alice_keyPair.getPublic(), blinded_msg, sig));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
-    public static void main(String[] args) throws UnsupportedEncodingException{
-        byte[] msg = "Hello There".getBytes("UTF-8");
-        MSB msb = new MSB();
-        Wallet Alice_wallet = new Wallet("1");
-        Wallet Bob_wallet = new Wallet("2");
-        msb.generate_keypairs(1024);
-        CipherParameters public_key = msb.share_publickey();
-        Alice_wallet.get_issuer_publickey(public_key);
-        Bob_wallet.get_issuer_publickey(public_key);
-        Alice_wallet.setBlindingFactor();
-        byte[] blind = Alice_wallet.blind_message(msg);
-        byte[] signed_blind = msb.signBlinded(blind);
-        byte[] unblind_sign = Alice_wallet.unblind_message(signed_blind);
+    @Test
+    public void blindTest(){
+        try {
+            byte[] msg = "Hello There".getBytes("UTF-8");
+            //Alice::Generating blinding factor based on Bob's public key
+            BigInteger blindingFactor = BlindSignature.generateBlindingFactor(bob_keyPair.getPublic());
+            //Alice::Blinding message with Bob's public key
+            byte[] blinded_msg =BlindSignature.blind(bob_keyPair.getPublic(), blindingFactor, msg);
+            Assert.assertNotEquals(blinded_msg, msg);
 
-        // Both Alice and bob could verify the message.
-        System.out.println(Alice_wallet.verify_message(msg, unblind_sign));
-        System.out.println(Bob_wallet.verify_message(msg, unblind_sign));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
+    @Test
+    public void keyGenerationTest(){
+        AsymmetricCipherKeyPair alice_keyPair = BlindSignature.generateKeys(1024);
+        AsymmetricCipherKeyPair bob_keyPair = BlindSignature.generateKeys(1024);
+        Assert.assertNotEquals(alice_keyPair.getPublic(),bob_keyPair.getPublic());
+        Assert.assertNotEquals(alice_keyPair.getPrivate(),bob_keyPair.getPrivate());
+
+    }
+
+
+
 }
