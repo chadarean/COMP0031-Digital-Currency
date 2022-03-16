@@ -167,28 +167,35 @@ public class Relay {
         Relay r = new Relay();
         MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
 
-
+        //defines port to run spark API on
         port(8090);
+        //defines API paths and their respective functionality
         get("/Relay/getPOP/:stringAddress/:G_K:/:G_n:", (request, response) -> {
             response.type("application/json");
-
+            //Invokes getPop() method by passing parameters from URL to method
+            //Returns the Pop in JSON format by using Gson to serialise the returned pop
             return new Gson()
                     .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")))));
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
-
+            //Invokes getPopSlice() method by passing parametrs from URL to method
+            //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             return new Gson()
                     .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))))));
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");
-
+            //Invokes getMostRecentCycleTrie method
+            //Serialises return value using Gson
             return new Gson()
                     .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getMostRecentCycTrieNode())));
         });
         post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
             response.type("application/json");
+            //Tries to invokes addUpdateFromDownstream() method
+            //If successful return succes
+            //Else return Failure
             try {
                 r.addUpdateFromDownstream(request.attribute(":stringAddress"),request.attribute(":updateHash"));
                 return new Gson()
