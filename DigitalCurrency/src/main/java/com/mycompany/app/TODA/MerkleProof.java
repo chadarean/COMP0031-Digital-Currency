@@ -51,7 +51,9 @@ public class MerkleProof {
 
     public long getSize() {
         long proofSize = Utils.getObjectSize(leafHash) + Utils.getObjectSize(null_proof);
+        System.out.printf("%d, %d=proof size metadata for %d frames\n", Utils.getObjectSize(leafHash), proofSize, frames.size());
         for (Frame f: frames) {
+            System.out.printf("%d=frame size\n", Utils.getObjectSize(f));
             proofSize += Utils.getObjectSize(f);
         }
         return proofSize;

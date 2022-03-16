@@ -67,40 +67,36 @@ public class Utils {
             return 0;
         }
 
-        if (object.getClass().getName().equals("src.TODA.MerkleTrie$TrieNode")) {
+        if (object.getClass().getName().equals("com.mycompany.app.TODA.MerkleTrie$TrieNode")) {
             // slow recursive method
             return ((MerkleTrie.TrieNode)object).getSize();
         }
 
-        if (object.getClass().getName().equals("src.TODA.MerkleProof")) {
+        if (object.getClass().getName().equals("com.mycompany.app.TODA.MerkleProof")) {
             return ((MerkleProof)object).getSize();
         }
 
-        if (object.getClass().getName().equals("src.TODA.MerkleProof$Frame")) {
+        if (object.getClass().getName().equals("com.mycompany.app.TODA.MerkleProof$Frame")) {
             return ((MerkleProof.Frame)object).getSize();
         }
 
-        if (object.getClass().getName().equals("src.POP.FileDetail")) {
+        if (object.getClass().getName().equals("com.mycompany.app.POP.FileDetail")) {
             return 0;
         }
 
-        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
+        if (object.getClass().getName().equals("com.mycompany.app.POP.TransactionPacket")) {
             return ((TransactionPacket)object).getSize();
         }
 
-        if (object.getClass().getName().equals("src.POP.TransactionPacket")) {
-            return ((TransactionPacket)object).getSize();
-        }
-
-        if (object.getClass().getName().equals("src.POP.POPSlice")) {
+        if (object.getClass().getName().equals("com.mycompany.app.POP.POPSlice")) {
             return ((POPSlice)object).getSize();
         }
 
-        if (object.getClass().getName().equals("src.POP.Token")) {
+        if (object.getClass().getName().equals("com.mycompany.app.POP.Token")) {
             return ((Token)object).getSize();
         }
 
-        if (object.getClass().getName().contains("src") && !object.getClass().getName().contains("File"))
+        if (object.getClass().getName().contains("com.") && !object.getClass().getName().contains("File"))
         System.out.println(object.getClass().getName());
 
         // TODO: change it to call .getSize() if object is of type \in {Token, TransactionPacket, POPSlice, FileDetail,
