@@ -22,7 +22,7 @@ public class RelayUserTest {
         HashMap<Integer, ArrayList<Token>> ownerAsset = new HashMap<>();
 
         for (int i = 0; i < numConsumers+numMerchants; ++ i) {
-            if (i < numConsumers) {git
+            if (i < numConsumers) {
                 Owner a = new Owner(Integer.toString(i));
                 String address = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                 consumers.add(a);

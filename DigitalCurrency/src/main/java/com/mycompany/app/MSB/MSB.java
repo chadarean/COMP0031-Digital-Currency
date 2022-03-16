@@ -10,6 +10,11 @@ import com.mycompany.app.StandardResponse;
 import com.mycompany.app.StatusResponse;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
+import org.bouncycastle.util.encoders.Base64;
+
 import static spark.Spark.delete;
 import static spark.Spark.get;
 import static spark.Spark.options;
@@ -30,7 +35,8 @@ public class MSB {
     redeemAsset(user_id, asset=F, POP_list) = forwards vefication to TODA API and possibly the ledger; on success updates the balance of user_id
     */
 
-    static CipherParameters public_key;
+
+    public static CipherParameters public_key;
     static CipherParameters private_key;
 
     
@@ -38,6 +44,7 @@ public class MSB {
     // Public key could also send to Bob to verify the tokens
     // Private key generate here could sign for blanded message
     public void generate_keypairs(int keySize){
+
         AsymmetricCipherKeyPair keyPair = BlindSignature.generateKeys(keySize);
         public_key = keyPair.getPublic();
         private_key = keyPair.getPrivate();
@@ -79,7 +86,7 @@ public class MSB {
         Connection conn = null;
         try {
             // db parameters
-            String url = "jdbc:sqlite:src/main/java/com/mycompany/app/MSB_DB.db";
+            String url = "jdbc:sqlite:src/main/java/com/mycompany/app/MSB/MSB_DB.db";
             // create a connection to the database
             conn = DriverManager.getConnection(url);
             
@@ -179,21 +186,14 @@ public class MSB {
         // Example workflow
         MSB msb = new MSB();
         Connection c = msb.connect();
-        // create a user
-        msb.insertUser(c, "User1", 10);
-        // verify balance
-        msb.verifyBalance(c, "User1", 5);
-        // update balance
-        msb.updateBalance(c, "User1", -5);
-        msb.selectAll();
-        msb.deleteUserData(c);
-        msb.selectAll();
+        msb.generate_keypairs(1024);
 
         port(8080);
 
         get("/MSB/requestKey", (request, response) -> {
             response.type("application/json");
-            String publicKey=public_key.toString();
+            byte[] publicKeyDer = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo((AsymmetricKeyParameter) msb.share_publickey()).getEncoded();
+            String publicKey = new String(publicKeyDer, StandardCharsets.UTF_8);
             return new Gson()
                     .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("ByteKey:"+publicKey)));
         });

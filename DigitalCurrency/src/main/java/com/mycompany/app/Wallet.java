@@ -1,6 +1,8 @@
 package com.mycompany.app; 
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 //import java.security.SecureRandom;
 
@@ -11,6 +13,8 @@ import com.mycompany.app.TODA.Utils;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 public class Wallet {
 
@@ -50,8 +54,9 @@ public class Wallet {
         private_key = wallet_keyPair.getPrivate();
     }
     
-    public void get_issuer_publickey(CipherParameters key){
-        issuer_public_key = key;
+    public void get_issuer_publickey(String key) throws IOException {
+        byte[] publicKeyDerRestored = key.getBytes(StandardCharsets.UTF_8);
+        issuer_public_key = (AsymmetricKeyParameter)PublicKeyFactory.createKey((publicKeyDerRestored));
     }
     // Generate blinding factor using own public key
     public void setBlindingFactor(){

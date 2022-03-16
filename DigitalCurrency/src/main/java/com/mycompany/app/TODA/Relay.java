@@ -103,7 +103,7 @@ public class Relay {
             cycleTrie.remove(lastCachedCycleTrieId);
             lastCachedCycleTrieId += 1;
         }
-        //TODO: check if memory problems occur due to cacheing
+        // TODO: check if memory problems occur due to cacheing
         // TODO: after deciding how/when relay creates the cycle trie, separate into different function
         // for (Pair<String, String> transaction : currentTransactions) {
         //     POPSlice crtPopSlice = getPOPSlice(transaction.key, root.value);
@@ -148,7 +148,6 @@ public class Relay {
     public static void main(String[] args){
         Relay r = new Relay();
         MerkleTrie.TrieNode genesisCycleRoot = RelayUtils.createGenesisCycleTrie(r);
-
 
         port(8090);
         get("/Relay/getPOP/:stringAddress/:G_K:/:G_n:", (request, response) -> {
