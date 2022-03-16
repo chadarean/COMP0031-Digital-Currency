@@ -1,7 +1,10 @@
 package com.mycompany.app.test;
 
+import com.mycompany.app.POP.Token;
+import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Relay;
+
 import java.util.*;
-import com.mycompany.app.TODA.*;
 
 public class TestUtils {
     public static Random rand = new Random();
@@ -37,13 +40,13 @@ public class TestUtils {
     }
 
     public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) {
-        r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
+        r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
         return r.createCycleTrie();
     }
 
     public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) {
         for (int i = 0; i < nUpdates; ++ i) {
-            r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
+            r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
         }
         return r.createCycleTrie();
     }

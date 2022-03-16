@@ -13,7 +13,7 @@ public class OwnerTest {
 
     public static void testOwner(int numTokens) {
         ArrayList<String> C_ = new ArrayList<>();
-        Relay r = new Relay(1, 1, TimeUnit.DAYS);
+        Relay r = new Relay(5, 5, TimeUnit.SECONDS);
 
         String aId = "user1";
         String[] addressA = {TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)};
@@ -46,6 +46,8 @@ public class OwnerTest {
             e.printStackTrace();
         }
 
+        //a.relay.createCycleTrie();
+
         MerkleTrie.TrieNode cycleRootNode1 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode1.value); // update cycle hash
         POPSlice popSlice1 = a.relay.getPOPSlice(addressA[0], C_.get(1));
@@ -64,6 +66,7 @@ public class OwnerTest {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        //a.relay.createCycleTrie();
         MerkleTrie.TrieNode cycleRootNode2 = a.relay.getMostRecentCycTrieNode();
         C_.add(cycleRootNode2.value);
         POPSlice popSlice2 = a.relay.getPOPSlice(addressA[1], C_.get(2));

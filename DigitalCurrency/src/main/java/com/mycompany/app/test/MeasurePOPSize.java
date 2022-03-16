@@ -405,8 +405,8 @@ public class MeasurePOPSize {
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
         //measureRandomExperim("varyTokenSizes.txt", new int[]{1, 2, 4, 8, 16}, new int[]{512}, new int[]{0}, false);
-        //measureRandomExperim("varyAddrSizes.txt", new int[]{8}, new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        measureRandomExperim("varyWaitingCycles.txt", new int[]{8}, new int[]{512*33}, new int[]{16}, true);
+        measureRandomExperim("varyAddrSizes.txt", new int[]{1}, new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+        measureRandomExperim("varyWaitingCycles.txt", new int[]{1}, new int[]{512*33}, new int[]{16}, true);
         //measureForXWaitingCycles();
         System.out.println("Passed");
     }

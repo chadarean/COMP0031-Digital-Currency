@@ -9,6 +9,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
+
+import static com.mycompany.app.test.TestUtils.createRandomCycleTrie;
 import static spark.Spark.delete;
 import static spark.Spark.get;
 import static spark.Spark.options;
@@ -51,6 +53,7 @@ public class Relay {
     }
 
     public void addUpdateFromUpstream(String address, String updateHash) {
+        System.out.println(updateHash);
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) { //*
@@ -146,7 +149,7 @@ public class Relay {
 
     public static void main(String[] args){
         Relay r = new Relay();
-        MerkleTrie.TrieNode genesisCycleRoot = RelayUtils.createGenesisCycleTrie(r);
+        MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
 
 
         port(8090);

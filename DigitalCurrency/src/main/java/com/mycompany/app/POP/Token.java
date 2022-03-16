@@ -75,7 +75,7 @@ public class Token {
         for (int i = 0; i < MerkleTrie.ADDRESS_SIZE; ++ i) {
             nullHashStr.append("0");
         }
-        return nullHashStr.toString();
+        return getHashOfString(nullHashStr.toString());
     }
 
     public long getSize() {
