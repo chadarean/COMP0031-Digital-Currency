@@ -1,5 +1,6 @@
 package com.mycompany.app.TODA;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,21 +33,25 @@ public class Relay {
     public HashMap<Integer, String> cycleHash = new HashMap<>();
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    RelayDB relayDB = new RelayDB();
+    Connection c = RelayDB.connect();
 
 
     public Relay() {
+        relayDB.deleteCycleTrieData(c);
+        relayDB.deleteTransactinData(c);
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                // calls insertNewCycleTrie(Connection conn)
                 createCycleTrie();
             }
         }, 1, 5, TimeUnit.SECONDS);
     }
 
     public Relay(int delay, int time, TimeUnit unit) {
+        relayDB.deleteCycleTrieData(c);
+        relayDB.deleteTransactinData(c);
         executorService.scheduleAtFixedRate(new Runnable() {
             public void run() {
-                // calls insertNewCycleTrie(Connection conn)
                 createCycleTrie();
             }
         }, delay, time, unit);
@@ -56,8 +61,8 @@ public class Relay {
         System.out.println(updateHash);
     }
 
-    public void addUpdateFromDownstream(String address, String updateHash) { //*
-        // calls insertTransaction(Connection conn, String addressOfAsset=address, String hashOfUpdate=updateHash)
+    public void addUpdateFromDownstream(String address, String updateHash) {
+        relayDB.insertTransaction(c, address, updateHash);
         currentTransactions.put(address, updateHash);
     }
 
@@ -66,8 +71,7 @@ public class Relay {
     }
 
     public ArrayList<Pair<String, String>> getTransactionsForCycleId(int cycleRootId) {
-        // calls selectAllTransactions(Connection conn, NCycleTries) for the transactions included in CT with id cycleRootId
-        return new ArrayList<Pair<String, String>>(); 
+        return relayDB.selectAllTransactionsForCycle(c, cycleRootId);
     }
 
     public MerkleTrie.TrieNode constructCycleTrie(String cycleRoot) {
@@ -84,11 +88,11 @@ public class Relay {
     }
 
     public ArrayList<Pair<String, String>>  getSortedTransactions() {
+        // return getTransactionsForCycleId(relayDB.getMostRecentCycleId(c));
         ArrayList<Pair<String, String>> crtTransactions = new ArrayList<>();
         for (Map.Entry<String, String> entry : currentTransactions.entrySet()) {
             crtTransactions.add(new Pair<String, String>(entry.getKey(), entry.getValue()));
         }
-        //Collections.sort(crtTransactions);
         return crtTransactions;
     }
 
@@ -112,6 +116,7 @@ public class Relay {
         //     //crtPopSlice.setUpdateHash(transaction.value);
         // }
         currentTransactions.clear();
+        relayDB.insertNewCycleTrie(c);
         return root;
     }
 

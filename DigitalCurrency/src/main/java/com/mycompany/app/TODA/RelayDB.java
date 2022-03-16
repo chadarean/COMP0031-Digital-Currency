@@ -2,6 +2,7 @@ package com.mycompany.app.TODA;
 
 import java.sql.*;
 import java.time.Instant;
+import java.util.ArrayList;
 
 public class RelayDB
 {
@@ -10,7 +11,7 @@ public class RelayDB
         Connection conn = null;
         try {
             // db parameters
-            String url = "jdbc:sqlite:src/main/java/toda/pop/RelayDB.db";
+            String url = "jdbc:sqlite:src/main/java/com/mycompany/app/TODA/RelayDB.db";
             // create a connection to the database
             conn = DriverManager.getConnection(url);
 
@@ -23,15 +24,9 @@ public class RelayDB
     }
 
     public void insertTransaction(Connection conn, String addressOfAsset, String hashOfUpdate) {
-        String sqlSelect = "SELECT CycleTrieId FROM CycleTries ORDER BY CycleTrieId DESC LIMIT 0, 1;";
         String sql = "INSERT INTO Transactions(AddressOfAsset, HashOfUpdate, CycleTrieId) VALUES(?,?,?)";
-
+        int currentId = getMostRecentCycleId(conn);
         try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sqlSelect);
-            int currentId = rs.getInt("CycleTrieId");
-
-
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, addressOfAsset);
             pstmt.setString(2, hashOfUpdate);
@@ -39,6 +34,17 @@ public class RelayDB
             pstmt.executeUpdate();
         } catch(SQLException e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    public int getMostRecentCycleId(Connection conn) {
+        String sqlSelect = "SELECT CycleTrieId FROM CycleTries ORDER BY CycleTrieId DESC LIMIT 0, 1;";
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sqlSelect);
+            return rs.getInt("CycleTrieId");
+        } catch (SQLException e) {
+            return 0; // first cycle trie
         }
     }
 
@@ -68,6 +74,7 @@ public class RelayDB
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.executeUpdate();
+            selectAllCycleTries(conn);
         } catch(SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -90,6 +97,28 @@ public class RelayDB
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public ArrayList<Pair<String, String>>  selectAllTransactionsForCycle(Connection conn, int cycleId){
+        String sql = "SELECT TransactionId, AddressOfAsset, HashOfUpdate, CycleTrieId FROM Transactions WHERE CycleTrieId == " + Integer.toString(cycleId);
+        sql += " ORDER BY AddressOfAsset";
+        ArrayList<Pair<String, String>> transactions = new ArrayList<Pair<String, String>>();
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            // loop through the result set
+            while (rs.next()) {
+                System.out.println(rs.getInt("TransactionId") +  "\t" +
+                        rs.getString("AddressOfAsset") + "\t" +
+                        rs.getString("HashOfUpdate") + "\t" +
+                        rs.getInt("CycleTrieId"));
+                transactions.add(new Pair<String, String>(rs.getString("AddressOfAsset"), rs.getString("HashOfUpdate")));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return transactions;
     }
 
     public void selectAllCycleTries(Connection conn){
