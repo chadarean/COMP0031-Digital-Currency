@@ -109,10 +109,6 @@ public class RelayDB
 
             // loop through the result set
             while (rs.next()) {
-                System.out.println(rs.getInt("TransactionId") +  "\t" +
-                        rs.getString("AddressOfAsset") + "\t" +
-                        rs.getString("HashOfUpdate") + "\t" +
-                        rs.getInt("CycleTrieId"));
                 transactions.add(new Pair<String, String>(rs.getString("AddressOfAsset"), rs.getString("HashOfUpdate")));
             }
         } catch (SQLException e) {

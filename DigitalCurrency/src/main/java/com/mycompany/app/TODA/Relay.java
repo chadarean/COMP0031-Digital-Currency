@@ -1,6 +1,7 @@
 package com.mycompany.app.TODA;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +35,11 @@ public class Relay {
     public HashMap<Integer, MerkleTrie.TrieNode> cycleTrie = new HashMap<>();
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
     RelayDB relayDB = new RelayDB();
-    Connection c = RelayDB.connect();
+    Connection c;
 
 
     public Relay() {
+        c = RelayDB.connect();
         relayDB.deleteCycleTrieData(c);
         relayDB.deleteTransactinData(c);
         executorService.scheduleAtFixedRate(new Runnable() {
@@ -48,6 +50,7 @@ public class Relay {
     }
 
     public Relay(int delay, int time, TimeUnit unit) {
+        c = RelayDB.connect();
         relayDB.deleteCycleTrieData(c);
         relayDB.deleteTransactinData(c);
         executorService.scheduleAtFixedRate(new Runnable() {
@@ -150,6 +153,14 @@ public class Relay {
 
     public MerkleTrie.TrieNode getMostRecentCycTrieNode() {
         return cycleTrie.get(NCycleTries);
+    }
+
+    public void closeConnection() {
+        try {
+            c.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static void main(String[] args){

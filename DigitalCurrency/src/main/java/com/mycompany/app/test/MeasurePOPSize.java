@@ -79,6 +79,10 @@ public class MeasurePOPSize {
         // System.out.println(r.cycleId.get(C_.get(0)));
     }
 
+    public static void tearDown() {
+        r.closeConnection();
+    }
+
     public static void setupTransactions(int nTokens, int nAddr, boolean useRandom){
         createUsers(nAddr);
 
@@ -195,7 +199,7 @@ public class MeasurePOPSize {
                 (double)userStorageSum / nAddr,
                 (double)fullUserStorageSum / nAddr,
                 assetsStorageSum / nAddr);
-
+        tearDown();
         return structs;
     }
 
@@ -210,7 +214,6 @@ public class MeasurePOPSize {
                 System.out.printf("Full user storage =%d\n user storage=%d\n assets storage=%d\n", res.fullUserStorage, res.userStorage, res.assetsStorage);
             }
         }
-        // todo, either create plot in Java or write results to a file and use Python 
     }
 
     public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) {
@@ -356,7 +359,7 @@ public class MeasurePOPSize {
                 (double)userStorageSum / nActiveUsers,
                 (double)fullUserStorageSum / nActiveUsers,
                 (double)assetsStorageSum / nActiveUsers);
-
+        tearDown();
         return structs;
     }
 
@@ -404,7 +407,6 @@ public class MeasurePOPSize {
 
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
-        //measureRandomExperim("varyTokenSizes.txt", new int[]{1, 2, 4, 8, 16}, new int[]{512}, new int[]{0}, false);
         measureRandomExperim("varyAddrSizes.txt", new int[]{1}, new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
         measureRandomExperim("varyWaitingCycles.txt", new int[]{1}, new int[]{512*33}, new int[]{16}, true);
         //measureForXWaitingCycles();

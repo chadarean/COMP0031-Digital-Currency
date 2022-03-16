@@ -84,7 +84,7 @@ public class RelayUserTest {
                 }
             }
         }
-
+        r.closeConnection();
     }
 
     public static void testSingleTransaction(int addressSize) {
@@ -120,6 +120,8 @@ public class RelayUserTest {
         if (assetsB == null || !assetsB.get(assetsB.size()-1).getFileId().equals(asset.getFileId())) {
             throw new RuntimeException("Asset not correctly redeemed!");
         }
+
+        r.closeConnection();
     }
 
     public static void main(String[] args) {
