@@ -160,6 +160,14 @@ public class MSB {
         } catch(SQLException e) {
             System.out.println(e.getMessage());
         }
+
+        sql = "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='Users'";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.executeUpdate();
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static void main(String[] args)
