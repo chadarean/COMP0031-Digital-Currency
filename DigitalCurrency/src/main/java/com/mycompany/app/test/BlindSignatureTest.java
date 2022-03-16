@@ -2,17 +2,16 @@ package com.mycompany.app.test;
 
 import static org.junit.Assert.assertTrue;
 
+import com.mycompany.app.MSB.MSB;
 import org.junit.Test;
 import java.io.UnsupportedEncodingException;
 
 import org.bouncycastle.crypto.CipherParameters;
-import test.MSB;
-import test.Wallet;
 
 /**
  * Unit test for simple App.
  */
-public class BlindSignatureTest 
+public class BlindSignatureTest
 {
     /**
      * Rigorous Test :-)
@@ -20,7 +19,7 @@ public class BlindSignatureTest
     @Test
     public void shouldAnswerWithTrue()
     {
-        Assert.assertTrue( true );
+        assertTrue( true );
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException{
@@ -37,7 +36,7 @@ public class BlindSignatureTest
         byte[] signed_blind = msb.signBlinded(blind);
         byte[] unblind_sign = Alice_wallet.unblind_message(signed_blind);
 
-        // Both Alice and bob could verify the message. 
+        // Both Alice and bob could verify the message.
         System.out.println(Alice_wallet.verify_message(msg, unblind_sign));
         System.out.println(Bob_wallet.verify_message(msg, unblind_sign));
     }

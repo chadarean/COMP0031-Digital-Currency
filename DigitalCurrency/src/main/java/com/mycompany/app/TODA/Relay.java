@@ -8,7 +8,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.Gson;
+import static spark.Spark.delete;
+import static spark.Spark.get;
+import static spark.Spark.options;
+import static spark.Spark.post;
+import static spark.Spark.put;
+import static spark.Spark.port;
+
+
 import com.mycompany.app.POP.POPSlice;
+import com.mycompany.app.StandardResponse;
+import com.mycompany.app.StatusResponse;
 
 public class Relay {
     public int NCycleTries = 0;
@@ -131,5 +142,44 @@ public class Relay {
 
     public MerkleTrie.TrieNode getMostRecentCycTrieNode() {
         return cycleTrie.get(NCycleTries);
+    }
+
+    public static void main(String[] args){
+        Relay r = new Relay();
+        MerkleTrie.TrieNode genesisCycleRoot = RelayUtils.createGenesisCycleTrie(r);
+
+
+        port(8090);
+        get("/Relay/getPOP/:stringAddress/:G_K:/:G_n:", (request, response) -> {
+            response.type("application/json");
+
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")))));
+        });
+        get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
+            response.type("application/json");
+
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))))));
+        });
+        get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
+            response.type("application/json");
+
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getMostRecentCycTrieNode())));
+        });
+        post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
+            response.type("application/json");
+            try {
+                r.addUpdateFromDownstream(request.attribute(":stringAddress"),request.attribute(":updateHash"));
+                return new Gson()
+                        .toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJson("Success")));
+            }catch (Exception e){
+                return new Gson()
+                        .toJson(new StandardResponse(StatusResponse.ERROR, new Gson().toJson("Failed to add update")));
+            }
+
+        });
+
     }
 }
