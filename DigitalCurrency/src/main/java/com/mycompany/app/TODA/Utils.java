@@ -22,6 +22,24 @@ public class Utils {
         }
     }
 
+    public static double getMean(ArrayList<Integer> x) {
+        long sum = 0;
+        for (int y: x) {
+            sum = sum + y;
+        }
+        return (double)sum / x.size();
+    }
+
+    public static double getStdev(ArrayList<Integer> x) {
+        double mean = getMean(x);
+        double standardDeviation = 0;
+        int n = x.size();
+        for (Integer integer : x) {
+            standardDeviation = standardDeviation + Math.pow((integer - mean), 2);
+        }
+        return standardDeviation / n;
+    }
+
     public static String getStringFromByte(byte[] arr, int arrLengthBits) {
         int fullLength = arr.length;
         if ((arrLengthBits % 8) != 0) {

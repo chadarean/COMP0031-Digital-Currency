@@ -65,7 +65,7 @@ public class Relay {
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) {
-        relayDB.insertTransaction(c, address, updateHash);
+        //relayDB.insertTransaction(c, address, updateHash);
         currentTransactions.put(address, updateHash);
     }
 
