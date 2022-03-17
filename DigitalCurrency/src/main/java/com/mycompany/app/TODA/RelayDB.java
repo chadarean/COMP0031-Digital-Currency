@@ -67,10 +67,28 @@ public class RelayDB
         } catch(SQLException e) {
             System.out.println(e.getMessage());
         }
+
+        sql = "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='Transactions'";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.executeUpdate();
+            selectAllCycleTries(conn);
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void deleteCycleTrieData(Connection conn) {
         String sql = "DELETE FROM CycleTries";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.executeUpdate();
+            selectAllCycleTries(conn);
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+        sql = "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='CycleTries'";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.executeUpdate();

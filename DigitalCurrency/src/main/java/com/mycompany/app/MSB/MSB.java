@@ -160,22 +160,49 @@ public class MSB {
         } catch(SQLException e) {
             System.out.println(e.getMessage());
         }
+
+        sql = "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='Users'";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.executeUpdate();
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static void main(String[] args)
     {
-        // Example workflow
+
         MSB msb = new MSB();
         Connection c = msb.connect();
-        // create a user
-        msb.insertUser(c, "User1", 10);
-        // verify balance
-        msb.verifyBalance(c, "User1", 5);
-        // update balance
-        msb.updateBalance(c, "User1", -5);
-        msb.selectAll();
-        msb.deleteUserData(c);
-        msb.selectAll();
+        msb.generate_keypairs(1024);
+        //defines port for spark API to run on
+        port(8080);
+
+        get("/MSB/requestKey", (request, response) -> {
+            response.type("application/json");
+            //First converts public key into byte format and then into string for output
+            byte[] publicKeyDer = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo((AsymmetricKeyParameter) msb.share_publickey()).getEncoded();
+            String publicKey = new String(publicKeyDer, StandardCharsets.UTF_8);
+            //Returns stringified public key as json response
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("ByteKey:"+publicKey)));
+        });
+
+        post("/MSB/requestSign/:blindedmsg", (request, response) -> {
+
+            response.type("application/json");
+            String msg=request.attribute(":blindedmsg");
+            //Converts blindedmsg parameters from string to byte array
+            byte[] blinded_message=msg.getBytes(StandardCharsets.UTF_8);
+            //Signs blinded message
+            byte[] signed_message=BlindSignature.signBlinded(private_key, blinded_message);
+            //Outputs Json response of signed_blinded message in string format
+            return new Gson()
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("SignedBling"+signed_message.toString())));
+        });
+
+
         try {
             c.close();
         } catch (SQLException e) {
