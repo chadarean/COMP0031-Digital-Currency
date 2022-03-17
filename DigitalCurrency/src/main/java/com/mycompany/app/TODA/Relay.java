@@ -29,6 +29,7 @@ public class Relay {
     public int NCycleTries = 0;
     public int lastCachedCycleTrieId = 1;
     public static final int cacheSize = 3600;
+    public HashMap<Integer, ArrayList<Pair<String, String>>> transactionsCache = new HashMap<>();
     public TreeMap<String, String> currentTransactions = new TreeMap<>();
     public HashMap<String, Integer> cycleId = new HashMap<>();
     public HashMap<Integer, String> cycleHash = new HashMap<>();
@@ -60,12 +61,17 @@ public class Relay {
         }, delay, time, unit);
     }
 
+    public void writeTransactions(ArrayList<Pair<String, String>> transactions) {
+        for (Pair<String, String> t: transactions) {
+            relayDB.insertTransaction(c, t.key, t.value);
+        }
+    }
+
     public void addUpdateFromUpstream(String address, String updateHash) {
         System.out.println(updateHash);
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) {
-        //relayDB.insertTransaction(c, address, updateHash);
         currentTransactions.put(address, updateHash);
     }
 
@@ -74,6 +80,10 @@ public class Relay {
     }
 
     public ArrayList<Pair<String, String>> getTransactionsForCycleId(int cycleRootId) {
+        ArrayList<Pair<String, String>> cachedTransactions = transactionsCache.get(cycleRootId);
+        if (cachedTransactions != null) {
+            return cachedTransactions;
+        }
         return relayDB.selectAllTransactionsForCycle(c, cycleRootId);
     }
 
@@ -104,11 +114,15 @@ public class Relay {
         if (currentTransactions.size() == 0) {
             return null;
         }
-        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(getSortedTransactions()); 
+        ArrayList<Pair<String, String>> sortedTransactions = getSortedTransactions();
+        MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(sortedTransactions);
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
+        transactionsCache.put(NCycleTries, sortedTransactions);
         while (cycleTrie.size() >= cacheSize) {
+            writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
+            transactionsCache.remove(lastCachedCycleTrieId);
             cycleTrie.remove(lastCachedCycleTrieId);
             lastCachedCycleTrieId += 1;
         }
@@ -118,6 +132,7 @@ public class Relay {
         //     POPSlice crtPopSlice = getPOPSlice(transaction.key, root.value);
         //     //crtPopSlice.setUpdateHash(transaction.value);
         // }
+
         currentTransactions.clear();
         relayDB.insertNewCycleTrie(c);
         return root;
