@@ -161,12 +161,17 @@ public class Experiment2 {
                     String addressB = t.value.value;
 
                     HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    System.out.println(request);
+                    System.out.printf("%d and %d\n", c+1, r.NCycleTries);
+
                     CloseableHttpClient client = HttpClients.createDefault();
                     CloseableHttpResponse response = client.execute(request);
                     HttpEntity entity = response.getEntity();
                     String popSliceString = EntityUtils.toString(entity);
+                    System.out.println(popSliceString);
                     POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);
                     a.receivePOP(addressA, popSlice_t);
+
 
                     ++ nTransRec;
                     ArrayList<Token> tokens_i = tokensForAddr.get(addressA);

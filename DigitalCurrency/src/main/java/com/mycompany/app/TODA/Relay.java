@@ -96,7 +96,9 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode constructCycleTrie(String cycleRoot) {
+        System.out.printf("old cycle w hash=%s\n", cycleRoot);
         Integer cycleRootId = cycleId.get(cycleRoot);
+        System.out.println(cycleId.keySet());
         if (cycleRootId == null) {
             return null;
         }
@@ -138,6 +140,7 @@ public class Relay {
         cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
         transactionsCache.put(NCycleTries, sortedTransactions);
+        System.out.printf("new cycle w hash=%s\n", root.value);
 
         while (cycleTrie.size() >= cacheSize) {
             writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
@@ -158,16 +161,18 @@ public class Relay {
     }
 
     public POPSlice getPOPSlice(String address, String cycleRoot) {
+        System.out.println("Here");
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        return new POPSlice(root.value, addressProof, null, null, null); 
+        return new POPSlice(root.value, addressProof, null, null, null);
     }
 
-    public POPSlice getPOPSlice(String address, Integer cycleRootId) {
-        MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
-        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        return new POPSlice(root.value, addressProof, null, null, null); 
-    }
+//    public POPSlice getPOPSlice(String address, Integer cycleRootId) {
+//        System.out.println("Hi");
+//        MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
+//        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+//        return new POPSlice(root.value, addressProof, null, null, null);
+//    }
 
     public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) { //*
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
@@ -216,7 +221,7 @@ public class Relay {
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             return new Gson()
-                    .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))));
+                    .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),request.attribute(":stringAddress")));
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");
