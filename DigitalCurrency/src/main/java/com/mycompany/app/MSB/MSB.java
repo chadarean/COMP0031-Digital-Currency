@@ -202,7 +202,7 @@ public class MSB {
         get("/MSB/requestSign/:blindedmsg", (request, response) -> {
 
             response.type("application/json");
-            String msg=request.attribute(":blindedmsg");
+            String msg=request.params("blindedmsg");
             //Converts blindedmsg parameters from string to byte array
             byte[] blinded_message=msg.getBytes(StandardCharsets.UTF_8);
             //Signs blinded message

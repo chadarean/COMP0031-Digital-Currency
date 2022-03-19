@@ -73,6 +73,8 @@ public class Relay {
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) {
+        System.out.println("Adding Transaction");
+        System.out.println("Add" + address + ", " + updateHash);
         currentTransactions.put(address, updateHash);
     }
 
@@ -129,17 +131,20 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode createCycleTrie() {
+        System.out.println("H0");
         NCycleTries += 1;
         if (currentTransactions.size() == 0) {
             return null;
         }
+        System.out.println("H1");
         ArrayList<Pair<String, String>> sortedTransactions = getSortedTransactions();
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(sortedTransactions);
+        System.out.println("H2");
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
         transactionsCache.put(NCycleTries, sortedTransactions);
-
+        System.out.println("H4");
         while (cycleTrie.size() >= cacheSize) {
             writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
             transactionsCache.remove(lastCachedCycleTrieId);
@@ -154,7 +159,9 @@ public class Relay {
         // }
 
         currentTransactions.clear();
+        System.out.println("H5");
         relayDB.insertNewCycleTrie(c, root.value);
+        System.out.println("Root: " + root);
         return root;
     }
 
@@ -209,16 +216,16 @@ public class Relay {
             //Invokes getPop() method by passing parameters from URL to method
             //Returns the Pop in JSON format by using Gson to serialise the returned pop
             return new Gson()
-                    .toJsonTree(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")));
+                    .toJsonTree(r.getPOP(request.params("stringAddress"),request.params("G_k"),request.params("G_n")));
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
-            System.out.println(request.attribute(":stringAddress").toString());
+            System.out.println(request.params("stringAddress").toString());
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             try{
                 return new Gson()
-                        .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"), (String) request.attribute(":cycleRootID")));
+                        .toJsonTree(r.getPOPSlice(request.params("stringAddress"), (String) request.params("cycleRootID")));
             }
             catch(Exception e){
                 return e.getMessage();
@@ -236,7 +243,7 @@ public class Relay {
             response.type("application/json");
 
             return new Gson()
-                    .toJson(r.getCycleId(request.attribute(":cyclehash")));
+                    .toJson(r.getCycleId(request.params("cyclehash")));
 
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
@@ -246,13 +253,13 @@ public class Relay {
             return new Gson()
                     .toJsonTree(r.getMostRecentCycTrieNode());
         });
-        post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
+        get("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
             response.type("application/json");
             //Tries to invokes addUpdateFromDownstream() method
             //If successful return succes
             //Else return Failure
             try {
-                r.addUpdateFromDownstream(request.attribute(":stringAddress"),request.attribute(":updateHash"));
+                r.addUpdateFromDownstream(request.params("stringAddress"),request.params("updateHash"));
                 return new Gson()
                         .toJson("Success");
             }catch (Exception e){
