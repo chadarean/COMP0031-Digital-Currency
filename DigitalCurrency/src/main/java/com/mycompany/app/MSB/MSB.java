@@ -1,10 +1,19 @@
 package com.mycompany.app.MSB;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
+import com.google.gson.Gson;
 import com.mycompany.app.BlindSignature;
+import com.mycompany.app.StandardResponse;
+import com.mycompany.app.StatusResponse;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
+import spark.Spark;
+
+import static spark.Spark.get;
 
 
 public class MSB {
@@ -19,7 +28,7 @@ public class MSB {
     */
 
     CipherParameters public_key;
-    CipherParameters private_key;
+    static CipherParameters private_key;
 
 
     // This public key generate here could send to Alice wallet, which could be used to blind the message.
@@ -177,7 +186,7 @@ public class MSB {
         Connection c = msb.connect();
         msb.generate_keypairs(1024);
         //defines port for spark API to run on
-        port(8080);
+        Spark.port(8080);
 
         get("/MSB/requestKey", (request, response) -> {
             response.type("application/json");
@@ -189,7 +198,7 @@ public class MSB {
                     .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("ByteKey:"+publicKey)));
         });
 
-        post("/MSB/requestSign/:blindedmsg", (request, response) -> {
+        Spark.post("/MSB/requestSign/:blindedmsg", (request, response) -> {
 
             response.type("application/json");
             String msg=request.attribute(":blindedmsg");
