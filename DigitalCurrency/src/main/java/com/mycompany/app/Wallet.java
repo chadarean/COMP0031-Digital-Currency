@@ -1,6 +1,10 @@
 package com.mycompany.app;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 //import java.security.SecureRandom;
 
@@ -9,8 +13,16 @@ import com.mycompany.app.POP.Token;
 import com.mycompany.app.TODA.Owner;
 import com.mycompany.app.TODA.Utils;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 public class Wallet {
 
@@ -20,10 +32,10 @@ public class Wallet {
     public static String userId; // Link to the specific user.
     Owner new_owner = new Owner(userId); // Create an owner object to do asset releated actions.
 
-    CipherParameters issuer_public_key;
+    public CipherParameters issuer_public_key;
     CipherParameters private_key;
     CipherParameters public_key;
-    BigInteger blindingFactor;
+    public BigInteger blindingFactor;
 
     /*
       1. Wallet could create asset
@@ -50,8 +62,15 @@ public class Wallet {
         private_key = wallet_keyPair.getPrivate();
     }
 
-    public void get_issuer_publickey(CipherParameters key){
-        issuer_public_key = key;
+    public void get_issuer_publickey() throws IOException {
+        HttpGet request = new HttpGet("localhost:8080/MSB/requestKey");
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String issuer_string_key = EntityUtils.toString(entity);
+        byte[] publicKeyDerRestored = issuer_string_key.getBytes(StandardCharsets.UTF_8);
+        issuer_public_key = (AsymmetricKeyParameter) PublicKeyFactory.createKey((publicKeyDerRestored));
+
     }
     // Generate blinding factor using own public key
     public void setBlindingFactor(){
@@ -87,7 +106,7 @@ public class Wallet {
         new_owner.transferAsset(cycleRoot, address, asset, destPk);
     }
 
-    public void sendUpdate(String address, String txpxHash){
+    public void sendUpdate(String address, String txpxHash) throws IOException {
         new_owner.sendUpdate(address, txpxHash);
     }
 

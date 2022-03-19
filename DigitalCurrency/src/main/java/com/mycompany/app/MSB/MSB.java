@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mycompany.app.BlindSignature;
 import com.mycompany.app.StandardResponse;
 import com.mycompany.app.StatusResponse;
@@ -11,9 +12,8 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
-import spark.Spark;
 
-import static spark.Spark.get;
+import static spark.Spark.*;
 
 
 public class MSB {
@@ -27,7 +27,7 @@ public class MSB {
     redeemAsset(user_id, asset=F, POP_list) = forwards vefication to TODA API and possibly the ledger; on success updates the balance of user_id
     */
 
-    CipherParameters public_key;
+    static CipherParameters public_key;
     static CipherParameters private_key;
 
 
@@ -76,7 +76,7 @@ public class MSB {
         Connection conn = null;
         try {
             // db parameters
-            String url = "jdbc:sqlite:src/main/java/com/mycompany/app/MSB_DB.db";
+            String url = "jdbc:sqlite:src/main/java/com/mycompany/app/MSB/MSB_DB.db";
             // create a connection to the database
             conn = DriverManager.getConnection(url);
 
@@ -186,7 +186,9 @@ public class MSB {
         Connection c = msb.connect();
         msb.generate_keypairs(1024);
         //defines port for spark API to run on
-        Spark.port(8080);
+        port(3080);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
 
         get("/MSB/requestKey", (request, response) -> {
             response.type("application/json");
@@ -194,11 +196,10 @@ public class MSB {
             byte[] publicKeyDer = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo((AsymmetricKeyParameter) msb.share_publickey()).getEncoded();
             String publicKey = new String(publicKeyDer, StandardCharsets.UTF_8);
             //Returns stringified public key as json response
-            return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("ByteKey:"+publicKey)));
+            return gson.toJson(new StandardResponse(StatusResponse.SUCCESS,publicKey));
         });
 
-        Spark.post("/MSB/requestSign/:blindedmsg", (request, response) -> {
+        get("/MSB/requestSign/:blindedmsg", (request, response) -> {
 
             response.type("application/json");
             String msg=request.attribute(":blindedmsg");
@@ -207,8 +208,7 @@ public class MSB {
             //Signs blinded message
             byte[] signed_message=BlindSignature.signBlinded(private_key, blinded_message);
             //Outputs Json response of signed_blinded message in string format
-            return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson("SignedBling"+signed_message.toString())));
+            return gson.toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(signed_message.toString())));
         });
 
 

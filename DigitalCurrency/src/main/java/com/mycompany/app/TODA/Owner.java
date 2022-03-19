@@ -8,12 +8,22 @@
 
 package com.mycompany.app.TODA;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mycompany.app.POP.FileDetail;
 import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;
 import com.mycompany.app.POP.TransactionPacket;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 // memory for user storage: crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs+addressToPOPSlice(cache)
 // min memory required:     crtFileTrie+fileTrieCache+fileDetails+assets+updateToCycleRoot+txpxs
@@ -97,7 +107,11 @@ public class Owner {
         }
     }
 
-    public void sendUpdate(String address, String txpxHash) {
+    public void sendUpdate(String address, String txpxHash) throws IOException {
+        HttpGet request = new HttpGet("/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+
         relay.addUpdateFromDownstream(address, txpxHash);
         // sends request to Relay
         // TODO: the relay could send back the POP after creating the trie
@@ -154,7 +168,7 @@ public class Owner {
         return fileTrie;
     }
 
-    public void sendUpdates(String cycleRoot, String address) {
+    public void sendUpdates(String cycleRoot, String address) throws IOException {
         updateToCycleRoot.remove(address);
         // send updates for address to relay; cycleRoot = cycleRoot at the time when the files transacted were created
         MerkleTrie.TrieNode fileTrie = createFileTrie(address);
@@ -250,17 +264,23 @@ public class Owner {
         popSlice.fileProof = getFileProof(popSlice.cycleRoot, address, fileId);
     }
 
-    public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) {
+    public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) throws IOException {
         // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
-        POPSlice popSlice = relay.getPOPSlice(address, cycleRoot);
+
+        HttpGet request = new HttpGet("localhost:8080/Relay/getPOPSlice/"+address+"/"+cycleRoot);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String popSliceString = EntityUtils.toString(entity);
+        POPSlice popSlice = new Gson().fromJson(popSliceString, POPSlice.class);
         receivePOP(address, popSlice);
         completePOPSlice(popSlice, address, fileId);
         return popSlice;
     }
 
-    public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) {
-        int beginCycle = relay.getCycleId(asset.getIssuedCycleRoot());
-        int endCycle = relay.getCycleId(cycleRoot);
+    public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) throws IOException {
+        int beginCycle = relay.cycleId.get(asset.getIssuedCycleRoot());
+        int endCycle = relay.cycleId.get(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
 
         for (int i = beginCycle; i <= endCycle; ++ i) {
@@ -268,7 +288,14 @@ public class Owner {
             HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(cycleIdx);
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
-                popSlice = relay.getPOPSlice(address, cycleIdx);
+
+                HttpGet request = new HttpGet("localhost:8080/Relay/getPOPSlice/"+address+"/"+cycleIdx);
+                CloseableHttpClient client = HttpClients.createDefault();
+                CloseableHttpResponse response = client.execute(request);
+                HttpEntity entity = response.getEntity();
+                String popSliceString = EntityUtils.toString(entity);
+                popSlice = new Gson().fromJson(popSliceString, POPSlice.class);
+
                 if (crtCycleSlice == null) {
                     addressToPOPSlice.put(cycleIdx, new HashMap<String, POPSlice>(){{put(address, popSlice);}});
                 } else {
@@ -287,11 +314,17 @@ public class Owner {
         return pop;
     }
 
-    public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) {
+    public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) throws IOException {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
-        ArrayList<POPSlice> pop = relay.getPOP(address, asset.getIssuedCycleRoot(), cycleRoot);
-        pop.add(addressToPOPSlice.get(relay.getCycleId(cycleRoot)).get(address));
+        HttpGet request = new HttpGet("localhost:8080/Relay/getPOP/"+cycleRoot+"/"+address+"/"+cycleRoot);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String popString = EntityUtils.toString(entity);
+        ArrayList<POPSlice> pop = new Gson().fromJson(popString, new TypeToken<ArrayList<POPSlice>>(){}.getType());
+
+        pop.add(addressToPOPSlice.get(relay.cycleId.get(cycleRoot)).get(address));
     
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {

@@ -1,6 +1,8 @@
 package com.mycompany.app.test;
 
 import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 import java.sql.*;
 
 import com.mycompany.app.MSB.MSB;
@@ -24,7 +26,7 @@ public class WalletMSB
         assertTrue( true );
     }
 
-    public static void main(String[] args) throws UnsupportedEncodingException{
+    public static void main(String[] args) throws IOException {
         byte[] msg = "Hello There".getBytes("UTF-8"); // For test, no asset is created here
         MSB msb = new MSB();
         Connection c = msb.connect();
@@ -34,8 +36,8 @@ public class WalletMSB
         Wallet Bob_wallet = new Wallet("2");
         msb.generate_keypairs(1024);
         CipherParameters public_key = msb.share_publickey();
-        Alice_wallet.get_issuer_publickey(public_key);
-        Bob_wallet.get_issuer_publickey(public_key);
+        Alice_wallet.get_issuer_publickey();
+        Bob_wallet.get_issuer_publickey();
         Alice_wallet.setBlindingFactor();
         byte[] blind = Alice_wallet.blind_message(msg);
 

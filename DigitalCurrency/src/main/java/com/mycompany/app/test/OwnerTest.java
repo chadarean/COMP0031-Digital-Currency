@@ -1,5 +1,6 @@
 package com.mycompany.app.test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +12,7 @@ import com.mycompany.app.TODA.*;
 public class OwnerTest {
     public static Random rand = new Random();
 
-    public static void testOwner(int numTokens) {
+    public static void testOwner(int numTokens) throws IOException {
         ArrayList<String> C_ = new ArrayList<>();
         Relay r = new Relay(5, 5, TimeUnit.SECONDS);
 
@@ -99,7 +100,7 @@ public class OwnerTest {
         Utils.printObjectSize(a.assets);
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         testOwner(10);
         System.out.println("Test passed");
     }
