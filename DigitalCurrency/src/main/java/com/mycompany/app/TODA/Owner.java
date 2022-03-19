@@ -72,6 +72,15 @@ public class Owner {
             addressAssets.add(asset);
         }
     }
+    public int getCycleId(String cycleRoot) throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String cycleIdString = EntityUtils.toString(entity);
+        System.out.println(cycleIdString);
+        return Integer.parseInt(cycleIdString);
+    }
 
     public Token createAsset(String address, int d) {
         String cycleRoot = ""; // TODO: getCurrentCycleRoot() from Relay DB? via MSB? 
@@ -113,7 +122,7 @@ public class Owner {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
 
-        relay.addUpdateFromDownstream(address, txpxHash);
+
         // sends request to Relay
         // TODO: the relay could send back the POP after creating the trie
     } 
@@ -183,7 +192,7 @@ public class Owner {
 
     // Called either when relay sends the POPSlice for the cycle when the transaction for address took place
     // or when receiving the full POP.
-    public void receivePOP(String address, POPSlice popSlice) {
+    public void receivePOP(String address, POPSlice popSlice) throws IOException {
         final String finalAddress = address;
         final POPSlice finalPOPSlice = popSlice;
         String cycleRoot = popSlice.cycleRoot;
@@ -192,9 +201,9 @@ public class Owner {
             throw new RuntimeException(popSlice.addressProof.leafHash);
         }
         // adds the POPSlice to the cache containing popslices for address in trie with root = cycleRoot
-        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(relay.getCycleId(cycleRoot));
+        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(getCycleId(cycleRoot));
         if (addressPOPSlice == null) {
-            addressToPOPSlice.put(relay.getCycleId(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
+            addressToPOPSlice.put(getCycleId(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
         } else {
             addressPOPSlice.put(address, popSlice);
         }
@@ -280,8 +289,8 @@ public class Owner {
     }
 
     public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) throws IOException {
-        int beginCycle = relay.getCycleId(asset.getIssuedCycleRoot());
-        int endCycle = relay.getCycleId(cycleRoot);
+        int beginCycle = getCycleId(asset.getIssuedCycleRoot());
+        int endCycle = getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
 
         for (int i = beginCycle; i <= endCycle; ++ i) {
@@ -325,7 +334,7 @@ public class Owner {
         String popString = EntityUtils.toString(entity);
         ArrayList<POPSlice> pop = new Gson().fromJson(popString, new TypeToken<ArrayList<POPSlice>>(){}.getType());
 
-        pop.add(addressToPOPSlice.get(relay.getCycleId(cycleRoot)).get(address));
+        pop.add(addressToPOPSlice.get(getCycleId(cycleRoot)).get(address));
     
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {

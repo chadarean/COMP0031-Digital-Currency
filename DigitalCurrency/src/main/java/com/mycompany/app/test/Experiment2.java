@@ -40,7 +40,7 @@ public class Experiment2 {
     static ArrayList<Wallet> wallets ;
     static MSB msb;
 
-    public static void setup() {
+    public static void setup() throws IOException {
         tokens = new ArrayList<>();
         users = new ArrayList<>();
         wallets=new ArrayList<>();
@@ -152,7 +152,13 @@ public class Experiment2 {
                     a.sendUpdates(C_.get(c), addressA);
                 }
 
-                MerkleTrie.TrieNode crtCycle = r.createCycleTrie();
+                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
+                CloseableHttpClient client = HttpClients.createDefault();
+                CloseableHttpResponse response = client.execute(request);
+                HttpEntity entity = response.getEntity();
+                String merkleTrieString = EntityUtils.toString(entity);
+
+                MerkleTrie.TrieNode crtCycle = new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
                 C_.add(crtCycle.value); // cycle c+1
                 for (Pair<Integer, Pair<String, String>> t : t_c) {
                     // execute transaction made by user t_c.key
@@ -160,13 +166,10 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
-                    System.out.println(request);
-                    System.out.printf("%d and %d\n", c+1, r.NCycleTries);
-
-                    CloseableHttpClient client = HttpClients.createDefault();
-                    CloseableHttpResponse response = client.execute(request);
-                    HttpEntity entity = response.getEntity();
+                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    client = HttpClients.createDefault();
+                    response = client.execute(request);
+                    entity = response.getEntity();
                     String popSliceString = EntityUtils.toString(entity);
                     System.out.println(popSliceString);
                     POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);

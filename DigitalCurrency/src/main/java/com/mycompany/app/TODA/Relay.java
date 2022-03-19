@@ -1,5 +1,6 @@
 package com.mycompany.app.TODA;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -160,8 +161,7 @@ public class Relay {
         return root;
     }
 
-    public POPSlice getPOPSlice(String address, String cycleRoot) {
-        System.out.println("Here");
+    public POPSlice getPOPSlice(String address, String cycleRoot){
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
         return new POPSlice(root.value, addressProof, null, null, null);
@@ -202,9 +202,8 @@ public class Relay {
         }
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
         Relay r = new Relay();
-        MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
 
         //defines port to run spark API on
         port(8090);
@@ -218,10 +217,30 @@ public class Relay {
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
+            System.out.println(request.attribute(":stringAddress").toString());
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
+            try{
+                return new Gson()
+                        .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"), (String) request.attribute(":cycleRootID")));
+            }
+            catch(Exception e){
+                return e.getMessage();
+            }
+
+        });
+        get("/Relay/createCycleTrie", (request, response) -> {
+            response.type("application/json");
+
             return new Gson()
-                    .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),request.attribute(":stringAddress")));
+                    .toJsonTree(r.createCycleTrie());
+
+        });
+        get("/Relay/getCycleID/:cyclehash", (request, response) -> {
+            response.type("application/json");
+
+            return new Gson()
+                    .toJson(r.getCycleId(request.attribute(":cyclehash")));
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");
@@ -246,5 +265,6 @@ public class Relay {
 
         });
 
+        MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
     }
 }
