@@ -36,9 +36,12 @@ public class MerkleProof {
         }
 
         public long getSize() {
+//            System.out.printf("frame size=%d\n", Utils.getObjectSize(this.leftBranchHash) + Utils.getObjectSize(this.leftBranchPrefix) +
+//                    Utils.getObjectSize(this.leftBranchPrefixLength) + Utils.getObjectSize(this.rightBranchHash) + Utils.getObjectSize(this.rightBranchPrefix) +
+//                    Utils.getObjectSize(this.rightBranchPrefixLength) + Utils.getObjectSize(this.constructionDataHash));
             return Utils.getObjectSize(this.leftBranchHash) + Utils.getObjectSize(this.leftBranchPrefix) +
             Utils.getObjectSize(this.leftBranchPrefixLength) + Utils.getObjectSize(this.rightBranchHash) + Utils.getObjectSize(this.rightBranchPrefix) +
-            Utils.getObjectSize(this.rightBranchPrefixLength);
+            Utils.getObjectSize(this.rightBranchPrefixLength) + Utils.getObjectSize(this.constructionDataHash);
         }
     }
 
@@ -54,6 +57,7 @@ public class MerkleProof {
         for (Frame f: frames) {
             proofSize += Utils.getObjectSize(f);
         }
+        //System.out.printf("nframes=%d, size=%d", frames.size(), proofSize);
         return proofSize;
     }
 

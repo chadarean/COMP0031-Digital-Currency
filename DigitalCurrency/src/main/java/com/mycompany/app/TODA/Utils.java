@@ -4,6 +4,8 @@ import java.util.*;
 
 import com.mycompany.app.POP.*;
 
+import static java.lang.Math.max;
+
 public class Utils {
     public static int ubyte(byte b) {
         if (b < 0) {
@@ -83,6 +85,10 @@ public class Utils {
     public static long getObjectSize(Object object) {
         if (object == null) {
             return 0;
+        }
+
+        if (object.getClass().getName().equals("java.lang.String")) {
+            return max(32, ((String)object).length());
         }
 
         if (object.getClass().getName().equals("com.mycompany.app.TODA.MerkleTrie$TrieNode")) {

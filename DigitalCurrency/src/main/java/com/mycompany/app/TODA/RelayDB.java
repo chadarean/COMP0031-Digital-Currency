@@ -48,6 +48,17 @@ public class RelayDB
         }
     }
 
+    public int getCycleId(Connection conn, String cycleRoot) {
+        String sqlSelect = "SELECT CycleTrieId FROM CycleTries WHERE CycleRoot == " + cycleRoot;
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sqlSelect);
+            return rs.getInt("cycleRoot");
+        } catch (SQLException e) {
+            return -1; // Should not happen
+        }
+    }
+
     public void insertNewCycleTrie(Connection conn, String cycleRoot) {
         String sql = "INSERT INTO CycleTries(Timestamp) VALUES(?)";
         try {
@@ -158,8 +169,8 @@ public class RelayDB
         Connection c = relayDB.connect();
         relayDB.insertTransaction(c, "address1", "hash1");
         relayDB.selectAllTransactions(c);
-        relayDB.insertNewCycleTrie(c);
-        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c, "");
+        relayDB.insertNewCycleTrie(c, "");
         relayDB.insertTransaction(c, "address1", "hash1");
         relayDB.selectAllTransactions(c);
         relayDB.selectAllCycleTries(c);
