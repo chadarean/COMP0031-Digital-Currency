@@ -160,7 +160,7 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    HttpGet request = new HttpGet("localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
                     CloseableHttpClient client = HttpClients.createDefault();
                     CloseableHttpResponse response = client.execute(request);
                     HttpEntity entity = response.getEntity();
