@@ -88,7 +88,7 @@ public class Owner {
         //TODO: should cycleRoot and signature be obtained by the wallet?
         Token token = new Token();
         token.createAsset(cycleRoot, address, signature, d);
-        //String fileIdAddress = Utils.convertKey(token.getFileId());
+        //String fileIdAddress = (token.getFileId());
         addAsset(address, token);
         // TODO: get signature for asset
         // TODO: should we add the token to a DB
@@ -106,7 +106,7 @@ public class Owner {
         // creates update for assetId to be transferred to destPk at a cycle following cycleRoot
         // using a map ensures that an address makes a single update in a cycle for an assetId
         // Note: in this version, cycleRoot = issuance cycle root
-        final String assetId = Utils.convertKey(asset.getFileId());
+        final String assetId = (asset.getFileId());
         asset.createUpdate(address, destPk);
         final FileDetail fileDetail = asset.fileDetail; //TODO: is proofs packet hash required?
         if (fileDetails.containsKey(address)) {
@@ -295,7 +295,7 @@ public class Owner {
         int beginCycle = getCycleId(asset.getIssuedCycleRoot());
         int endCycle = getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
-
+        System.out.printf("Getting pop form %d to %d\n", beginCycle, endCycle);
         for (int i = beginCycle; i <= endCycle; ++ i) {
             int cycleIdx = i;
             HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(cycleIdx);
@@ -306,7 +306,7 @@ public class Owner {
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
                 String popSliceString = EntityUtils.toString(entity);
-                System.out.println(popSliceString);
+                System.out.println("pstr= " + popSliceString);
                 System.out.println(cycleIdx);
                 popSlice = new Gson().fromJson(popSliceString, POPSlice.class);
 
@@ -319,7 +319,7 @@ public class Owner {
                 popSlice = crtCycleSlice.get(address);
             }
             if (!popSlice.addressProof.null_proof) {
-                completePOPSlice(popSlice, address,  Utils.convertKey(asset.getFileId()));
+                completePOPSlice(popSlice, address,  (asset.getFileId()));
             } else {
                 popSlice.transactionPacket = new TransactionPacket(null, address, null, null, null);
             }
@@ -348,12 +348,12 @@ public class Owner {
                     popSlice.transactionPacket = crtCycleSlice.get(address).transactionPacket;
                     
                 }
-                completePOPSlice(popSlice, address, Utils.convertKey(asset.getFileId()));
+                completePOPSlice(popSlice, address, (asset.getFileId()));
             } else {
                 popSlice.transactionPacket = new TransactionPacket(null, address, null, null, null);
             }
         }
-        fileDetails.get(address).remove(Utils.convertKey(asset.getFileId()));
+        fileDetails.get(address).remove((asset.getFileId()));
         return pop;
     }
 

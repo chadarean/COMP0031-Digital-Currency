@@ -124,6 +124,15 @@ public class MerkleProof {
                 
                 if (!null_proof && cmp != 0) {
                     // the address doesn't match the prefix
+                    System.out.println("the address doesn't match the prefix");
+                    System.out.println("1=" + address.substring(prefSize, prefSize + leftBranchPLen));
+                    System.out.println("1=" + address.substring(prefSize, prefSize + rightBranchPLen));
+                    System.out.println("2=" +leftPrefStr);
+                    System.out.println("3="+rightPrefStr);
+                    System.out.println(address.length());
+                    System.out.println(leftBranchPLen);
+                    System.out.println(rightBranchPLen);
+                    System.out.println(expBranch);
                     return false;
                 }
                 if (null_proof) {
@@ -149,10 +158,11 @@ public class MerkleProof {
         }
         //System.out.println(prefSize);
         if (null_proof && chosen_branch == -1) {
+            System.out.println("chosen_branch ==-1 for null p");
             return false;
         }
         if (!null_proof && (prefSize != address.length() || !(prevHash.equals(leafHash)))) {
-            //System.out.println("pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
+            System.out.println("ups pref_sz=" + Integer.toString(address.length()) + " and prevHash=" + prevHash + "and leaf=" + leafHash);
             return false;
         }
         return true;

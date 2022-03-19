@@ -39,6 +39,18 @@ public class Experiment2 {
     static ArrayList<Pair<String, String>> transactions; // transactions.get(i) = <souceAddr, destAddr> for transaction made by user i
     static ArrayList<Wallet> wallets ;
     static MSB msb;
+    static int offset;
+
+    public static String getMostRecentCycle() throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getMostRecentCycleTrieNode");
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String crtCycleString = EntityUtils.toString(entity);
+        MerkleTrie.TrieNode crtCycle = new Gson().fromJson(crtCycleString, MerkleTrie.TrieNode.class);
+        System.out.println(crtCycleString + " thats it");
+        return crtCycle.value;
+    }
 
     public static void setup() throws IOException {
         tokens = new ArrayList<>();
@@ -46,14 +58,13 @@ public class Experiment2 {
         wallets=new ArrayList<>();
         transactions = new ArrayList<>();
         C_ = new ArrayList<>();
-        r = new Relay(1, 1, TimeUnit.DAYS); // TODO: change user cadence
-        initialCycle = TestUtils.createRandomCycleTrie(r);
         msb = new MSB();
-        C_.add(initialCycle.value); // add creation cycle hash
+        C_.add(getMostRecentCycle()); // add creation cycle hash
+        offset = new Owner("").getCycleId(C_.get(0));
     }
 
     public static void tearDown() {
-        r.closeConnection();
+        //r.closeConnection();
     }
 
     public static void createUsers(int nUsers) {
@@ -124,7 +135,7 @@ public class Experiment2 {
                         byte[] sigBymsb = signedMessage.getBytes(StandardCharsets.UTF_8);
                         byte[] unblindedSigBymsb = BlindSignature.unblind(w.issuer_public_key, w.blindingFactor, sigBymsb);
                         String signature = new String(unblindedSigBymsb, StandardCharsets.UTF_8); // unblinded bsig for asset.fileKernel
-
+                        System.out.printf("sgn sz=%d and val=%s\n", signature.length(), signature);
                         asset.addSignature(signature);
                         tokensForAddr.get(addressA).add(asset);
                     }
@@ -149,6 +160,7 @@ public class Experiment2 {
                     for (Token asset: crtTokens) {
                         a.transferAsset(C_.get(c), addressA, asset, addressB);
                     }
+                    System.out.printf("send update for %s at %d\n", addressA, c);
                     a.sendUpdates(C_.get(c), addressA);
                 }
 
@@ -166,7 +178,7 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1));
+                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1+offset));
                     client = HttpClients.createDefault();
                     response = client.execute(request);
                     entity = response.getEntity();
@@ -182,11 +194,15 @@ public class Experiment2 {
                     ArrayList<Token> tokens_i = tokensForAddr.get(addressA);
                     for (Token token_j : tokens_i) {
                         ArrayList<POPSlice> pop;
-                        System.out.println(C_.get(c+1));
+                        System.out.println("crt cy " + C_.get(c+1));
                         pop = a.getPOPUsingCache(C_.get(c+1), addressA, token_j);
-                        MerkleProof proof = a.getFileProof(C_.get(c+1), addressA, Utils.convertKey(token_j.getFileId()));
+                        MerkleProof proof = a.getFileProof(C_.get(c+1), addressA, token_j.getFileId());
+                        System.out.println(proof.leafHash);
                         String fileDetailHash = token_j.getFileDetail();
-                        if (!proof.verify(Utils.convertKey(token_j.getFileId()), fileDetailHash)) {
+
+                        if (!proof.verify(token_j.getFileId(), fileDetailHash)) {
+                            System.out.println(fileDetailHash);
+                            System.out.println(addressA);
                             throw new RuntimeException("Incorrect proof created!");
                         }
                     }
