@@ -48,7 +48,7 @@ public class RelayDB
         }
     }
 
-    public void insertNewCycleTrie(Connection conn) {
+    public void insertNewCycleTrie(Connection conn, String cycleRoot) {
         String sql = "INSERT INTO CycleTries(Timestamp) VALUES(?)";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);

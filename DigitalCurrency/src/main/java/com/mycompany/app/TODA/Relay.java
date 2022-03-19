@@ -28,7 +28,7 @@ import com.mycompany.app.StatusResponse;
 public class Relay {
     public int NCycleTries = 0;
     public int lastCachedCycleTrieId = 1;
-    public static final int cacheSize = 3600;
+    public int cacheSize = 3600;
     public HashMap<Integer, ArrayList<Pair<String, String>>> transactionsCache = new HashMap<>();
     public TreeMap<String, String> currentTransactions = new TreeMap<>();
     public HashMap<String, Integer> cycleId = new HashMap<>();
@@ -79,6 +79,14 @@ public class Relay {
         //TODO: publish hash on DLT
     }
 
+    public int getCycleId(String cycleHash) {
+        return cycleId.get(cycleHash);
+    }
+
+    public void setCacheSize(int x) {
+        cacheSize = x;
+    }
+
     public ArrayList<Pair<String, String>> getTransactionsForCycleId(int cycleRootId) {
         ArrayList<Pair<String, String>> cachedTransactions = transactionsCache.get(cycleRootId);
         if (cachedTransactions != null) {
@@ -120,6 +128,7 @@ public class Relay {
         cycleHash.put(NCycleTries, root.value); 
         cycleTrie.put(NCycleTries, root);
         transactionsCache.put(NCycleTries, sortedTransactions);
+
         while (cycleTrie.size() >= cacheSize) {
             writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
             transactionsCache.remove(lastCachedCycleTrieId);
@@ -134,7 +143,7 @@ public class Relay {
         // }
 
         currentTransactions.clear();
-        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c, root.value);
         return root;
     }
 

@@ -177,9 +177,9 @@ public class Owner {
             throw new RuntimeException(popSlice.addressProof.leafHash);
         }
         // adds the POPSlice to the cache containing popslices for address in trie with root = cycleRoot
-        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(relay.cycleId.get(cycleRoot));
+        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(relay.getCycleId(cycleRoot));
         if (addressPOPSlice == null) {
-            addressToPOPSlice.put(relay.cycleId.get(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
+            addressToPOPSlice.put(relay.getCycleId(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
         } else {
             addressPOPSlice.put(address, popSlice);
         }
@@ -259,8 +259,8 @@ public class Owner {
     }
 
     public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) {
-        int beginCycle = relay.cycleId.get(asset.getIssuedCycleRoot());
-        int endCycle = relay.cycleId.get(cycleRoot);
+        int beginCycle = relay.getCycleId(asset.getIssuedCycleRoot());
+        int endCycle = relay.getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
 
         for (int i = beginCycle; i <= endCycle; ++ i) {
@@ -291,7 +291,7 @@ public class Owner {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
         ArrayList<POPSlice> pop = relay.getPOP(address, asset.getIssuedCycleRoot(), cycleRoot);
-        pop.add(addressToPOPSlice.get(relay.cycleId.get(cycleRoot)).get(address));
+        pop.add(addressToPOPSlice.get(relay.getCycleId(cycleRoot)).get(address));
     
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {

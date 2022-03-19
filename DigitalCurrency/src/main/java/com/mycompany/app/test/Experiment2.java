@@ -82,7 +82,7 @@ public class Experiment2 {
                     for (int j = 0; j < tokens_i; ++j) {
                         String certSignature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // certificate signature s((I_d, d), I)
                         // create asset for addressA, issuance cycle root C_.get(c), denominator j+1 and certSignature
-                        Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature);
+                        Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature); // TODO: how to get c from relay/MSB
                         // TODO: get the unblinded blind signature on assest.getFileId()
                         String signature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // unblinded bsig for asset.fileKernel
                         asset.addSignature(signature);
