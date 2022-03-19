@@ -190,8 +190,6 @@ public class MerkleTrie {
             proof.null_proof = true;
         }
 
-        System.out.printf("lh_in_mp=%s\n", node.value);
-
         proof.setHash(node.value);
         
         // if (proof.null_proof) {

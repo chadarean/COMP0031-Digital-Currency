@@ -48,7 +48,6 @@ public class Experiment2 {
         HttpEntity entity = response.getEntity();
         String crtCycleString = EntityUtils.toString(entity);
         MerkleTrie.TrieNode crtCycle = new Gson().fromJson(crtCycleString, MerkleTrie.TrieNode.class);
-        System.out.println(crtCycleString + " thats it");
         return crtCycle.value;
     }
 
@@ -135,7 +134,6 @@ public class Experiment2 {
                         byte[] sigBymsb = signedMessage.getBytes(StandardCharsets.UTF_8);
                         byte[] unblindedSigBymsb = BlindSignature.unblind(w.issuer_public_key, w.blindingFactor, sigBymsb);
                         String signature = new String(unblindedSigBymsb, StandardCharsets.UTF_8); // unblinded bsig for asset.fileKernel
-                        System.out.printf("sgn sz=%d and val=%s\n", signature.length(), signature);
                         asset.addSignature(signature);
                         tokensForAddr.get(addressA).add(asset);
                     }
@@ -160,7 +158,7 @@ public class Experiment2 {
                     for (Token asset: crtTokens) {
                         a.transferAsset(C_.get(c), addressA, asset, addressB);
                     }
-                    System.out.printf("send update for %s at %d\n", addressA, c);
+
                     a.sendUpdates(C_.get(c), addressA);
                 }
 
@@ -183,10 +181,8 @@ public class Experiment2 {
                     response = client.execute(request);
                     entity = response.getEntity();
                     String popSliceString = EntityUtils.toString(entity);
-                    System.out.printf("popSliceString=%s\n", popSliceString);
 
                     POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);
-                    System.out.printf("lh=%s\n", popSlice_t.cycleRoot);
                     a.receivePOP(addressA, popSlice_t);
 
 
@@ -194,15 +190,12 @@ public class Experiment2 {
                     ArrayList<Token> tokens_i = tokensForAddr.get(addressA);
                     for (Token token_j : tokens_i) {
                         ArrayList<POPSlice> pop;
-                        System.out.println("crt cy " + C_.get(c+1));
                         pop = a.getPOPUsingCache(C_.get(c+1), addressA, token_j);
                         MerkleProof proof = a.getFileProof(C_.get(c+1), addressA, token_j.getFileId());
-                        System.out.println(proof.leafHash);
+
                         String fileDetailHash = token_j.getFileDetail();
 
                         if (!proof.verify(token_j.getFileId(), fileDetailHash)) {
-                            System.out.println(fileDetailHash);
-                            System.out.println(addressA);
                             throw new RuntimeException("Incorrect proof created!");
                         }
                     }
@@ -239,7 +232,8 @@ public class Experiment2 {
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
         measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+        System.out.println("Done2");
+        measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
         System.out.println("Done");
         /*
         port(3456);

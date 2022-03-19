@@ -78,7 +78,7 @@ public class Owner {
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
         String cycleIdString = EntityUtils.toString(entity);
-        System.out.println(cycleIdString);
+
         return Integer.parseInt(cycleIdString);
     }
 
@@ -194,7 +194,6 @@ public class Owner {
     // or when receiving the full POP.
     public void receivePOP(String address, POPSlice popSlice) throws IOException {
         final String finalAddress = address;
-//        System.out.printf("asset=%s\n", assets.get(address).get(0).getFileId());
         final POPSlice finalPOPSlice = popSlice;
         String cycleRoot = popSlice.cycleRoot;
         popSlice.transactionPacket = getTxpx(address, popSlice.addressProof.leafHash);
@@ -277,7 +276,6 @@ public class Owner {
 
     public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) throws IOException {
         // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
-        System.out.printf("%s cycle root\n", cycleRoot);
         // TODO send cycleRootId by querying the relay.getCycleId()
         int cycleRootId = getCycleId(cycleRoot);
         HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+Integer.toString(cycleRootId));
@@ -295,7 +293,7 @@ public class Owner {
         int beginCycle = getCycleId(asset.getIssuedCycleRoot());
         int endCycle = getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
-        System.out.printf("Getting pop form %d to %d\n", beginCycle, endCycle);
+
         for (int i = beginCycle; i <= endCycle; ++ i) {
             int cycleIdx = i;
             HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(cycleIdx);
@@ -306,8 +304,7 @@ public class Owner {
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
                 String popSliceString = EntityUtils.toString(entity);
-                System.out.println("pstr= " + popSliceString);
-                System.out.println(cycleIdx);
+
                 popSlice = new Gson().fromJson(popSliceString, POPSlice.class);
 
                 if (crtCycleSlice == null) {

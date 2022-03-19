@@ -73,8 +73,6 @@ public class Relay {
     }
 
     public void addUpdateFromDownstream(String address, String updateHash) {
-        System.out.println("Adding Transaction");
-        System.out.println("Add" + address + ", " + updateHash);
         currentTransactions.put(address, updateHash);
     }
 
@@ -105,7 +103,6 @@ public class Relay {
         }
         MerkleTrie.TrieNode cachedRoot = cycleTrie.get(cycleRootId);
         if (cachedRoot != null) {
-            System.out.println("the happy case\n");
             return cachedRoot;
         }
         ArrayList<Pair<String, String>> pairs = getTransactionsForCycleId(cycleRootId);
@@ -132,16 +129,11 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode createCycleTrie() {
-        System.out.printf("%d\n", NCycleTries);
         NCycleTries += 1;
         if (currentTransactions.size() == 0) {
             return null;
         }
         ArrayList<Pair<String, String>> sortedTransactions = getSortedTransactions();
-        for (Pair<String, String> p: sortedTransactions) {
-            System.out.printf("***%s %s***\n", p.key, p.value);
-        }
-        System.out.println(NCycleTries);
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(sortedTransactions);
         cycleId.put(root.value, NCycleTries);
         cycleHash.put(NCycleTries, root.value);
@@ -167,18 +159,14 @@ public class Relay {
     }
 
     public POPSlice getPOPSlice(String address, String cycleRoot){
-        System.out.printf("here %d **\n", cycleId.get(cycleRoot));
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        System.out.printf("lh_in_add=%s\n", addressProof.leafHash);
         return new POPSlice(root.value, addressProof, null, null, null);
     }
 
     public POPSlice getPOPSlice(String address, Integer cycleRootId) {
         MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
-        System.out.printf("here %d and %s\n", cycleRootId, cycleHash.get(cycleRootId));
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-        System.out.printf("lh_in_int=%s\n", addressProof.leafHash);
         return new POPSlice(root.value, addressProof, null, null, null);
     }
 
