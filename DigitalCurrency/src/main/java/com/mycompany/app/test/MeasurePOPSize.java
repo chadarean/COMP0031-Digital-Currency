@@ -279,7 +279,7 @@ public class MeasurePOPSize {
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
         measureRandomExperim("varyAddrSizes.txt", new int[]{1}, new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        measureRandomExperim("varyWaitingCycles.txt", new int[]{1}, new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+        //measureRandomExperim("varyWaitingCycles.txt", new int[]{1}, new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
         System.out.println("Passed");
     }
 }

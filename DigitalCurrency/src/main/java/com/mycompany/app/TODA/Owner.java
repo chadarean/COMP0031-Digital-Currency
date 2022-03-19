@@ -108,6 +108,8 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) throws IOException {
+        System.out.println(address);
+        System.out.println(txpxHash);
         HttpGet request = new HttpGet("/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
@@ -279,8 +281,8 @@ public class Owner {
     }
 
     public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) throws IOException {
-        int beginCycle = relay.cycleId.get(asset.getIssuedCycleRoot());
-        int endCycle = relay.cycleId.get(cycleRoot);
+        int beginCycle = relay.getCycleId(asset.getIssuedCycleRoot());
+        int endCycle = relay.getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
 
         for (int i = beginCycle; i <= endCycle; ++ i) {
@@ -324,7 +326,7 @@ public class Owner {
         String popString = EntityUtils.toString(entity);
         ArrayList<POPSlice> pop = new Gson().fromJson(popString, new TypeToken<ArrayList<POPSlice>>(){}.getType());
 
-        pop.add(addressToPOPSlice.get(relay.cycleId.get(cycleRoot)).get(address));
+        pop.add(addressToPOPSlice.get(relay.getCycleId(cycleRoot)).get(address));
     
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {
