@@ -63,12 +63,14 @@ public class Wallet {
     }
 
     public void get_issuer_publickey() throws IOException {
-        HttpGet request = new HttpGet("localhost:3080/MSB/requestKey");
+        HttpGet request = new HttpGet("http://localhost:3080/MSB/requestKey");
+
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
         String issuer_string_key = EntityUtils.toString(entity);
-        byte[] publicKeyDerRestored = issuer_string_key.getBytes(StandardCharsets.UTF_8);
+        System.out.println(issuer_string_key.substring(1,issuer_string_key.length()-1));
+        byte[] publicKeyDerRestored = issuer_string_key.substring(1,issuer_string_key.length()-1).getBytes(StandardCharsets.UTF_8);
         issuer_public_key = (AsymmetricKeyParameter) PublicKeyFactory.createKey((publicKeyDerRestored));
 
     }
