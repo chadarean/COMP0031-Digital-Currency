@@ -53,7 +53,7 @@ public class TestUtils {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
 
-        request = new HttpGet("http://localhost:8090/Relay/createCycleTrie/");
+        request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
         client = HttpClients.createDefault();
         response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -71,7 +71,7 @@ public class TestUtils {
 
 
         }
-        HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie/");
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();

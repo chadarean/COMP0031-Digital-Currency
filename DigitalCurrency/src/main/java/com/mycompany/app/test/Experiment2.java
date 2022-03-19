@@ -152,7 +152,7 @@ public class Experiment2 {
                     a.sendUpdates(C_.get(c), addressA);
                 }
 
-                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie/");
+                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
                 CloseableHttpClient client = HttpClients.createDefault();
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
