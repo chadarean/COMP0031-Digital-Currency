@@ -108,6 +108,16 @@ public class Relay {
         return MerkleTrie.createMerkleTrie(pairs); 
     }
 
+    public ArrayList<Pair<Integer, String>> getMostRecentCycleIds(int x) {
+        ArrayList<Pair<Integer, String>> res = new ArrayList<>();
+        if (x < cacheSize) {
+            for (int i = x; i > 0; -- i) {
+                res.add(new Pair<Integer, String>(NCycleTries - i, cycleHash.get(NCycleTries - i)));
+            }
+        } // else get it from DB
+        return res;
+    }
+
     public ArrayList<Pair<String, String>>  getSortedTransactions() {
         // return getTransactionsForCycleId(relayDB.getMostRecentCycleId(c));
         ArrayList<Pair<String, String>> crtTransactions = new ArrayList<>();
