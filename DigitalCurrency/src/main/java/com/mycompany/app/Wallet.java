@@ -71,6 +71,7 @@ public class Wallet {
         String issuer_string_key = EntityUtils.toString(entity);
         System.out.println(issuer_string_key.substring(1,issuer_string_key.length()-1));
         byte[] publicKeyDerRestored = issuer_string_key.substring(1,issuer_string_key.length()-1).getBytes(StandardCharsets.UTF_8);
+        System.out.printf("ikl=%d pdr=%d\n", issuer_string_key.length(), publicKeyDerRestored.length);
         issuer_public_key = (AsymmetricKeyParameter) PublicKeyFactory.createKey((publicKeyDerRestored));
 
     }
