@@ -108,7 +108,8 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) throws IOException {
-        HttpGet request = new HttpGet("http://localhost/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
+
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
 
