@@ -63,7 +63,7 @@ public class Wallet {
     }
 
     public void get_issuer_publickey() throws IOException {
-        HttpGet request = new HttpGet("localhost:8080/MSB/requestKey");
+        HttpGet request = new HttpGet("localhost:3080/MSB/requestKey");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
