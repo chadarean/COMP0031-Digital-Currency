@@ -110,12 +110,12 @@ public class Experiment2 {
                         Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature);
 
                         byte[] msg = w.convert_token_to_byte(asset);
-                        msb.generate_keypairs(1024);
+                        msb.generate_keypairs(16);
                         w.get_issuer_publickey();
                         w.setBlindingFactor();
                         byte[] blinded_msg = w.blind_message(msg);
 
-                        HttpGet request = new HttpGet("localhost:8080/requestSign/"+new String(blinded_msg,StandardCharsets.UTF_8));
+                        HttpGet request = new HttpGet("localhost:3080/requestSign/"+new String(blinded_msg,StandardCharsets.UTF_8));
                         CloseableHttpClient client = HttpClients.createDefault();
                         CloseableHttpResponse response = client.execute(request);
                         HttpEntity entity = response.getEntity();
@@ -159,7 +159,7 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    HttpGet request = new HttpGet("localhost:8080/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    HttpGet request = new HttpGet("localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
                     CloseableHttpClient client = HttpClients.createDefault();
                     CloseableHttpResponse response = client.execute(request);
                     HttpEntity entity = response.getEntity();
@@ -203,13 +203,16 @@ public class Experiment2 {
             }
             results.close();
         } catch (IOException e) {
+            System.out.print(e);
             System.out.println("IO Error");
         }
     }
 
     public static void main(String[] args) {
+        TestUtils.setRandomNumbers();
         measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
         measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+        System.out.println("Done");
         /*
         port(3456);
         TestUtils.setRandomNumbers();

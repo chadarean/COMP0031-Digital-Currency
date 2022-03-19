@@ -209,21 +209,21 @@ public class Relay {
             //Invokes getPop() method by passing parameters from URL to method
             //Returns the Pop in JSON format by using Gson to serialise the returned pop
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")))));
+                    .toJsonTree(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")));
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))))));
+                    .toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))));
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");
             //Invokes getMostRecentCycleTrie method
             //Serialises return value using Gson
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getMostRecentCycTrieNode())));
+                    .toJsonTree(r.getMostRecentCycTrieNode());
         });
         post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
             response.type("application/json");
@@ -233,10 +233,10 @@ public class Relay {
             try {
                 r.addUpdateFromDownstream(request.attribute(":stringAddress"),request.attribute(":updateHash"));
                 return new Gson()
-                        .toJson(new StandardResponse(StatusResponse.SUCCESS, new Gson().toJson("Success")));
+                        .toJson("Success");
             }catch (Exception e){
                 return new Gson()
-                        .toJson(new StandardResponse(StatusResponse.ERROR, new Gson().toJson("Failed to add update")));
+                        .toJson("Failed to add update");
             }
 
         });
