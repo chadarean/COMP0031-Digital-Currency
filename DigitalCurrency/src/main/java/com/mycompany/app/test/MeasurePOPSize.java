@@ -95,7 +95,7 @@ public class MeasurePOPSize {
         }
     }
 
-    public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) {
+    public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
 

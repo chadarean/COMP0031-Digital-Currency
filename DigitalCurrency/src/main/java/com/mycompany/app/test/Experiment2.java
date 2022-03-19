@@ -1,15 +1,33 @@
 package com.mycompany.app.test;
 
+import com.google.gson.Gson;
+import com.mycompany.app.BlindSignature;
+import com.mycompany.app.MSB.MSB;
 import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;
+import com.mycompany.app.StandardResponse;
+import com.mycompany.app.StatusResponse;
 import com.mycompany.app.TODA.*;
+import com.mycompany.app.Wallet;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static spark.Spark.get;
+import static spark.Spark.port;
 
 public class Experiment2 {
     public static Random rand = new Random();
@@ -19,14 +37,18 @@ public class Experiment2 {
     static ArrayList<ArrayList<Token>> tokens;
     static ArrayList<Owner> users;
     static ArrayList<Pair<String, String>> transactions; // transactions.get(i) = <souceAddr, destAddr> for transaction made by user i
+    static ArrayList<Wallet> wallets ;
+    static MSB msb;
 
     public static void setup() {
         tokens = new ArrayList<>();
         users = new ArrayList<>();
+        wallets=new ArrayList<>();
         transactions = new ArrayList<>();
         C_ = new ArrayList<>();
         r = new Relay(1, 1, TimeUnit.DAYS); // TODO: change user cadence
         initialCycle = TestUtils.createRandomCycleTrie(r);
+        msb = new MSB();
         C_.add(initialCycle.value); // add creation cycle hash
     }
 
@@ -39,11 +61,13 @@ public class Experiment2 {
             String aId = "user" + Integer.toString(i);
             Owner a = new Owner(aId);
             users.add(a);
+            Wallet w = new Wallet(aId);
+            wallets.add(w);
             a.setRelay(r); // set the relay for user i to r
         }
     }
 
-    public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) {
+    public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
 
@@ -74,6 +98,7 @@ public class Experiment2 {
                         transactingUser.put(user_i, -1);
                     }
                     Owner a = users.get(user_i);
+                    Wallet w=wallets.get(user_i);
                     String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     String addressB = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
                     // create asset for user_i
@@ -82,9 +107,23 @@ public class Experiment2 {
                     for (int j = 0; j < tokens_i; ++j) {
                         String certSignature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // certificate signature s((I_d, d), I)
                         // create asset for addressA, issuance cycle root C_.get(c), denominator j+1 and certSignature
-                        Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature); // TODO: how to get c from relay/MSB
-                        // TODO: get the unblinded blind signature on assest.getFileId()
-                        String signature = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE); // unblinded bsig for asset.fileKernel
+                        Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature);
+
+                        byte[] msg = w.convert_token_to_byte(asset);
+                        msb.generate_keypairs(1024);
+                        w.get_issuer_publickey();
+                        w.setBlindingFactor();
+                        byte[] blinded_msg = w.blind_message(msg);
+
+                        HttpGet request = new HttpGet("localhost:8080/requestSign/"+new String(blinded_msg,StandardCharsets.UTF_8));
+                        CloseableHttpClient client = HttpClients.createDefault();
+                        CloseableHttpResponse response = client.execute(request);
+                        HttpEntity entity = response.getEntity();
+                        String signedMessage = EntityUtils.toString(entity);
+                        byte[] sigBymsb = signedMessage.getBytes(StandardCharsets.UTF_8);
+                        byte[] unblindedSigBymsb = BlindSignature.unblind(w.issuer_public_key, w.blindingFactor, sigBymsb);
+                        String signature = new String(unblindedSigBymsb, StandardCharsets.UTF_8); // unblinded bsig for asset.fileKernel
+
                         asset.addSignature(signature);
                         tokensForAddr.get(addressA).add(asset);
                     }
@@ -119,7 +158,13 @@ public class Experiment2 {
                     Owner a = users.get(t.key);
                     String addressA = t.value.key;
                     String addressB = t.value.value;
-                    POPSlice popSlice_t = r.getPOPSlice(addressA, C_.get(c+1));
+
+                    HttpGet request = new HttpGet("localhost:8080/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    CloseableHttpClient client = HttpClients.createDefault();
+                    CloseableHttpResponse response = client.execute(request);
+                    HttpEntity entity = response.getEntity();
+                    String popSliceString = EntityUtils.toString(entity);
+                    POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);
                     a.receivePOP(addressA, popSlice_t);
 
                     ++ nTransRec;
@@ -163,9 +208,25 @@ public class Experiment2 {
     }
 
     public static void main(String[] args) {
-        TestUtils.setRandomNumbers();
         measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
         measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
-        System.out.println("Passed");
+        /*
+        port(3456);
+        TestUtils.setRandomNumbers();
+        get("/Experiment", (request, response) -> {
+            response.type("application/json");
+            try{
+                measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+                return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
+            }catch(Exception e){
+                return new Gson().toJson(new StandardResponse(StatusResponse.ERROR,"Test Failed:"+e.get));
+            }
+
+
+        });
+
+        */
+
     }
 }

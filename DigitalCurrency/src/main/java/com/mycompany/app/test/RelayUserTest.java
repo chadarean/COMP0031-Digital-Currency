@@ -1,5 +1,6 @@
 package com.mycompany.app.test;
 
+import java.io.IOException;
 import java.lang.Math;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +14,7 @@ import com.mycompany.app.TODA.Relay;
 
 public class RelayUserTest {
     public static Random rand = new Random();
-    public static void testMutipleTransactions(int numConsumers, int numMerchants, int numTokens, int numTokensToTransact, int X) {
+    public static void testMutipleTransactions(int numConsumers, int numMerchants, int numTokens, int numTokensToTransact, int X) throws IOException {
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay(10, 10, TimeUnit.HOURS);
         MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createRandomCycleTrie(r);
@@ -87,7 +88,7 @@ public class RelayUserTest {
         r.closeConnection();
     }
 
-    public static void testSingleTransaction(int addressSize) {
+    public static void testSingleTransaction(int addressSize) throws IOException {
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay();
         MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createRandomCycleTrie(r);
@@ -124,7 +125,7 @@ public class RelayUserTest {
         r.closeConnection();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
         testMutipleTransactions(200, 4, 400, 4, 100);
         System.out.println("Tests passed!");

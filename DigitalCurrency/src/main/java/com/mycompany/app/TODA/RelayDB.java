@@ -59,7 +59,40 @@ public class RelayDB
         }
     }
 
+    public ArrayList<Integer> getLastNCycleIds(Connection conn, int n) {
+        String sql = "SELECT CycleTrieId FROM CycleTries ORDER BY CycleTrieId DESC LIMIT ?;";
+        ArrayList<Integer> cycleIds = new ArrayList<>();
+
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, n);
+            ResultSet rs = pstmt.executeQuery();
+
+            // loop through the result set
+            while (rs.next()) {
+                System.out.println(rs.getInt("CycleTrieId"));
+            }
+            return cycleIds;
+        } catch (SQLException e) {
+            System.out.println(e);
+            return cycleIds; // first cycle trie
+        }
+    }
+
     public void insertNewCycleTrie(Connection conn, String cycleRoot) {
+        String sql = "INSERT INTO CycleTries(Timestamp, CycleRoot) VALUES(?, ?)";
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setTimestamp(1, Timestamp.from(Instant.now()));
+            pstmt.setString(2, cycleRoot);
+            pstmt.executeUpdate();
+        } catch(SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void insertNewCycleTrie(Connection conn) {
         String sql = "INSERT INTO CycleTries(Timestamp) VALUES(?)";
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -178,6 +211,17 @@ public class RelayDB
         relayDB.deleteTransactinData(c);
         relayDB.selectAllTransactions(c);
         relayDB.selectAllCycleTries(c);
+        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c);
+        relayDB.insertNewCycleTrie(c);
+        // add cycle root hash
+        System.out.println("Next");
+        relayDB.selectAllCycleTries(c);
+        System.out.println("Then");
+        relayDB.getLastNCycleIds(c, 2);
         try {
             c.close();
         } catch (SQLException e) {

@@ -113,7 +113,7 @@ public class InitialPOPSizeExperiment {
         }
     }
 
-    public static MeasurePOPSize.Structs measureXTokensYAddressesZWaitingCycles(int nTokens, int nAddr, int nWaitingCycles) {
+    public static MeasurePOPSize.Structs measureXTokensYAddressesZWaitingCycles(int nTokens, int nAddr, int nWaitingCycles) throws IOException {
         setup();
         setupTransactions(nTokens, nAddr, false);
 
@@ -198,7 +198,7 @@ public class InitialPOPSizeExperiment {
         return structs;
     }
 
-    public static void measureForNTokensNAddresses() {
+    public static void measureForNTokensNAddresses() throws IOException {
         int nTokenValues[] = {1, 4, 8};
         int nAddrValue[] = {1024, 1700, 2048};
 
@@ -212,7 +212,7 @@ public class InitialPOPSizeExperiment {
     }
 
 
-    public static void measureForXWaitingCycles() {
+    public static void measureForXWaitingCycles() throws IOException {
         int nTokenValues[] = {8};
         int nAddrValue[] = {1024};
         int nWaitingCyclesValues[] = {0, 1, 2, 4, 8, 16};
@@ -225,7 +225,7 @@ public class InitialPOPSizeExperiment {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         TestUtils.setRandomNumbers();
         measureForXWaitingCycles();
         measureForNTokensNAddresses();

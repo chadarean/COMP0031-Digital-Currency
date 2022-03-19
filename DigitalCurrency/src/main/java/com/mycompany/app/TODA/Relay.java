@@ -209,21 +209,21 @@ public class Relay {
             //Invokes getPop() method by passing parameters from URL to method
             //Returns the Pop in JSON format by using Gson to serialise the returned pop
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")))));
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getPOP(request.attribute(":stringAddress"),request.attribute(":G_k"),request.attribute(":G_n")))));
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))))));
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getPOPSlice(request.attribute(":stringAddress"),Integer.parseInt(request.attribute(":stringAddress"))))));
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");
             //Invokes getMostRecentCycleTrie method
             //Serialises return value using Gson
             return new Gson()
-                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJson(r.getMostRecentCycTrieNode())));
+                    .toJson(new StandardResponse(StatusResponse.SUCCESS,new Gson().toJsonTree(r.getMostRecentCycTrieNode())));
         });
         post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
             response.type("application/json");
