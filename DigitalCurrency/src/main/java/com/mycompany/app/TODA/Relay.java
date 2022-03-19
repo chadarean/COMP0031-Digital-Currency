@@ -249,13 +249,13 @@ public class Relay {
             return new Gson()
                     .toJsonTree(r.getMostRecentCycTrieNode());
         });
-        post("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
+        get("/Relay/addUpdateFromDownstream/:stringAddress/:updateHash", (request, response) -> {
             response.type("application/json");
             //Tries to invokes addUpdateFromDownstream() method
             //If successful return succes
             //Else return Failure
             try {
-                r.addUpdateFromDownstream(request.attribute(":stringAddress"),request.attribute(":updateHash"));
+                r.addUpdateFromDownstream(request.params("stringAddress"),request.params("updateHash"));
                 return new Gson()
                         .toJson("Success");
             }catch (Exception e){
