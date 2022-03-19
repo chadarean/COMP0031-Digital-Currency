@@ -108,7 +108,7 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) throws IOException {
-        HttpGet request = new HttpGet("/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
+        HttpGet request = new HttpGet("http://localhost/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
 
@@ -267,7 +267,7 @@ public class Owner {
     public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) throws IOException {
         // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
 
-        HttpGet request = new HttpGet("localhost:8090/Relay/getPOPSlice/"+address+"/"+cycleRoot);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+cycleRoot);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -289,7 +289,7 @@ public class Owner {
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
 
-                HttpGet request = new HttpGet("localhost:8090/Relay/getPOPSlice/"+address+"/"+cycleIdx);
+                HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+cycleIdx);
                 CloseableHttpClient client = HttpClients.createDefault();
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
@@ -317,7 +317,7 @@ public class Owner {
     public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) throws IOException {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
-        HttpGet request = new HttpGet("localhost:8090/Relay/getPOP/"+cycleRoot+"/"+address+"/"+cycleRoot);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOP/"+cycleRoot+"/"+address+"/"+cycleRoot);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
