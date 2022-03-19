@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 //import java.security.SecureRandom;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;
 import com.mycompany.app.TODA.Owner;
@@ -22,6 +24,8 @@ import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.RSABlindingParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 public class Wallet {
@@ -70,8 +74,7 @@ public class Wallet {
         HttpEntity entity = response.getEntity();
         String issuer_string_key = EntityUtils.toString(entity);
         System.out.println(issuer_string_key.substring(1,issuer_string_key.length()-1));
-        byte[] publicKeyDerRestored = issuer_string_key.substring(1,issuer_string_key.length()-1).getBytes(StandardCharsets.UTF_8);
-        issuer_public_key = (AsymmetricKeyParameter) PublicKeyFactory.createKey((publicKeyDerRestored));
+        issuer_public_key = new Gson().fromJson(issuer_string_key, new TypeToken<RSAKeyParameters>() {}.getType());
 
     }
     // Generate blinding factor using own public key

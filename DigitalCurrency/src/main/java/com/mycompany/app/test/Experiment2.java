@@ -110,7 +110,7 @@ public class Experiment2 {
                         Token asset = a.createAsset(C_.get(c), addressA, j + 1, certSignature);
 
                         byte[] msg = w.convert_token_to_byte(asset);
-                        msb.generate_keypairs(16);
+                        msb.generate_keypairs(1024);
                         w.get_issuer_publickey();
                         w.setBlindingFactor();
                         byte[] blinded_msg = w.blind_message(msg);
