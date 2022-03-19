@@ -70,7 +70,7 @@ public class MeasurePOPSize {
     static ArrayList<Pair<String, String>> transactions; // transactions.get(i) = <souceAddr, destAddr> for transaction made by user i
     static HashMap <String, Integer> addrToId;
 
-    public static void setup() {
+    public static void setup() throws IOException {
         tokens = new ArrayList<>();
         users = new ArrayList<>();
         transactions = new ArrayList<>();

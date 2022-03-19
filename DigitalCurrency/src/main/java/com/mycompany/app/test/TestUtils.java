@@ -1,9 +1,17 @@
 package com.mycompany.app.test;
 
+import com.google.gson.Gson;
 import com.mycompany.app.POP.Token;
 import com.mycompany.app.TODA.MerkleTrie;
 import com.mycompany.app.TODA.Relay;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
 import java.util.*;
 
 public class TestUtils {
@@ -40,16 +48,35 @@ public class TestUtils {
         return addr.toString();
     }
 
-    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) {
-        r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
-        return r.createCycleTrie();
+    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+
+        request = new HttpGet("http://localhost:8090/Relay/createCycleTrie/");
+        client = HttpClients.createDefault();
+        response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String merkleTrieString = EntityUtils.toString(entity);
+        return new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
+
     }
 
-    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) {
+    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) throws IOException {
         for (int i = 0; i < nUpdates; ++ i) {
-            r.addUpdateFromDownstream(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE), Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
+
+            HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
+            CloseableHttpClient client = HttpClients.createDefault();
+            CloseableHttpResponse response = client.execute(request);
+
+
         }
-        return r.createCycleTrie();
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie/");
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String merkleTrieString = EntityUtils.toString(entity);
+        return new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
     }
 
 
