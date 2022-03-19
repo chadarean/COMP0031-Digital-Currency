@@ -217,6 +217,7 @@ public class Experiment2 {
                 for (int nAddr:  nAddrValues) {
                     for (int nWaitingCycles : nWaitingCyclesValues) {
                         for (int nCycles : nCyclesValues) {
+                            System.out.println(nWaitingCycles);
                             TestUtils.resetState();
                             measureRandom(nAddr, nWaitingCycles, nCycles, oneTransaction);
                         }
@@ -232,7 +233,6 @@ public class Experiment2 {
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
         measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        System.out.println("Done2");
         measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
         System.out.println("Done");
         /*
