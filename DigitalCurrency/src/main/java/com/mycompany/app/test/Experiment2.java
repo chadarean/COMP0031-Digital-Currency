@@ -166,13 +166,15 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+C_.get(c+1));
+                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1));
                     client = HttpClients.createDefault();
                     response = client.execute(request);
                     entity = response.getEntity();
                     String popSliceString = EntityUtils.toString(entity);
-                    System.out.println(popSliceString);
+                    System.out.printf("popSliceString=%s\n", popSliceString);
+
                     POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);
+                    System.out.printf("lh=%s\n", popSlice_t.cycleRoot);
                     a.receivePOP(addressA, popSlice_t);
 
 
@@ -180,6 +182,7 @@ public class Experiment2 {
                     ArrayList<Token> tokens_i = tokensForAddr.get(addressA);
                     for (Token token_j : tokens_i) {
                         ArrayList<POPSlice> pop;
+                        System.out.println(C_.get(c+1));
                         pop = a.getPOPUsingCache(C_.get(c+1), addressA, token_j);
                         MerkleProof proof = a.getFileProof(C_.get(c+1), addressA, Utils.convertKey(token_j.getFileId()));
                         String fileDetailHash = token_j.getFileDetail();

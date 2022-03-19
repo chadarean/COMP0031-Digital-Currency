@@ -99,18 +99,17 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode constructCycleTrie(String cycleRoot) {
-        System.out.printf("old cycle w hash=%s\n", cycleRoot);
         Integer cycleRootId = cycleId.get(cycleRoot);
-        System.out.println(cycleId.keySet());
         if (cycleRootId == null) {
             return null;
         }
         MerkleTrie.TrieNode cachedRoot = cycleTrie.get(cycleRootId);
         if (cachedRoot != null) {
+            System.out.println("the happy case\n");
             return cachedRoot;
         }
         ArrayList<Pair<String, String>> pairs = getTransactionsForCycleId(cycleRootId);
-        return MerkleTrie.createMerkleTrie(pairs); 
+        return MerkleTrie.createMerkleTrie(pairs);
     }
 
     public ArrayList<Pair<Integer, String>> getMostRecentCycleIds(int x) {
@@ -133,22 +132,21 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode createCycleTrie() {
-        System.out.println("H0");
+        System.out.printf("%d\n", NCycleTries);
         NCycleTries += 1;
         if (currentTransactions.size() == 0) {
             return null;
         }
-        System.out.println("H1");
         ArrayList<Pair<String, String>> sortedTransactions = getSortedTransactions();
+        for (Pair<String, String> p: sortedTransactions) {
+            System.out.printf("***%s %s***\n", p.key, p.value);
+        }
+        System.out.println(NCycleTries);
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(sortedTransactions);
-        System.out.println("H2");
         cycleId.put(root.value, NCycleTries);
-        cycleHash.put(NCycleTries, root.value); 
+        cycleHash.put(NCycleTries, root.value);
         cycleTrie.put(NCycleTries, root);
         transactionsCache.put(NCycleTries, sortedTransactions);
-
-        System.out.printf("new cycle w hash=%s\n", root.value);
-
         while (cycleTrie.size() >= cacheSize) {
             writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
             transactionsCache.remove(lastCachedCycleTrieId);
@@ -163,32 +161,34 @@ public class Relay {
         // }
 
         currentTransactions.clear();
-        System.out.println("H5");
         relayDB.insertNewCycleTrie(c, root.value);
         System.out.println("Root: " + root);
         return root;
     }
 
     public POPSlice getPOPSlice(String address, String cycleRoot){
+        System.out.printf("here %d **\n", cycleId.get(cycleRoot));
         MerkleTrie.TrieNode root = constructCycleTrie(cycleRoot);
         MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+        System.out.printf("lh_in_add=%s\n", addressProof.leafHash);
         return new POPSlice(root.value, addressProof, null, null, null);
     }
 
-//    public POPSlice getPOPSlice(String address, Integer cycleRootId) {
-//        System.out.println("Hi");
-//        MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
-//        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
-//        return new POPSlice(root.value, addressProof, null, null, null);
-//    }
+    public POPSlice getPOPSlice(String address, Integer cycleRootId) {
+        MerkleTrie.TrieNode root = constructCycleTrie(cycleHash.get(cycleRootId));
+        System.out.printf("here %d and %s\n", cycleRootId, cycleHash.get(cycleRootId));
+        MerkleProof addressProof = MerkleTrie.getMerkleProof(address, root);
+        System.out.printf("lh_in_int=%s\n", addressProof.leafHash);
+        return new POPSlice(root.value, addressProof, null, null, null);
+    }
 
     public ArrayList<POPSlice> getPOP(String address, String G_k, String G_n) { //*
         ArrayList<POPSlice> pop = new ArrayList<POPSlice>();
         int beginCycle = cycleId.get(G_k);
         int endCycle = cycleId.get(G_n);
-        pop.add(getPOPSlice(address, G_k));
+        pop.add(getPOPSlice(address, cycleId.get(G_k)));
         for (int i = beginCycle+1; i < endCycle; ++ i) {
-            pop.add(getPOPSlice(address, cycleHash.get(i)));
+            pop.add(getPOPSlice(address, i));
         }
         // pop.add(getPOPSlice(address, G_n)); it's assumed that the user has the POPSlice for the last cycle
         return pop;
@@ -211,7 +211,7 @@ public class Relay {
     }
 
     public static void main(String[] args) throws IOException {
-        Relay r = new Relay();
+        Relay r = new Relay(1, 1, TimeUnit.DAYS);
 
         //defines port to run spark API on
         port(8090);
@@ -225,12 +225,12 @@ public class Relay {
         });
         get("/Relay/getPOPSlice/:stringAddress/:cycleRootId", (request, response) -> {
             response.type("application/json");
-            System.out.println(request.params("stringAddress").toString());
+            //System.out.println(request.params("stringAddress").toString());
             //Invokes getPopSlice() method by passing parametrs from URL to method
             //Return pop slice in JSON format by using Gson to serialise the returned pop slice
             try{
                 return new Gson()
-                        .toJsonTree(r.getPOPSlice(request.params("stringAddress"), (String) request.params("cycleRootID")));
+                        .toJsonTree(r.getPOPSlice(request.params("stringAddress"), Integer.parseInt(request.params("cycleRootId"))));
             }
             catch(Exception e){
                 return e.getMessage();
@@ -249,6 +249,7 @@ public class Relay {
 
             return new Gson()
                     .toJson(r.getCycleId(request.params("cyclehash")));
+
         });
         get("/Relay/getMostRecentCycleTrieNode", (request, response) -> {
             response.type("application/json");

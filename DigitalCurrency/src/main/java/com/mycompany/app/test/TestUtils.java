@@ -54,14 +54,12 @@ public class TestUtils {
         HttpGet request = new HttpGet(uri);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
-        System.out.println(request);
 
         request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
         client = HttpClients.createDefault();
         response = client.execute(request);
         HttpEntity entity = response.getEntity();
         String merkleTrieString = EntityUtils.toString(entity);
-        System.out.println(entity);
         return new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
 
     }
@@ -70,7 +68,6 @@ public class TestUtils {
         for (int i = 0; i < nUpdates; ++ i) {
 
             HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
-            System.out.println(request);
             CloseableHttpClient client = HttpClients.createDefault();
             CloseableHttpResponse response = client.execute(request);
 
