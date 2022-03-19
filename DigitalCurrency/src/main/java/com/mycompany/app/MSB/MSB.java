@@ -196,7 +196,7 @@ public class MSB {
             byte[] publicKeyDer = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo((AsymmetricKeyParameter) msb.share_publickey()).getEncoded();
             String publicKey = new String(publicKeyDer, StandardCharsets.UTF_8);
             //Returns stringified public key as json response
-            return gson.toJson(publicKey);
+            return gson.toJsonTree(msb.share_publickey());
         });
 
         get("/MSB/requestSign/:blindedmsg", (request, response) -> {

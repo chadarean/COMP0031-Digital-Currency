@@ -63,8 +63,8 @@ public class Token {
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
             byte[] hash = digest.digest(concatenation.getBytes(StandardCharsets.UTF_8));
-            String encoded = new String(hash, StandardCharsets.US_ASCII);
-            return encoded;
+            //String encoded = new String(hash, StandardCharsets.UTF_8);
+            return Utils.getStringFromByte(hash, 32);
         } catch(NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }

@@ -33,7 +33,8 @@ public class TestUtils {
 
     public static String getRandomXBitAddr(Random rand, int addrSize) {
         StringBuilder addr = new StringBuilder();
-        for (int j = 0; j < MerkleTrie.ADDRESS_SIZE; ++ j) {
+        addr.append(0);
+        for (int j = 1; j < MerkleTrie.ADDRESS_SIZE; ++ j) {
             addr.append(Integer.toString(rand.nextInt(2)));
         }
         return addr.toString();

@@ -108,8 +108,6 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) throws IOException {
-        System.out.println(address);
-        System.out.println(txpxHash);
         HttpGet request = new HttpGet("/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);

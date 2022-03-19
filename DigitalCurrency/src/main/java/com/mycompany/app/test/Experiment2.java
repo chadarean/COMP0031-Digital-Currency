@@ -111,11 +111,12 @@ public class Experiment2 {
 
                         byte[] msg = w.convert_token_to_byte(asset);
                         msb.generate_keypairs(256);
+
                         w.get_issuer_publickey();
                         w.setBlindingFactor();
                         byte[] blinded_msg = w.blind_message(msg);
 
-                        HttpGet request = new HttpGet("localhost:3080/requestSign/"+new String(blinded_msg,StandardCharsets.UTF_8));
+                        HttpGet request = new HttpGet("http://localhost:3080/requestSign/"+Utils.getStringFromByte(blinded_msg, blinded_msg.length));
                         CloseableHttpClient client = HttpClients.createDefault();
                         CloseableHttpResponse response = client.execute(request);
                         HttpEntity entity = response.getEntity();
