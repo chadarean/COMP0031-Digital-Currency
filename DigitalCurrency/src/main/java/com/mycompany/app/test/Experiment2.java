@@ -211,7 +211,9 @@ public class Experiment2 {
     }
 
     public static void measureRandomExperim(String fileName, int nAddrValues[], int nWaitingCyclesValues[], boolean oneTransaction) {
-        int[] nCyclesValues = {33};
+        // 4
+        // 16
+        int[] nCyclesValues = {16};
         try {
             PrintWriter results = new PrintWriter(fileName);
                 for (int nAddr:  nAddrValues) {
@@ -232,26 +234,30 @@ public class Experiment2 {
 
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
-        measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+        /*measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
         measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
-        System.out.println("Done");
-        /*
+        System.out.println("Done");*/
+
         port(3456);
         TestUtils.setRandomNumbers();
         get("/Experiment", (request, response) -> {
             response.type("application/json");
             try{
-                measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+                /*
+                                measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256}, new int[]{0}, false);
+                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*4}, new int[]{0, 1, 2, 3, 4, 5, 6}, true);
+                 */
+                //measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
                 return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
             }catch(Exception e){
-                return new Gson().toJson(new StandardResponse(StatusResponse.ERROR,"Test Failed:"+e.get));
+                return null;
             }
 
 
         });
 
-        */
+
 
     }
 }
