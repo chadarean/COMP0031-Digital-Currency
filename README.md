@@ -45,7 +45,7 @@ You can use the network.sh script to create a channel between Org1 and Org2 and 
 
 After you have used the network.sh to create a channel, you can start a chaincode on the channel using the following command:
 
-`./network.sh deployCC -ccn basic -ccp -ccl java`
+`./network.sh deployCC -ccn basic -ccp ../../code/chaincode-java -ccl java`
 
 ### Interacting with the network
 
