@@ -73,7 +73,7 @@ public class Owner {
         }
     }
     public int getCycleId(String cycleRoot) throws IOException {
-        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/getCycleID/"+cycleRoot);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -117,7 +117,7 @@ public class Owner {
     }
 
     public void sendUpdate(String address, String txpxHash) throws IOException {
-        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+address+"/"+txpxHash);
 
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
@@ -278,7 +278,7 @@ public class Owner {
         // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
         // TODO send cycleRootId by querying the relay.getCycleId()
         int cycleRootId = getCycleId(cycleRoot);
-        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/getPOPSlice/"+address+"/"+Integer.toString(cycleRootId));
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+Integer.toString(cycleRootId));
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -299,7 +299,7 @@ public class Owner {
             HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(cycleIdx);
             POPSlice popSlice;
             if (crtCycleSlice == null || !crtCycleSlice.containsKey(address)) {
-                HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/getPOPSlice/"+address+"/"+cycleIdx);
+                HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+cycleIdx);
                 CloseableHttpClient client = HttpClients.createDefault();
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
@@ -328,7 +328,7 @@ public class Owner {
     public ArrayList<POPSlice> getPOP(String cycleRoot, String address, Token asset) throws IOException {
         // Constructs the POP for asset by obtaining all POPSlices from the asset cycle root issuance to cycleRoot = the hash of the cycle trie
         // containing the update to asset
-        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/getPOP/"+cycleRoot+"/"+address+"/"+cycleRoot);
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOP/"+cycleRoot+"/"+address+"/"+cycleRoot);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
