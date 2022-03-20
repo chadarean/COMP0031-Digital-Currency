@@ -121,7 +121,7 @@ public class Utils {
         }
 
         if (object.getClass().getName().contains("com.") && !object.getClass().getName().contains("File"))
-        System.out.println(object.getClass().getName());
+            System.out.println(object.getClass().getName());
 
         // TODO: change it to call .getSize() if object is of type \in {Token, TransactionPacket, POPSlice, FileDetail,
         // MerkleTrie.TrieNode, MerkleProof}
