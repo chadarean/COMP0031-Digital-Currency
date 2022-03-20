@@ -23,6 +23,7 @@ import static spark.Spark.port;
 
 
 import com.mycompany.app.POP.POPSlice;
+import com.mycompany.app.POP.Token;
 import com.mycompany.app.StandardResponse;
 import com.mycompany.app.StatusResponse;
 
@@ -48,7 +49,7 @@ public class Relay {
             public void run() {
                 createCycleTrie();
             }
-        }, 1, 5, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     public Relay(int delay, int time, TimeUnit unit) {
@@ -129,16 +130,20 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode createCycleTrie() {
-        NCycleTries += 1;
         if (currentTransactions.size() == 0) {
-            return null;
+            currentTransactions.put(Token.nullHash(), Token.nullHash());
         }
+
         ArrayList<Pair<String, String>> sortedTransactions = getSortedTransactions();
         MerkleTrie.TrieNode root = MerkleTrie.createMerkleTrie(sortedTransactions);
-        cycleId.put(root.value, NCycleTries);
-        cycleHash.put(NCycleTries, root.value);
-        cycleTrie.put(NCycleTries, root);
-        transactionsCache.put(NCycleTries, sortedTransactions);
+
+
+            NCycleTries += 1;
+            cycleId.put(root.value, NCycleTries);
+            cycleHash.put(NCycleTries, root.value);
+            cycleTrie.put(NCycleTries, root);
+            transactionsCache.put(NCycleTries, sortedTransactions);
+
         while (cycleTrie.size() >= cacheSize) {
             writeTransactions(transactionsCache.get(lastCachedCycleTrieId));
             transactionsCache.remove(lastCachedCycleTrieId);
@@ -187,6 +192,7 @@ public class Relay {
     }
 
     public MerkleTrie.TrieNode getMostRecentCycTrieNode() {
+        System.out.println(NCycleTries + " ct " + cycleTrie.size());
         return cycleTrie.get(NCycleTries);
     }
 
@@ -199,7 +205,7 @@ public class Relay {
     }
 
     public static void main(String[] args) throws IOException {
-        Relay r = new Relay(1, 1, TimeUnit.DAYS);
+        Relay r = new Relay(0, 1, TimeUnit.SECONDS);
 
         //defines port to run spark API on
         port(8090);
@@ -262,6 +268,6 @@ public class Relay {
 
         });
 
-        MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
+        //MerkleTrie.TrieNode genesisCycleRoot = createRandomCycleTrie(r);
     }
 }

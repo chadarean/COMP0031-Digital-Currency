@@ -1,8 +1,15 @@
 package com.mycompany.app.TODA;
 
+import java.io.IOException;
 import java.util.*;
 
 import com.mycompany.app.POP.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 import static java.lang.Math.max;
 
@@ -68,6 +75,16 @@ public class Utils {
             }
         }
         return res;
+    }
+
+    public static int getCycleId(String cycleRoot) throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String cycleIdString = EntityUtils.toString(entity);
+
+        return Integer.parseInt(cycleIdString);
     }
 
     public static String convertKey(String s) {

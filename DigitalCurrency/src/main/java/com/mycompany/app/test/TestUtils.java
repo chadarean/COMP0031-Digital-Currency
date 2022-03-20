@@ -49,6 +49,7 @@ public class TestUtils {
     }
 
     public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) throws IOException {
+        System.out.println("Here");
         String uri = "http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
         System.out.println(uri);
         HttpGet request = new HttpGet(uri);

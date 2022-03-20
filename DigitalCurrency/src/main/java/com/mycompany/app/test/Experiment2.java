@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Thread.sleep;
 import static spark.Spark.get;
 import static spark.Spark.port;
 
@@ -41,14 +42,17 @@ public class Experiment2 {
     static MSB msb;
     static int offset;
 
-    public static String getMostRecentCycle() throws IOException {
+    public static MerkleTrie.TrieNode getMostRecentCycleTrieNode() throws IOException {
         HttpGet request = new HttpGet("http://localhost:8090/Relay/getMostRecentCycleTrieNode");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
         String crtCycleString = EntityUtils.toString(entity);
-        MerkleTrie.TrieNode crtCycle = new Gson().fromJson(crtCycleString, MerkleTrie.TrieNode.class);
-        return crtCycle.value;
+        return new Gson().fromJson(crtCycleString, MerkleTrie.TrieNode.class);
+    }
+
+    public static String getMostRecentCycle() throws IOException {
+        return getMostRecentCycleTrieNode().value;
     }
 
     public static void setup() throws IOException {
@@ -59,7 +63,7 @@ public class Experiment2 {
         C_ = new ArrayList<>();
         msb = new MSB();
         C_.add(getMostRecentCycle()); // add creation cycle hash
-        offset = new Owner("").getCycleId(C_.get(0));
+        offset = Utils.getCycleId(C_.get(0));
     }
 
     public static void tearDown() {
@@ -80,7 +84,11 @@ public class Experiment2 {
     public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
-
+//        try {
+//            sleep(1);
+//        } catch (InterruptedException e) {
+//            System.out.println(e);
+//        }
         HashMap<Integer, Integer> transactingUser = new HashMap<>();
 
         int nTrans = 0;
@@ -147,6 +155,8 @@ public class Experiment2 {
                 C_.add(crtCycle.value);
             } else {
                 // c >= nWaitingCycles
+                int crtCycleId = Utils.getCycleId(getMostRecentCycle());
+
                 ArrayList<Pair<Integer, Pair<String, String>>> t_c = transactions.get(c-nWaitingCycles);
 
                 for (Pair<Integer, Pair<String, String>> t : t_c) {
@@ -161,25 +171,28 @@ public class Experiment2 {
 
                     a.sendUpdates(C_.get(c), addressA);
                 }
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
 
-                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
-                CloseableHttpClient client = HttpClients.createDefault();
-                CloseableHttpResponse response = client.execute(request);
-                HttpEntity entity = response.getEntity();
-                String merkleTrieString = EntityUtils.toString(entity);
-
-                MerkleTrie.TrieNode crtCycle = new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
-                C_.add(crtCycle.value); // cycle c+1
+                }
+                MerkleTrie.TrieNode nextCycle = getMostRecentCycleTrieNode();
+//                System.out.println("crt " + crtCycleId);
+//                while (Utils.getCycleId(nextCycle.value) == crtCycleId) {
+//                    nextCycle = getMostRecentCycleTrieNode();
+//                }
+//                System.out.println("nxt " + Utils.getCycleId(nextCycle.value));
+                C_.add(nextCycle.value); // cycle c+1
                 for (Pair<Integer, Pair<String, String>> t : t_c) {
                     // execute transaction made by user t_c.key
                     Owner a = users.get(t.key);
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1+offset));
-                    client = HttpClients.createDefault();
-                    response = client.execute(request);
-                    entity = response.getEntity();
+                    HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/" + addressA + "/" + Integer.toString(c + 1 + offset));
+                    CloseableHttpClient client = HttpClients.createDefault();
+                    CloseableHttpResponse response = client.execute(request);
+                    HttpEntity entity = response.getEntity();
                     String popSliceString = EntityUtils.toString(entity);
 
                     POPSlice popSlice_t = new Gson().fromJson(popSliceString, POPSlice.class);
