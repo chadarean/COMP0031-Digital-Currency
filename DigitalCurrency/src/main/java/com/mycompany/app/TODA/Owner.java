@@ -4,7 +4,7 @@
  * (if this is not the case, the user could later find the cycle root of the updated by checking a small set of cycle hashes
  * published in the expected time interval) 
  * 3. using 2, the user will have the first cycle root required for the POP for each asset
-*/
+ */
 
 package com.mycompany.app.TODA;
 
@@ -43,7 +43,7 @@ public class Owner {
     public HashMap<String, ArrayList<Token>> assets; // assets[address]
     public HashMap<Integer, HashMap<String, POPSlice>> addressToPOPSlice; //cache POP for address but not for files since files will be removed after transacted
     public HashMap<String, String> updateToCycleRoot; // updateToCycleRoot[address] = the cycle root hash where the update for address was made
-    public Relay relay; 
+    public Relay relay;
     //public HashMap<String, FileDetail> oldFileDetails;
     public HashMap<String, TransactionPacket> txpxs; // assume address has only one update before receiving its POP
     long storedPopSize = 0;
@@ -72,18 +72,9 @@ public class Owner {
             addressAssets.add(asset);
         }
     }
-    public int getCycleId(String cycleRoot) throws IOException {
-        HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
-        CloseableHttpClient client = HttpClients.createDefault();
-        CloseableHttpResponse response = client.execute(request);
-        HttpEntity entity = response.getEntity();
-        String cycleIdString = EntityUtils.toString(entity);
-
-        return Integer.parseInt(cycleIdString);
-    }
 
     public Token createAsset(String address, int d) {
-        String cycleRoot = ""; // TODO: getCurrentCycleRoot() from Relay DB? via MSB? 
+        String cycleRoot = ""; // TODO: getCurrentCycleRoot() from Relay DB? via MSB?
         String signature = ""; // TODO: get s(d, I_d) from DLT via MSB
         //TODO: should cycleRoot and signature be obtained by the wallet?
         Token token = new Token();
@@ -125,7 +116,7 @@ public class Owner {
 
         // sends request to Relay
         // TODO: the relay could send back the POP after creating the trie
-    } 
+    }
 
     public void removeCycleRootData(ArrayList<String> cycleRoots) {
         for (String cycleRoot: cycleRoots) {
@@ -133,7 +124,7 @@ public class Owner {
             fileTrieCache.remove(cycleRoot);
         }
     }
-    // TODO: implement function that detects the time when it is safe to remove the POPs data 
+    // TODO: implement function that detects the time when it is safe to remove the POPs data
 
     private MerkleTrie.TrieNode getFileTrieForAddress(String cycleRoot, String address) {
         // returns the file trie for the address at trie with root = cycleRoot. if cycleRoot is null, then it returns the current cycle trie
@@ -141,7 +132,7 @@ public class Owner {
             return crtFileTrie.get(address); // current file Trie for the most recent update under address
             // Note: once user has the proof for this update (and consequently the cycleRoot), the fileTrie will be cleared
             // and moved to the cache
-        } 
+        }
         HashMap<String, MerkleTrie.TrieNode> crtFileTries = fileTrieCache.get(cycleRoot);
         if (crtFileTries == null) {
             return null;
@@ -169,8 +160,8 @@ public class Owner {
     }
 
     public MerkleTrie.TrieNode createFileTrie(String address) {
-        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address)); 
-        
+        MerkleTrie.TrieNode fileTrie = MerkleTrie.createMerkleTrie(getFileDetailPairs(address));
+
         if (crtFileTrie.containsKey(address)) {
             throw new RuntimeException("The address is not allowed to create a new file trie! This limitation can be removed at the cost of additional memory!");
         }
@@ -201,9 +192,9 @@ public class Owner {
             throw new RuntimeException(popSlice.addressProof.leafHash);
         }
         // adds the POPSlice to the cache containing popslices for address in trie with root = cycleRoot
-        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(getCycleId(cycleRoot));
+        HashMap<String, POPSlice> addressPOPSlice = addressToPOPSlice.get(Utils.getCycleId(cycleRoot));
         if (addressPOPSlice == null) {
-            addressToPOPSlice.put(getCycleId(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
+            addressToPOPSlice.put(Utils.getCycleId(cycleRoot), new HashMap<String, POPSlice>(){{put(finalAddress, finalPOPSlice);}});
         } else {
             addressPOPSlice.put(address, popSlice);
         }
@@ -248,7 +239,7 @@ public class Owner {
             }
             if (i != 0 && i != (numPOPSlices - 1)) {
                 if (popSlice.fileProof != null && !popSlice.fileProof.null_proof) {
-                    // the owner must prove that they did not transact the asset=>POPSlice must be a null proof 
+                    // the owner must prove that they did not transact the asset=>POPSlice must be a null proof
                     System.out.println("non-null POP");
                     return false;
                 }
@@ -276,8 +267,8 @@ public class Owner {
 
     public POPSlice getPOPSliceForCycle(String address, String fileId, String cycleRoot) throws IOException {
         // Obtains the POPSlice for address in trie with root cycleRoot and completes it with data for fileId
-        // TODO send cycleRootId by querying the relay.getCycleId()
-        int cycleRootId = getCycleId(cycleRoot);
+        // TODO send cycleRootId by querying the relay.Utils.getCycleId()
+        int cycleRootId = Utils.getCycleId(cycleRoot);
         HttpGet request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+address+"/"+Integer.toString(cycleRootId));
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
@@ -290,8 +281,8 @@ public class Owner {
     }
 
     public ArrayList<POPSlice> getPOPUsingCache(String cycleRoot, String address, Token asset) throws IOException {
-        int beginCycle = getCycleId(asset.getIssuedCycleRoot());
-        int endCycle = getCycleId(cycleRoot);
+        int beginCycle = Utils.getCycleId(asset.getIssuedCycleRoot());
+        int endCycle = Utils.getCycleId(cycleRoot);
         ArrayList<POPSlice> pop = new ArrayList<>();
 
         for (int i = beginCycle; i <= endCycle; ++ i) {
@@ -335,15 +326,15 @@ public class Owner {
         String popString = EntityUtils.toString(entity);
         ArrayList<POPSlice> pop = new Gson().fromJson(popString, new TypeToken<ArrayList<POPSlice>>(){}.getType());
 
-        pop.add(addressToPOPSlice.get(getCycleId(cycleRoot)).get(address));
-    
+        pop.add(addressToPOPSlice.get(Utils.getCycleId(cycleRoot)).get(address));
+
         for (POPSlice popSlice: pop) {
             if (!popSlice.addressProof.null_proof) {
                 // cycle Root contained in popSlice, but not known to user
                 if (popSlice.transactionPacket == null) {
                     HashMap <String, POPSlice> crtCycleSlice = addressToPOPSlice.get(popSlice.cycleRoot);
                     popSlice.transactionPacket = crtCycleSlice.get(address).transactionPacket;
-                    
+
                 }
                 completePOPSlice(popSlice, address, (asset.getFileId()));
             } else {
@@ -364,12 +355,12 @@ public class Owner {
 
     public long getSize(boolean addCache) {
         long size = Utils.getObjectSize(userId) + // done
-        Utils.getSizeCrt(crtFileTrie) +
-        Utils.getSize(fileTrieCache) +
-        Utils.getSizeT(fileDetails) +
-        Utils.getSizeMapAndList(assets) +
-        Utils.getObjectSize(updateToCycleRoot) +
-        Utils.getSizeCrt(txpxs);
+                Utils.getSizeCrt(crtFileTrie) +
+                Utils.getSize(fileTrieCache) +
+                Utils.getSizeT(fileDetails) +
+                Utils.getSizeMapAndList(assets) +
+                Utils.getObjectSize(updateToCycleRoot) +
+                Utils.getSizeCrt(txpxs);
         // TODO: how to consider the size of the relay?
         if (addCache) {
             size += Utils.getSize(addressToPOPSlice);
