@@ -42,7 +42,7 @@ public class Experiment2 {
     static int offset;
 
     public static String getMostRecentCycle() throws IOException {
-        HttpGet request = new HttpGet("http://localhost:8090/Relay/getMostRecentCycleTrieNode");
+        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/getMostRecentCycleTrieNode");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -126,7 +126,7 @@ public class Experiment2 {
                         w.setBlindingFactor();
                         byte[] blinded_msg = w.blind_message(msg);
 
-                        HttpGet request = new HttpGet("http://localhost:3080/requestSign/"+Utils.getStringFromByte(blinded_msg, blinded_msg.length));
+                        HttpGet request = new HttpGet("http://0.0.0.0:3080/requestSign/"+Utils.getStringFromByte(blinded_msg, blinded_msg.length));
                         CloseableHttpClient client = HttpClients.createDefault();
                         CloseableHttpResponse response = client.execute(request);
                         HttpEntity entity = response.getEntity();
@@ -162,7 +162,7 @@ public class Experiment2 {
                     a.sendUpdates(C_.get(c), addressA);
                 }
 
-                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
+                HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/createCycleTrie");
                 CloseableHttpClient client = HttpClients.createDefault();
                 CloseableHttpResponse response = client.execute(request);
                 HttpEntity entity = response.getEntity();
@@ -176,7 +176,7 @@ public class Experiment2 {
                     String addressA = t.value.key;
                     String addressB = t.value.value;
 
-                    request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1+offset));
+                    request = new HttpGet("http://0.0.0.0:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(c+1+offset));
                     client = HttpClients.createDefault();
                     response = client.execute(request);
                     entity = response.getEntity();
