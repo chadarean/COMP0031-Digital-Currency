@@ -202,7 +202,9 @@ public class Relay {
         Relay r = new Relay(1, 1, TimeUnit.DAYS);
 
         //defines port to run spark API on
+
         port(8090);
+
         //defines API paths and their respective functionality
         get("/Relay/getPOP/:stringAddress/:G_K:/:G_n:", (request, response) -> {
             response.type("application/json");

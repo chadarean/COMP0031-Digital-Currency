@@ -49,13 +49,13 @@ public class TestUtils {
     }
 
     public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r) throws IOException {
-        String uri = "http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
+        String uri = "http://0.0.0.0:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE));
         System.out.println(uri);
         HttpGet request = new HttpGet(uri);
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
 
-        request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
+        request = new HttpGet("http://0.0.0.0:8090/Relay/createCycleTrie");
         client = HttpClients.createDefault();
         response = client.execute(request);
         HttpEntity entity = response.getEntity();
@@ -67,13 +67,13 @@ public class TestUtils {
     public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) throws IOException {
         for (int i = 0; i < nUpdates; ++ i) {
 
-            HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
+            HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
             CloseableHttpClient client = HttpClients.createDefault();
             CloseableHttpResponse response = client.execute(request);
 
 
         }
-        HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
+        HttpGet request = new HttpGet("http://0.0.0.0:8090/Relay/createCycleTrie");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();

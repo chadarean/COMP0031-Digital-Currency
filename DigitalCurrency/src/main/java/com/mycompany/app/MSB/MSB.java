@@ -186,7 +186,9 @@ public class MSB {
         Connection c = msb.connect();
         msb.generate_keypairs(1024);
         //defines port for spark API to run on
+
         port(3080);
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 
