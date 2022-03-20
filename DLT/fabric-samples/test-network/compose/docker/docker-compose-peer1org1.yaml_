@@ -30,6 +30,9 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      #- CORE_PEER_TLS_CERT_FILE=/home/user/Documents/COMP0031-Digital-Currency/DLT/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/server.crt
+      #- CORE_PEER_TLS_KEY_FILE=/home/user/Documents/COMP0031-Digital-Currency/DLT/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/server.key
+      #- CORE_PEER_TLS_ROOTCERT_FILE=/home/user/Documents/COMP0031-Digital-Currency/DLT/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
       # Peer specific variabes
       - CORE_PEER_ID=peer1.org1.example.com
       - CORE_PEER_ADDRESS=peer1.org1.example.com:8051
@@ -41,8 +44,10 @@ services:
       - CORE_PEER_LOCALMSPID=Org1MSP
     volumes:
         - /var/run/:/host/var/run/
-        - ../organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp
-        - ../organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
+        #- /home/user/Documents/COMP0031-Digital-Currency/DLT/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:etc/hyperledger/fabric/msp
+        #- /home/user/Documents/COMP0031-Digital-Currency/DLT/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:etc/hyperledger/fabric/tls
+        - ./organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp/signcerts
+        - ./organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
         - peer1.org1.example.com:/var/hyperledger/production
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
