@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.max;
 import static spark.Spark.get;
 import static spark.Spark.port;
 
@@ -77,7 +79,7 @@ public class Experiment2 {
         }
     }
 
-    public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
+    public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, int maxWaitingCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
 
@@ -89,9 +91,14 @@ public class Experiment2 {
         ArrayList<ArrayList<Pair<Integer, Pair<String, String>>>> transactions = new ArrayList<>();
         HashMap<String, ArrayList<Token>> tokensForAddr = new HashMap<>();
         ArrayList<Integer> tokensInFlight = new ArrayList<>();
+        // The monitored users will transact after maxWaitingCycles have passed
+        // The first cycle for which tokens will be created is maxWaitingCycles - nWaitingCycles and
+        // the last one is nCycles-nWaitingCycles-2 => nCycles-2-maxWaitingCycles cycles in total
+        // Users will transact from maxWaitingCycles until C+maxWaitingCycles and create tokens
 
+        int nTransactingCycles = 0;
         for (int c = 0; c < nCycles - 1; ++ c) {
-            if (c + nWaitingCycles < nCycles - 1) {
+            if (c + nWaitingCycles < nCycles - 1 && c >= maxWaitingCycles - nWaitingCycles) {
                 int nTransactions = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
                 // create nTransactions for cycle c+1
@@ -138,16 +145,16 @@ public class Experiment2 {
                         tokensForAddr.get(addressA).add(asset);
                     }
 
-                    transactions.get(c).add(new Pair<Integer, Pair<String, String>>(user_i, new Pair<String, String>(addressA, addressB)));
+                    transactions.get(c-maxWaitingCycles+nWaitingCycles).add(new Pair<Integer, Pair<String, String>>(user_i, new Pair<String, String>(addressA, addressB)));
                 }
             }
-            if (c < nWaitingCycles) {
+            if (c < maxWaitingCycles) {
                 int nRandTrans = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
                 MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, nRandTrans);
                 C_.add(crtCycle.value);
             } else {
-                // c >= nWaitingCycles
-                ArrayList<Pair<Integer, Pair<String, String>>> t_c = transactions.get(c-nWaitingCycles);
+                // c >= maxWaitingCycles
+                ArrayList<Pair<Integer, Pair<String, String>>> t_c = transactions.get(c-maxWaitingCycles);
 
                 for (Pair<Integer, Pair<String, String>> t : t_c) {
                     // execute transaction made by user t_c.key
@@ -210,18 +217,17 @@ public class Experiment2 {
         tearDown();
     }
 
-    public static void measureRandomExperim(String fileName, int nAddrValues[], int nWaitingCyclesValues[], boolean oneTransaction) {
+    public static void measureRandomExperim(String fileName, int nAddrValues[], int nWaitingCyclesValues[], int maxWaitingCycles, int[] nCyclesValues, boolean oneTransaction) {
         // 4
         // 16
-        int[] nCyclesValues = {16};
         try {
             PrintWriter results = new PrintWriter(fileName);
-                for (int nAddr:  nAddrValues) {
+                for (int nAddrPerCycle:  nAddrValues) {
                     for (int nWaitingCycles : nWaitingCyclesValues) {
                         for (int nCycles : nCyclesValues) {
                             System.out.println(nWaitingCycles);
                             TestUtils.resetState();
-                            measureRandom(nAddr, nWaitingCycles, nCycles, oneTransaction);
+                            measureRandom(nAddrPerCycle * nCycles, nWaitingCycles, nCycles+maxWaitingCycles, maxWaitingCycles, oneTransaction);
                         }
                     }
             }
@@ -234,21 +240,54 @@ public class Experiment2 {
 
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
-        /*measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        measureRandomExperim("varyWaitingCycles.txt", new int[]{512*33}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
-        System.out.println("Done");*/
+//        for (int rep = 0; rep < 1; ++ rep) {
+//            System.out.printf("Time before rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//            //measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
+//            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+//                    new int[]{512}, new int[]{4},  8, new int[]{16}, true);
+//            System.out.printf("Time after rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//        }
 
         port(3456);
         TestUtils.setRandomNumbers();
         get("/Experiment", (request, response) -> {
             response.type("application/json");
+            int nReps = 1;
             try{
                 /*
                                 measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256}, new int[]{0}, false);
                 measureRandomExperim("varyWaitingCycles.txt", new int[]{512*4}, new int[]{0, 1, 2, 3, 4, 5, 6}, true);
                  */
                 //measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
+                for (int rep = 0; rep < nReps; ++ rep) {
+                    System.out.printf("Time before rep %d:", rep);
+                    System.out.println(new Timestamp(System.currentTimeMillis()));
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{8},  8, new int[]{16}, true);
+                    /*
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{4},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 2 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{2},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 1 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{1},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 0 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{0},  8, new int[]{16}, true);
+                     */
+
+                    System.out.printf("Time after rep %d:", rep);
+                    System.out.println(new Timestamp(System.currentTimeMillis()));
+                }
+
+
+
                 return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
             }catch(Exception e){
                 return null;
