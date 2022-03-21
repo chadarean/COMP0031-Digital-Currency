@@ -20,16 +20,10 @@ import com.google.gson.JsonParser;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import org.hyperledger.fabric.client.CallOption;
-import org.hyperledger.fabric.client.Contract;
-import org.hyperledger.fabric.client.Gateway;
-import org.hyperledger.fabric.client.GatewayException;
-import org.hyperledger.fabric.client.Network;
-import org.hyperledger.fabric.client.identity.Identities;
-import org.hyperledger.fabric.client.identity.Identity;
-import org.hyperledger.fabric.client.identity.Signer;
-import org.hyperledger.fabric.client.identity.Signers;
-import org.hyperledger.fabric.client.identity.X509Identity;
+import org.hyperledger.fabric.client.*;
+import org.hyperledger.fabric.client.identity.*;
+
+
 
 public final class FabricGateway implements LedgerAPI {
 
