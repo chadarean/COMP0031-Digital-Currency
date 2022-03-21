@@ -23,7 +23,7 @@ First, clone the repository
 
 Next, set the working directory to 'test-network'
 
-`cd COMP0031-Digital-Currency\DLT\fabric-samples\`
+`cd COMP0031-Digital-Currency/DLT/fabric-samples/test-network`
 
 From inside the test-network directory, run the following command to remove any containers or artifacts from any previous runs:
 
