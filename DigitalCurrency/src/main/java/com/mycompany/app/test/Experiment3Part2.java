@@ -89,7 +89,7 @@ public class Experiment3Part2 {
 
         //POPSlice popSlice1 = r.getPOPSlice(addressA, cycleRoots.get(1));
         //a.receivePOP(addressA, popSlice1);
-        int offset = a.getCycleId(getMostRecentCycle());
+        int offset = TestUtils.getCycleId(getMostRecentCycle());
         request = new HttpGet("http://localhost:8090/Relay/getPOPSlice/"+addressA+"/"+Integer.toString(offset));
         client = HttpClients.createDefault();
         response = client.execute(request);
