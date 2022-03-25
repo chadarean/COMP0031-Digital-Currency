@@ -34,6 +34,16 @@ public class TestUtils {
         }
     }
 
+    public static String getMostRecentCycle() throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getMostRecentCycleTrieNode");
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String crtCycleString = EntityUtils.toString(entity);
+        MerkleTrie.TrieNode crtCycle = new Gson().fromJson(crtCycleString, MerkleTrie.TrieNode.class);
+        return crtCycle.value;
+    }
+
     public static int getCycleId(String cycleRoot) throws IOException {
         HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
         CloseableHttpClient client = HttpClients.createDefault();
@@ -74,15 +84,16 @@ public class TestUtils {
 
     }
 
-    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) throws IOException {
+    public static void addRandomUpdates(int nUpdates) throws IOException {
         for (int i = 0; i < nUpdates; ++ i) {
-
             HttpGet request = new HttpGet("http://localhost:8090/Relay/addUpdateFromDownstream/"+TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)+"/"+Token.getHashOfString(TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE)));
             CloseableHttpClient client = HttpClients.createDefault();
             CloseableHttpResponse response = client.execute(request);
-
-
         }
+    }
+
+    public static MerkleTrie.TrieNode createRandomCycleTrie(Relay r, int nUpdates) throws IOException {
+        addRandomUpdates(nUpdates);
         HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(request);

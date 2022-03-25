@@ -25,13 +25,12 @@ import java.util.HashMap;
 import java.util.Random;
 
 import static java.lang.Math.max;
+import static java.lang.Thread.sleep;
 import static spark.Spark.get;
 import static spark.Spark.port;
 
 public class Experiment4 {
     public static Random rand = new Random();
-    static ArrayList<String> C_; // array of cycle hashes
-    static Relay r; // TODO: create multiple relays for future tests
 
     public static String getMostRecentCycle() throws IOException {
         HttpGet request = new HttpGet("http://localhost:8090/Relay/getMostRecentCycleTrieNode");
@@ -43,18 +42,11 @@ public class Experiment4 {
         return crtCycle.value;
     }
 
-    public static void setup() throws IOException {
-        C_ = new ArrayList<>();
-        C_.add(getMostRecentCycle()); // add creation cycle hash
-    }
-
     public static void tearDown() {
         //r.closeConnection();
     }
 
     public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, int maxWaitingCycles, boolean oneTransaction) throws IOException {
-        setup();
-
         int nTrans = 0;
         int nTransRec = 0;
 
@@ -75,42 +67,18 @@ public class Experiment4 {
                 for (int i = 0; i < nTransactions; ++ i) {
                     // a user will do one transaction; "we don't expect multiple transactions to change the result as the speed load is on the relay"
                     OwnerThread user = new OwnerThread(Integer.toString(i));
-                    user.setAddresses();
-                    // create asset for user_i : move method into thread's run
-                    user.createTokens(C_.get(c), user.pkeyA); // multiple machines:
-                    transactingThreads.get(c-maxWaitingCycles+nWaitingCycles).add(user);
+                    new Thread(user).start();
                 }
             }
             if (c < maxWaitingCycles) {
                 int nRandTrans = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
-                MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, nRandTrans);
-                C_.add(crtCycle.value);
-            } else {
-                // c >= maxWaitingCycles
-                ArrayList<OwnerThread> t_c = transactingThreads.get(c-maxWaitingCycles);
-
-                for (OwnerThread user : t_c) {
-                    user.transferTokens(user.pkeyA, user.pkeyB, C_.get(c));
-                }
-
-                HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
-                CloseableHttpClient client = HttpClients.createDefault();
-                CloseableHttpResponse response = client.execute(request);
-                HttpEntity entity = response.getEntity();
-                String merkleTrieString = EntityUtils.toString(entity);
-
-                MerkleTrie.TrieNode crtCycle = new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
-                C_.add(crtCycle.value); // cycle c+1
-                for (OwnerThread user : t_c) {
-                    // execute transaction made by user t_c.key
-                    user.getVerifyPOP(user.pkeyA, C_.get(c+1), TestUtils.getCycleId(C_.get(c+1)));
-                    nTransRec += 1;
-                }
+                TestUtils.addRandomUpdates(nRandTrans);
             }
-        }
-
-        if (nTransRec != nTrans) {
-            throw new RuntimeException("Not all transactions have been received!");
+            try {
+                sleep(1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         tearDown();
     }
