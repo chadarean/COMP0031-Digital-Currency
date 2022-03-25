@@ -34,6 +34,16 @@ public class TestUtils {
         }
     }
 
+    public static int getCycleId(String cycleRoot) throws IOException {
+        HttpGet request = new HttpGet("http://localhost:8090/Relay/getCycleID/"+cycleRoot);
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String cycleIdString = EntityUtils.toString(entity);
+
+        return Integer.parseInt(cycleIdString);
+    }
+
     public static int getNextInt() {
         randState += 1;
         return randNumbers.get(randState-1);
