@@ -7,7 +7,10 @@ import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;
 import com.mycompany.app.StandardResponse;
 import com.mycompany.app.StatusResponse;
-import com.mycompany.app.TODA.*;
+import com.mycompany.app.TODA.MerkleTrie;
+import com.mycompany.app.TODA.Owner;
+import com.mycompany.app.TODA.Relay;
+import com.mycompany.app.TODA.Utils;
 import com.mycompany.app.Wallet;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,16 +22,12 @@ import spark.Spark;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.port;
 
-public class Experiment3 {
+public class Experiment3Part1 {
     public static Random rand = new Random();
 
     public static String getMostRecentCycle() throws IOException {
@@ -42,7 +41,7 @@ public class Experiment3 {
     }
 
     // Create and Transfer Asset
-    public static void testSingleTransaction(int addressSize) throws IOException {
+    public static void testCreaingAndTrasactingToken(int addressSize) throws IOException {
         MSB msb = new MSB();
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay();
@@ -79,6 +78,7 @@ public class Experiment3 {
 
 
         //MerkleTrie.TrieNode cycleRootNode1 = r.createCycleTrie();
+        //MerkleTrie.TrieNode cycleRootNode1 = r.createCycleTrie();
         request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
         client = HttpClients.createDefault();
         response = client.execute(request);
@@ -86,8 +86,6 @@ public class Experiment3 {
         String merkleTrieString = EntityUtils.toString(entity);
 
         MerkleTrie.TrieNode cycleRootNode1 = new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
-
-
 
         cycleRoots.add(cycleRootNode1.value); // update1 cycle hash
 
@@ -105,20 +103,8 @@ public class Experiment3 {
         a.receivePOP(addressA, popSlice_t);
 
 
-        ArrayList<POPSlice> pop = a.getPOPUsingCache(cycleRoots.get(1), addressA, asset);
-        
+        a.getPOPUsingCache(cycleRoots.get(1), addressA, asset);
 
-        Owner b = new Owner("userB");
-        if (!b.verifyPOP(pop, addressA, destPk, signature)) {
-            throw new RuntimeException("Valid POP is not correctly verified!");
-        }
-        b.receiveAsset(pop, addressA, destPk, signature, asset);
-        ArrayList<Token> assetsB = b.assets.get(destPk);
-        if (assetsB == null || !assetsB.get(assetsB.size()-1).getFileId().equals(asset.getFileId())) {
-            throw new RuntimeException("Asset not correctly redeemed!");
-        }
-
-        r.closeConnection();
     }
 
     public static void main(String[] args) throws IOException {
@@ -126,9 +112,9 @@ public class Experiment3 {
         //System.out.println("Tests passed!");
 
         port(3456);
-        Spark.get("/Experiment3", (request, response) -> {
+        Spark.get("/Experiment3a", (request, response) -> {
             try{
-                testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
+                testCreaingAndTrasactingToken(MerkleTrie.ADDRESS_SIZE);
                 return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
             }catch(Exception e){
                 return null;
