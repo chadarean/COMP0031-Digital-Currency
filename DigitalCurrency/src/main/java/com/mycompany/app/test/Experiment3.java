@@ -1,14 +1,14 @@
 package com.mycompany.app.test;
 
 import com.google.gson.Gson;
+import com.mycompany.app.BlindSignature;
+import com.mycompany.app.MSB.MSB;
 import com.mycompany.app.POP.POPSlice;
 import com.mycompany.app.POP.Token;
 import com.mycompany.app.StandardResponse;
 import com.mycompany.app.StatusResponse;
-import com.mycompany.app.TODA.MerkleTrie;
-import com.mycompany.app.TODA.Owner;
-import com.mycompany.app.TODA.Pair;
-import com.mycompany.app.TODA.Relay;
+import com.mycompany.app.TODA.*;
+import com.mycompany.app.Wallet;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 import spark.Spark;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,29 +43,46 @@ public class Experiment3 {
 
     // Create and Transfer Asset
     public static void testSingleTransaction(int addressSize) throws IOException {
+        MSB msb = new MSB();
         ArrayList<String> cycleRoots = new ArrayList<>();
         Relay r = new Relay();
         MerkleTrie.TrieNode genesisCycleRoot = TestUtils.createRandomCycleTrie(r);
         cycleRoots.add(genesisCycleRoot.value);
         Owner a = new Owner("userA");
         a.relay = r;
+        Wallet w = new Wallet("userA");
         String addressA = TestUtils.getRandomXBitAddr(rand, addressSize);
         int d = 2;
         // the wallet will call the createAsset method which will call createAsset from the Owner.java class
-        Token asset = a.createAsset(cycleRoots.get(0), addressA, d, ""); 
+        Token asset = a.createAsset(cycleRoots.get(0), addressA, d, "");
+
         // blind token.getFileId() and request signature for blinded version
-        // unblind signature 
-        String signature = "asdfghjkl"; //TODO: add blind signature to file detail?
+        byte[] msg = w.convert_token_to_byte(asset);
+        msb.generate_keypairs(256);
+        w.get_issuer_publickey();
+        w.setBlindingFactor();
+        byte[] blinded_msg = w.blind_message(msg);
+
+        HttpGet request = new HttpGet("http://localhost:3080/requestSign/"+ Utils.getStringFromByte(blinded_msg, blinded_msg.length));
+        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        String signedMessage = EntityUtils.toString(entity);
+        byte[] sigBymsb = signedMessage.getBytes(StandardCharsets.UTF_8);
+        byte[] unblindedSigBymsb = BlindSignature.unblind(w.issuer_public_key, w.blindingFactor, sigBymsb);
+        String signature = new String(unblindedSigBymsb, StandardCharsets.UTF_8); // unblinded bsig for asset.fileKernel
+        asset.addSignature(signature);
+
         String destPk = TestUtils.getRandomXBitAddr(rand, addressSize);
         a.transferAsset(cycleRoots.get(0), addressA, asset, destPk);
         a.sendUpdates(cycleRoots.get(0), addressA);
 
 
         //MerkleTrie.TrieNode cycleRootNode1 = r.createCycleTrie();
-        HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
-        CloseableHttpClient client = HttpClients.createDefault();
-        CloseableHttpResponse response = client.execute(request);
-        HttpEntity entity = response.getEntity();
+        request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
+        client = HttpClients.createDefault();
+        response = client.execute(request);
+        entity = response.getEntity();
         String merkleTrieString = EntityUtils.toString(entity);
 
         MerkleTrie.TrieNode cycleRootNode1 = new Gson().fromJson(merkleTrieString, MerkleTrie.TrieNode.class);
@@ -106,17 +124,17 @@ public class Experiment3 {
     }
 
     public static void main(String[] args) throws IOException {
-        //testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
-        //System.out.println("Tests passed!");
+        testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
+        System.out.println("Tests passed!");
 
-        port(3456);
-        Spark.get("/Experiment3", (request, response) -> {
-            try{
-                testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
-                return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
-            }catch(Exception e){
-                return null;
-            }
-        });
+//        port(3456);
+//        Spark.get("/Experiment3", (request, response) -> {
+//            try{
+//                testSingleTransaction(MerkleTrie.ADDRESS_SIZE);
+//                return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
+//            }catch(Exception e){
+//                return null;
+//            }
+//        });
     }
 }
