@@ -100,6 +100,7 @@ public class Experiment2 {
 
         int nTransactingCycles = 0;
         for (int c = 0; c < nCycles - 1; ++ c) {
+            long time_c = System.currentTimeMillis();
             if (c + nWaitingCycles < nCycles - 1 && c >= maxWaitingCycles - nWaitingCycles) {
                 int nTransactions = minUsersPerCycle + Math.abs(TestUtils.getNextInt()) % ((nUsers/nCycles) - minUsersPerCycle + 1);
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
@@ -152,6 +153,7 @@ public class Experiment2 {
             }
             if (c < maxWaitingCycles) {
                 int nRandTrans = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
+                while (time_c + 1000L > System.currentTimeMillis());
                 MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, nRandTrans);
                 C_.add(crtCycle.value);
             } else {
@@ -170,6 +172,8 @@ public class Experiment2 {
 
                     a.sendUpdates(C_.get(c), addressA);
                 }
+
+                while (time_c + 1000L > System.currentTimeMillis());
 
                 HttpGet request = new HttpGet("http://localhost:8090/Relay/createCycleTrie");
                 CloseableHttpClient client = HttpClients.createDefault();
@@ -241,58 +245,13 @@ public class Experiment2 {
     }
 
     public static void main(String[] args) {
-        TestUtils.setRandomNumbers();
-        for (int rep = 0; rep < 1; ++ rep) {
-            System.out.printf("Time before rep %d:", rep);
-            System.out.println(new Timestamp(System.currentTimeMillis()));
-            // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
-            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
-                    new int[]{MAX_T_PER_SECOND}, new int[]{10},  10, new int[]{600}, true);
-                    /*
-                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
-                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-                            new int[]{512}, new int[]{4},  8, new int[]{16}, true);
-                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 2 waiting cycles and 16+8 total cycles
-                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-                            new int[]{512}, new int[]{2},  8, new int[]{16}, true);
-                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 1 waiting cycles and 16+8 total cycles
-                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-                            new int[]{512}, new int[]{1},  8, new int[]{16}, true);
-                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 0 waiting cycles and 16+8 total cycles
-                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-                            new int[]{512}, new int[]{0},  8, new int[]{16}, true);
-                     */
-
-            System.out.printf("Time after rep %d:", rep);
-            System.out.println(new Timestamp(System.currentTimeMillis()));
-        }
+//        TestUtils.setRandomNumbers();
 //        for (int rep = 0; rep < 1; ++ rep) {
 //            System.out.printf("Time before rep %d:", rep);
 //            System.out.println(new Timestamp(System.currentTimeMillis()));
-//            //measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
-//            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-//                    new int[]{512}, new int[]{0, 1, 2, 4, 8},  8, new int[]{16}, true);
-//            System.out.printf("Time after rep %d:", rep);
-//            System.out.println(new Timestamp(System.currentTimeMillis()));
-//        }
-
-//        port(3456);
-//        TestUtils.setRandomNumbers();
-//        get("/Experiment", (request, response) -> {
-//            response.type("application/json");
-//            int nReps = 1;
-//            try{
-//                /*
-//                                measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256}, new int[]{0}, false);
-//                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*4}, new int[]{0, 1, 2, 3, 4, 5, 6}, true);
-//                 */
-//                //measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
-//                for (int rep = 0; rep < nReps; ++ rep) {
-//                    System.out.printf("Time before rep %d:", rep);
-//                    System.out.println(new Timestamp(System.currentTimeMillis()));
-//                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
-//                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
-//                            new int[]{MAX_T_PER_SECOND}, new int[]{30},  60, new int[]{3600}, true);
+//            // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
+//            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
+//                    new int[]{MAX_T_PER_SECOND}, new int[]{10},  10, new int[]{600}, true);
 //                    /*
 //                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
 //                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
@@ -308,19 +267,64 @@ public class Experiment2 {
 //                            new int[]{512}, new int[]{0},  8, new int[]{16}, true);
 //                     */
 //
-//                    System.out.printf("Time after rep %d:", rep);
-//                    System.out.println(new Timestamp(System.currentTimeMillis()));
-//                }
-//
-//
-//
-//                return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
-//            }catch(Exception e){
-//                return null;
-//            }
-//
-//
-//        });
+//            System.out.printf("Time after rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//        }
+//        for (int rep = 0; rep < 1; ++ rep) {
+//            System.out.printf("Time before rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//            //measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
+//            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+//                    new int[]{512}, new int[]{0, 1, 2, 4, 8},  8, new int[]{16}, true);
+//            System.out.printf("Time after rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//        }
+
+        port(3456);
+        TestUtils.setRandomNumbers();
+        get("/Experiment", (request, response) -> {
+            response.type("application/json");
+            int nReps = 1;
+            try{
+                /*
+                                measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256}, new int[]{0}, false);
+                measureRandomExperim("varyWaitingCycles.txt", new int[]{512*4}, new int[]{0, 1, 2, 3, 4, 5, 6}, true);
+                 */
+                //measureRandomExperim("varyAddrSizes.txt", new int[]{128, 256, 512, 1024, 2048}, new int[]{0}, false);
+                for (int rep = 0; rep < nReps; ++ rep) {
+                    System.out.printf("Time before rep %d:", rep);
+                    System.out.println(new Timestamp(System.currentTimeMillis()));
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
+                            new int[]{MAX_T_PER_SECOND}, new int[]{10},  10, new int[]{600}, true);
+                    /*
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{4},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 2 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{2},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 1 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{1},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 0 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{0},  8, new int[]{16}, true);
+                     */
+
+                    System.out.printf("Time after rep %d:", rep);
+                    System.out.println(new Timestamp(System.currentTimeMillis()));
+                }
+
+
+
+                return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS,"Passed"));
+            }catch(Exception e){
+                return null;
+            }
+
+
+        });
 
 
 
