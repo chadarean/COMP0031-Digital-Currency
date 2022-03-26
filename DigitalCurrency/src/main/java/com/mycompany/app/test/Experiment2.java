@@ -32,6 +32,8 @@ import static spark.Spark.get;
 import static spark.Spark.port;
 
 public class Experiment2 {
+    public static final int MAX_T_PER_SECOND = 70;
+    public static final int MIN_T_PER_SECOND = 40;
     public static Random rand = new Random();
     static ArrayList<String> C_; // array of cycle hashes
     static Relay r; // TODO: create multiple relays for future tests
@@ -79,7 +81,7 @@ public class Experiment2 {
         }
     }
 
-    public static void measureRandom(int nUsers, int nWaitingCycles, int nCycles, int maxWaitingCycles, boolean oneTransaction) throws IOException {
+    public static void measureRandom(int minUsersPerCycle, int nUsers, int nWaitingCycles, int nCycles, int maxWaitingCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
 
@@ -99,7 +101,7 @@ public class Experiment2 {
         int nTransactingCycles = 0;
         for (int c = 0; c < nCycles - 1; ++ c) {
             if (c + nWaitingCycles < nCycles - 1 && c >= maxWaitingCycles - nWaitingCycles) {
-                int nTransactions = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
+                int nTransactions = minUsersPerCycle + Math.abs(TestUtils.getNextInt()) % ((nUsers/nCycles) - minUsersPerCycle + 1);
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
                 // create nTransactions for cycle c+1
                 transactions.add(new ArrayList<>());
@@ -209,17 +211,17 @@ public class Experiment2 {
                     transactingUser.put(t.key, a.addressToPOPSlice.size());
                 }
             }
+
         }
 
+        System.out.printf("Generated %d transaction for %d cycles and %d waiting cycles\n", nTrans, nCycles, nWaitingCycles);
         if (nTransRec != nTrans) {
             throw new RuntimeException("Not all transactions have been received!");
         }
         tearDown();
     }
 
-    public static void measureRandomExperim(String fileName, int nAddrValues[], int nWaitingCyclesValues[], int maxWaitingCycles, int[] nCyclesValues, boolean oneTransaction) {
-        // 4
-        // 16
+    public static void measureRandomExperim(String fileName, int minUsersPerCycle, int nAddrValues[], int nWaitingCyclesValues[], int maxWaitingCycles, int[] nCyclesValues, boolean oneTransaction) {
         try {
             PrintWriter results = new PrintWriter(fileName);
                 for (int nAddrPerCycle:  nAddrValues) {
@@ -227,7 +229,7 @@ public class Experiment2 {
                         for (int nCycles : nCyclesValues) {
                             System.out.println(nWaitingCycles);
                             TestUtils.resetState();
-                            measureRandom(nAddrPerCycle * nCycles, nWaitingCycles, nCycles+maxWaitingCycles, maxWaitingCycles, oneTransaction);
+                            measureRandom(minUsersPerCycle, nAddrPerCycle * nCycles, nWaitingCycles, nCycles+maxWaitingCycles, maxWaitingCycles, oneTransaction);
                         }
                     }
             }
@@ -243,12 +245,36 @@ public class Experiment2 {
         for (int rep = 0; rep < 1; ++ rep) {
             System.out.printf("Time before rep %d:", rep);
             System.out.println(new Timestamp(System.currentTimeMillis()));
-            //measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
-            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-                    new int[]{512}, new int[]{0, 1, 2, 4, 8},  8, new int[]{16}, true);
+            // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
+            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
+                    new int[]{MAX_T_PER_SECOND}, new int[]{10},  10, new int[]{600}, true);
+                    /*
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{4},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 2 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{2},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 1 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{1},  8, new int[]{16}, true);
+                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 0 waiting cycles and 16+8 total cycles
+                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+                            new int[]{512}, new int[]{0},  8, new int[]{16}, true);
+                     */
+
             System.out.printf("Time after rep %d:", rep);
             System.out.println(new Timestamp(System.currentTimeMillis()));
         }
+//        for (int rep = 0; rep < 1; ++ rep) {
+//            System.out.printf("Time before rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//            //measureRandomExperim("varyWaitingCycles.txt", new int[]{512*16}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}, true);
+//            measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
+//                    new int[]{512}, new int[]{0, 1, 2, 4, 8},  8, new int[]{16}, true);
+//            System.out.printf("Time after rep %d:", rep);
+//            System.out.println(new Timestamp(System.currentTimeMillis()));
+//        }
 
 //        port(3456);
 //        TestUtils.setRandomNumbers();
@@ -265,8 +291,8 @@ public class Experiment2 {
 //                    System.out.printf("Time before rep %d:", rep);
 //                    System.out.println(new Timestamp(System.currentTimeMillis()));
 //                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 8 waiting cycles and 16+8 total cycles
-//                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
-//                            new int[]{512}, new int[]{8},  8, new int[]{16}, true);
+//                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt", MIN_T_PER_SECOND,
+//                            new int[]{MAX_T_PER_SECOND}, new int[]{30},  60, new int[]{3600}, true);
 //                    /*
 //                    // Results for repetition rep, maximum 512 addresses transacting per cycle, 4 waiting cycles and 16+8 total cycles
 //                    measureRandomExperim("varyWaitingCycles" + Integer.toString(rep) + ".txt",
