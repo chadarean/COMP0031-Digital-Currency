@@ -8,7 +8,7 @@ public class TestUtils {
 
     public static int randState = 0;
 
-    public static int maxRandNumbers = 10000000;
+    public static int maxRandNumbers = 100000000;
 
     public static ArrayList<Integer> randNumbers;
 
@@ -24,6 +24,9 @@ public class TestUtils {
     }
 
     public static int getNextInt() {
+        if (randState == maxRandNumbers) {
+            randState = 0;
+        }
         randState += 1;
         return randNumbers.get(randState-1);
     }

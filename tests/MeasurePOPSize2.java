@@ -14,7 +14,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
-public class MeasurePOPSize {
+public class MeasurePOPSize2 {
     public static class Structs {
         double addressProofSize;
         double fileProofSize;
@@ -107,7 +107,7 @@ public class MeasurePOPSize {
         }
     }
 
-    public static Structs measureRandom(int nTokens, int nUsers, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
+    public static Structs measureRandom(int nTokens, int nUsers, int minUsersPerCycle, int nWaitingCycles, int nCycles, boolean oneTransaction) throws IOException {
         setup(); // create initial cycle
         createUsers(nUsers);
 
@@ -133,10 +133,7 @@ public class MeasurePOPSize {
         int crtSet = 0;
         for (int c = 0; c < nCycles - 1; ++ c) {
             if (c + nWaitingCycles < nCycles - 1) {
-                int nTransactions = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
-                if (oneTransaction == false) {
-                    nTransactions = nUsers/nCycles;
-                }
+                int nTransactions = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles-minUsersPerCycle) + minUsersPerCycle;
                 //System.out.printf("Creating %d trans at cycle %d\n", nTransactions, c);
                 // create nTransactions for cycle c+1
                 transactions.add(new ArrayList<>());
@@ -151,6 +148,9 @@ public class MeasurePOPSize {
                             user_i = Math.abs(TestUtils.getNextInt()) % nUsers;
                         }
                         transactingUser.put(user_i, -1);
+                    }
+                    if (user_i < 0) {
+                        throw new RuntimeException("wtf!");
                     }
                     Owner a = users.get(user_i);
                     String addressA = TestUtils.getRandomXBitAddr(rand, MerkleTrie.ADDRESS_SIZE);
@@ -172,7 +172,7 @@ public class MeasurePOPSize {
                 }
             }
             if (c < nWaitingCycles) {
-                int nRandTrans = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles) + 1;
+                int nRandTrans = Math.abs(TestUtils.getNextInt()) % (nUsers/nCycles - minUsersPerCycle) + minUsersPerCycle;
                 tokensInFlight.set(crtSet, tokensInFlight.get(crtSet) + nRandTrans);
                 MerkleTrie.TrieNode crtCycle = TestUtils.createRandomCycleTrie(r, nRandTrans);
                 C_.add(crtCycle.value);
@@ -260,19 +260,19 @@ public class MeasurePOPSize {
         return structs;
     }
 
-    public static void measureRandomExperim(String fileName, int nTokenValues[], int nAddrValues[], int nWaitingCyclesValues[], boolean oneTransaction) {
-        int nCyclesValues[] = {33};
+    public static void measureRandomExperim(String fileName, int nTokenValues[], int nAddrValues[], int minAddr, int maxWaitingCycles, boolean oneTransaction) {
+        int nCyclesValues[] = {256};
         int N_REPS = 5;
         try {
             PrintWriter results = new PrintWriter(fileName);
             for (int nTokens: nTokenValues) {
                 for (int nAddr:  nAddrValues) {
-                    for (int nWaitingCycles : nWaitingCyclesValues) {
+                    for (int nWaitingCycles = 64; nWaitingCycles < maxWaitingCycles; nWaitingCycles += 4) {
                         for (int nCycles : nCyclesValues) {
                             TestUtils.resetState();
-                            Structs res = measureRandom(nTokens, nAddr*33, nWaitingCycles, nCycles, oneTransaction);
+                            Structs res = measureRandom(nTokens, nAddr*nCycles, minAddr, nWaitingCycles, nCycles, oneTransaction);
                             for (int reps = 1; reps < N_REPS; ++ reps) {
-                                res.add(measureRandom(nTokens, nAddr*33, nWaitingCycles, nCycles, oneTransaction));
+                                res.add(measureRandom(nTokens, nAddr*nCycles, minAddr, nWaitingCycles, nCycles, oneTransaction));
                             }
                             res.divBy(N_REPS);
                             System.out.println(nWaitingCycles);
@@ -295,8 +295,7 @@ public class MeasurePOPSize {
 
     public static void main(String[] args) {
         TestUtils.setRandomNumbers();
-        measureRandomExperim("VaryAddrSizes.txt", new int[]{1}, new int[]{32, 64, 128, 256, 512, 1024, 2048}, new int[]{0}, false);
-        //measureRandomExperim("VaryWaitingCycles.txt", new int[]{1}, new int[]{512}, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, true);
+        measureRandomExperim("VaryWaitingCycles_long_64.txt", new int[]{1}, new int[]{70}, 39, 132, true);
         System.out.println("Passed");
     }
 }

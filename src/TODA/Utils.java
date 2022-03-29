@@ -11,6 +11,42 @@ public class Utils {
         return b;
     }
 
+    public static double getMeanI(ArrayList<Integer> x) {
+        long sum = 0;
+        for (int y: x) {
+            sum = sum + y;
+        }
+        return (double)sum / x.size();
+    }
+
+    public static double getMean(ArrayList<Double> x) {
+        double sum = 0;
+        for (double y: x) {
+            sum = sum + y;
+        }
+        return sum / x.size();
+    }
+
+    public static double getStdevI(ArrayList<Integer> x) {
+        double mean = getMeanI(x);
+        double standardDeviation = 0;
+        int n = x.size();
+        for (Integer integer : x) {
+            standardDeviation = standardDeviation + Math.pow((integer - mean), 2);
+        }
+        return standardDeviation / n;
+    }
+
+    public static double getStdev(ArrayList<Double> x) {
+        double mean = getMean(x);
+        double standardDeviation = 0;
+        int n = x.size();
+        for (Double integer : x) {
+            standardDeviation = standardDeviation + Math.pow((integer - mean), 2);
+        }
+        return standardDeviation / n;
+    }
+
     public static void appendBits(StringBuilder res, int value, int n) {
         for (int j = 0; j < n; ++ j) {
             if ((value & (1<<j)) == 0) {
